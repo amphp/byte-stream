@@ -1,0 +1,43 @@
+{
+    "name": "amphp/stream",
+    "homepage": "https://github.com/amphp/stream",
+    "description": "Async streams for the amp concurrency framework",
+    "support": {
+        "issues": "https://github.com/amphp/stream/issues"
+    },
+    "keywords": [
+        "stream",
+        "async",
+        "non-blocking",
+        "amp"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Aaron Piotrowski",
+            "email": "aaron@trowski.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=5.5",
+        "amphp/amp": "dev-master as 2.0"
+    },
+    "require-dev": {
+        "amphp/loop": "dev-master",
+        "phpunit/phpunit": "^4|^5",
+        "friendsofphp/php-cs-fixer": "~1.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Amp\\Stream\\": "lib/"
+        },
+        "files": ["lib/functions.php"]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Amp\\Stream\\Test\\": "test/"
+        }
+    }
+}
