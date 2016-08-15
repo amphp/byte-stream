@@ -2,9 +2,8 @@
 
 namespace Amp\Stream;
 
-use Amp\Deferred;
-use Amp\Failure;
-use Amp\Success;
+use Amp\{ Deferred, Failure, Success };
+use Interop\Async\Awaitable;
 
 /**
  * Serves as buffer that implements the stream interface, allowing consumers to be notified when data is available in
@@ -27,7 +26,7 @@ class MemoryStream implements Stream {
     /**
      * @param string $data
      */
-    public function __construct($data = '') {
+    public function __construct(string $data = '') {
         $this->buffer = new Buffer($data);
         $this->reads = new \SplQueue;
     }
@@ -35,14 +34,14 @@ class MemoryStream implements Stream {
     /**
      * {@inheritdoc}
      */
-    public function isReadable() {
+    public function isReadable(): bool {
         return $this->readable;
     }
     
     /**
      * {@inheritdoc}
      */
-    public function isWritable() {
+    public function isWritable(): bool {
         return $this->writable;
     }
     
@@ -66,12 +65,9 @@ class MemoryStream implements Stream {
     /**
      * {@inheritdoc}
      */
-    public function read($bytes = null, $delimiter = null) {
-        if ($bytes !== null) {
-            $bytes = (int) $bytes;
-            if ($bytes <= 0) {
-                throw new \InvalidArgumentException("The number of bytes to read should be a positive integer or null");
-            }
+    public function read(int $bytes = null, string $delimiter = null): Awaitable {
+        if ($bytes !== null && $bytes <= 0) {
+            throw new \InvalidArgumentException("The number of bytes to read should be a positive integer or null");
         }
     
         if (!$this->readable) {
@@ -119,19 +115,23 @@ class MemoryStream implements Stream {
             $this->reads->unshift([$bytes, $delimiter, $deferred]);
             return;
         }
+        
+        if (!$this->writable && $this->buffer->isEmpty()) {
+            $this->close();
+        }
     }
     
     /**
      * {@inheritdoc}
      */
-    public function write($data) {
+    public function write(string $data): Awaitable {
         return $this->send($data, false);
     }
     
     /**
      * {@inheritdoc}
      */
-    public function end($data = '') {
+    public function end(string $data = ''): Awaitable {
         return $this->send($data, true);
     }
     
@@ -141,7 +141,7 @@ class MemoryStream implements Stream {
      *
      * @return \Interop\Async\Awaitable
      */
-    protected function send($data, $end = false) {
+    protected function send(string $data, bool $end = false): Awaitable {
         if (!$this->writable) {
             return new Failure(new \LogicException("The stream is not writable"));
         }

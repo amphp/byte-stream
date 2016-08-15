@@ -21,12 +21,11 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=5.5",
         "amphp/amp": "dev-master as 2.0"
     },
     "require-dev": {
         "amphp/loop": "dev-master",
-        "phpunit/phpunit": "^4|^5",
+        "phpunit/phpunit": "^5",
         "friendsofphp/php-cs-fixer": "~1.9"
     },
     "autoload": {

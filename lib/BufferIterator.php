@@ -6,14 +6,10 @@ namespace Amp\Stream;
  */
 class BufferIterator implements \SeekableIterator
 {
-    /**
-     * @var Buffer
-     */
+    /** @var \Amp\Stream\Buffer */
     private $buffer;
     
-    /**
-     * @var int
-     */
+    /** @var int */
     private $current = 0;
     
     /**
@@ -35,7 +31,7 @@ class BufferIterator implements \SeekableIterator
      *
      * @return bool
      */
-    public function valid() {
+    public function valid(): bool {
         return isset($this->buffer[$this->current]);
     }
     
@@ -44,7 +40,7 @@ class BufferIterator implements \SeekableIterator
      *
      * @return int
      */
-    public function key() {
+    public function key(): int {
         return $this->current;
     }
     
@@ -53,7 +49,7 @@ class BufferIterator implements \SeekableIterator
      *
      * @return string
      */
-    public function current() {
+    public function current(): string {
         return $this->buffer[$this->current];
     }
     
@@ -93,7 +89,7 @@ class BufferIterator implements \SeekableIterator
      *
      * @throws \OutOfBoundsException If the iterator is invalid.
      */
-    public function insert($data) {
+    public function insert(string $data) {
         if (!$this->valid()) {
             throw new \OutOfBoundsException('The iterator is not valid!');
         }
@@ -110,7 +106,7 @@ class BufferIterator implements \SeekableIterator
      *
      * @throws \OutOfBoundsException If the iterator is invalid.
      */
-    public function replace($data) {
+    public function replace(string $data): string {
         if (!$this->valid()) {
             throw new \OutOfBoundsException('The iterator is not valid!');
         }
@@ -129,7 +125,7 @@ class BufferIterator implements \SeekableIterator
      *
      * @throws \OutOfBoundsException If the iterator is invalid.
      */
-    public function remove() {
+    public function remove(): string {
         if (!$this->valid()) {
             throw new \OutOfBoundsException('The iterator is not valid!');
         }

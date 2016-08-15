@@ -3,10 +3,11 @@
 namespace Amp\Stream;
 
 use Amp\Coroutine;
+use Interop\Async\Awaitable;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
-    throw new \RuntimeException(
+    throw new \Error(
         'The mbstring.func_overload ini setting is enabled. It must be disable to use the stream package.'
     );
 } // @codeCoverageIgnoreEnd
@@ -18,31 +19,28 @@ if (\strlen('…') !== 3) {
  *
  * @return \Interop\Async\Awaitable
  */
-function pipe(Stream $source, Stream $destination, $bytes = null) {
+function pipe(Stream $source, Stream $destination, int $bytes = null): Awaitable {
     return new Coroutine(__doPipe($source, $destination, $bytes));
 }
 
-function __doPipe(Stream $source, Stream $destination, $bytes = null) {
+function __doPipe(Stream $source, Stream $destination, int $bytes = null): \Generator {
     if (!$destination->isWritable()) {
         throw new \LogicException("The destination is not writable");
     }
     
     if (null !== $bytes) {
-        yield Coroutine::result(
-            yield $destination->write(
-                yield $source->read($bytes)
-            )
+        return yield $destination->write(
+            yield $source->read($bytes)
         );
-        return;
     }
     
     $written = 0;
     
     do {
-        $written += (yield $destination->write(
+        $written += yield $destination->write(
             yield $source->read()
-        ));
+        );
     } while ($source->isReadable() && $destination->isWritable());
     
-    yield Coroutine::result($written);
+    return $written;
 }

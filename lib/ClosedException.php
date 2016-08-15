@@ -2,4 +2,4 @@
 
 namespace Amp\Stream;
 
-class ClosedException extends \RuntimeException {}
+class ClosedException extends \Exception {}
