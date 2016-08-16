@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Amp\Stream;
 
 use Amp\{ Deferred, Failure, Success };
