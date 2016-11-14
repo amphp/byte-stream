@@ -3,7 +3,7 @@
 namespace Amp\Stream;
 
 use Amp\{ Deferred, Failure, Success };
-use Interop\Async\Awaitable;
+use Interop\Async\Promise;
 
 /**
  * Serves as buffer that implements the stream interface, allowing consumers to be notified when data is available in
@@ -65,7 +65,7 @@ class MemoryStream implements Stream {
     /**
      * {@inheritdoc}
      */
-    public function read(int $bytes = null, string $delimiter = null): Awaitable {
+    public function read(int $bytes = null, string $delimiter = null): Promise {
         if ($bytes !== null && $bytes <= 0) {
             throw new \InvalidArgumentException("The number of bytes to read should be a positive integer or null");
         }
@@ -78,7 +78,7 @@ class MemoryStream implements Stream {
         $this->reads->push([$bytes, $delimiter, $deferred]);
         $this->checkPendingReads();
         
-        return $deferred->getAwaitable();
+        return $deferred->promise();
     }
     
     /**
@@ -124,14 +124,14 @@ class MemoryStream implements Stream {
     /**
      * {@inheritdoc}
      */
-    public function write(string $data): Awaitable {
+    public function write(string $data): Promise {
         return $this->send($data, false);
     }
     
     /**
      * {@inheritdoc}
      */
-    public function end(string $data = ''): Awaitable {
+    public function end(string $data = ''): Promise {
         return $this->send($data, true);
     }
     
@@ -139,9 +139,9 @@ class MemoryStream implements Stream {
      * @param string $data
      * @param bool $end
      *
-     * @return \Interop\Async\Awaitable
+     * @return \Interop\Async\Promise
      */
-    protected function send(string $data, bool $end = false): Awaitable {
+    protected function send(string $data, bool $end = false): Promise {
         if (!$this->writable) {
             return new Failure(new \LogicException("The stream is not writable"));
         }

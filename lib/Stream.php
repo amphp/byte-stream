@@ -2,7 +2,7 @@
 
 namespace Amp\Stream;
 
-use Interop\Async\Awaitable;
+use Interop\Async\Promise;
 
 interface Stream {
     /**
@@ -23,23 +23,23 @@ interface Stream {
      * @param int|null $bytes
      * @param string|null $delimiter
      *
-     * @return \Interop\Async\Awaitable<string> Resolves with bytes read from the stream.
+     * @return \Interop\Async\Promise<string> Resolves with bytes read from the stream.
      */
-    public function read(int $bytes = null, string $delimiter = null): Awaitable;
+    public function read(int $bytes = null, string $delimiter = null): Promise;
     
     /**
      * @param string $data
      *
-     * @return \Interop\Async\Awaitable<int>
+     * @return \Interop\Async\Promise<int>
      */
-    public function write(string $data): Awaitable;
+    public function write(string $data): Promise;
     
     /**
      * @param string $data
      *
-     * @return \Interop\Async\Awaitable<int>
+     * @return \Interop\Async\Promise<int>
      */
-    public function end(string $data = ''): Awaitable;
+    public function end(string $data = ''): Promise;
     
     /**
      * Closes the stream and fails any pending reads or writes.
