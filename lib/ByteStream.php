@@ -4,7 +4,7 @@ namespace Amp\Stream;
 
 use AsyncInterop\Promise;
 
-interface Stream {
+interface ByteStream {
     /**
      * Determines if the stream is readable.
      *

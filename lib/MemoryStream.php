@@ -10,7 +10,7 @@ use AsyncInterop\Promise;
  * the buffer. This class by itself is not particularly useful, but it can be extended to add functionality upon reading
  * or writing, as well as acting as an example of how stream classes can be implemented.
  */
-class MemoryStream implements Stream {
+class MemoryStream implements ByteStream {
     /** @var \Amp\Stream\Buffer */
     private $buffer;
     

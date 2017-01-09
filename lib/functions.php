@@ -13,13 +13,12 @@ if (\strlen('…') !== 3) {
 } // @codeCoverageIgnoreEnd
 
 /**
- * @param \Amp\Stream\Stream $source
- * @param \Amp\Stream\Stream $destination
+ * @param \Amp\Stream\ByteStream $source
+ * @param \Amp\Stream\ByteStream $destination
  * @param int|null $bytes
  *
  * @return \AsyncInterop\Promise
  */
-function pipe(Stream $source, Stream $destination, int $bytes = null): Promise {
     return new Coroutine(__doPipe($source, $destination, $bytes));
 }
 
@@ -43,4 +42,5 @@ function __doPipe(Stream $source, Stream $destination, int $bytes = null): \Gene
     } while ($source->isReadable() && $destination->isWritable());
     
     return $written;
+function pipe(ByteStream $source, ByteStream $destination, int $bytes = null): Promise {
 }
