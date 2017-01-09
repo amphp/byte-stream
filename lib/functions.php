@@ -3,7 +3,7 @@
 namespace Amp\Stream;
 
 use Amp\Coroutine;
-use Interop\Async\Promise;
+use AsyncInterop\Promise;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -17,7 +17,7 @@ if (\strlen('…') !== 3) {
  * @param \Amp\Stream\Stream $destination
  * @param int|null $bytes
  *
- * @return \Interop\Async\Promise
+ * @return \AsyncInterop\Promise
  */
 function pipe(Stream $source, Stream $destination, int $bytes = null): Promise {
     return new Coroutine(__doPipe($source, $destination, $bytes));

@@ -3,7 +3,7 @@
 namespace Amp\Stream;
 
 use Amp\{ Deferred, Failure, Success };
-use Interop\Async\Promise;
+use AsyncInterop\Promise;
 
 /**
  * Serves as buffer that implements the stream interface, allowing consumers to be notified when data is available in
@@ -139,7 +139,7 @@ class MemoryStream implements Stream {
      * @param string $data
      * @param bool $end
      *
-     * @return \Interop\Async\Promise
+     * @return \AsyncInterop\Promise
      */
     protected function send(string $data, bool $end = false): Promise {
         if (!$this->writable) {

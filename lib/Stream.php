@@ -2,7 +2,7 @@
 
 namespace Amp\Stream;
 
-use Interop\Async\Promise;
+use AsyncInterop\Promise;
 
 interface Stream {
     /**
@@ -23,21 +23,21 @@ interface Stream {
      * @param int|null $bytes
      * @param string|null $delimiter
      *
-     * @return \Interop\Async\Promise<string> Resolves with bytes read from the stream.
+     * @return \AsyncInterop\Promise<string> Resolves with bytes read from the stream.
      */
     public function read(int $bytes = null, string $delimiter = null): Promise;
     
     /**
      * @param string $data
      *
-     * @return \Interop\Async\Promise<int>
+     * @return \AsyncInterop\Promise<int>
      */
     public function write(string $data): Promise;
     
     /**
      * @param string $data
      *
-     * @return \Interop\Async\Promise<int>
+     * @return \AsyncInterop\Promise<int>
      */
     public function end(string $data = ''): Promise;
     
