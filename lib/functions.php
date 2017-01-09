@@ -19,28 +19,6 @@ if (\strlen('…') !== 3) {
  *
  * @return \AsyncInterop\Promise
  */
-    return new Coroutine(__doPipe($source, $destination, $bytes));
-}
-
-function __doPipe(Stream $source, Stream $destination, int $bytes = null): \Generator {
-    if (!$destination->isWritable()) {
-        throw new \LogicException("The destination is not writable");
-    }
-    
-    if (null !== $bytes) {
-        return yield $destination->write(
-            yield $source->read($bytes)
-        );
-    }
-    
-    $written = 0;
-    
-    do {
-        $written += yield $destination->write(
-            yield $source->read()
-        );
-    } while ($source->isReadable() && $destination->isWritable());
-    
-    return $written;
 function pipe(ByteStream $source, ByteStream $destination, int $bytes = null): Promise {
+    return new Coroutine(Internal\pipe($source, $destination, $bytes));
 }

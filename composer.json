@@ -32,7 +32,10 @@
         "psr-4": {
             "Amp\\Stream\\": "lib/"
         },
-        "files": ["lib/functions.php"]
+        "files": [
+            "lib/functions.php",
+            "lib/Internal/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
