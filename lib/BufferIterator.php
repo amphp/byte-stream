@@ -4,8 +4,7 @@ namespace Amp\Stream;
 
 /**
  */
-class BufferIterator implements \SeekableIterator
-{
+class BufferIterator implements \SeekableIterator {
     /** @var \Amp\Stream\Buffer */
     private $buffer;
     

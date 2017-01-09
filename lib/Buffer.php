@@ -4,8 +4,7 @@ namespace Amp\Stream;
 
 /**
  */
-class Buffer implements \ArrayAccess, \Countable, \IteratorAggregate
-{
+class Buffer implements \ArrayAccess, \Countable, \IteratorAggregate {
     /** @var string */
     private $data;
     
