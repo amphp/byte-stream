@@ -1,8 +1,8 @@
 <?php
 
-namespace Amp\Stream;
+namespace Amp\ByteStream;
 
-use AsyncInterop\Promise;
+use Amp\Promise;
 
 interface ByteStream {
     /**
@@ -23,21 +23,21 @@ interface ByteStream {
      * @param int|null $bytes
      * @param string|null $delimiter
      *
-     * @return \AsyncInterop\Promise<string> Resolves with bytes read from the stream.
+     * @return \Amp\Promise<string> Resolves with bytes read from the stream.
      */
     public function read(int $bytes = null, string $delimiter = null): Promise;
     
     /**
      * @param string $data
      *
-     * @return \AsyncInterop\Promise<int>
+     * @return \Amp\Promise<int>
      */
     public function write(string $data): Promise;
     
     /**
      * @param string $data
      *
-     * @return \AsyncInterop\Promise<int>
+     * @return \Amp\Promise<int>
      */
     public function end(string $data = ''): Promise;
     

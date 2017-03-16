@@ -1,9 +1,8 @@
 <?php
 
-namespace Amp\Stream;
+namespace Amp\ByteStream;
 
-use Amp\{ Deferred, Failure, Success };
-use AsyncInterop\Promise;
+use Amp\{ Deferred, Failure, Promise, Success };
 
 /**
  * Serves as buffer that implements the stream interface, allowing consumers to be notified when data is available in
@@ -11,7 +10,7 @@ use AsyncInterop\Promise;
  * or writing, as well as acting as an example of how stream classes can be implemented.
  */
 class MemoryStream implements ByteStream {
-    /** @var \Amp\Stream\Buffer */
+    /** @var \Amp\ByteStream\Buffer */
     private $buffer;
     
     /** @var bool */
@@ -139,7 +138,7 @@ class MemoryStream implements ByteStream {
      * @param string $data
      * @param bool $end
      *
-     * @return \AsyncInterop\Promise
+     * @return \Amp\Promise
      */
     protected function send(string $data, bool $end = false): Promise {
         if (!$this->writable) {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Amp\Stream\Internal;
+namespace Amp\ByteStream\Internal;
 
-use Amp\Stream\ByteStream;
+use Amp\ByteStream\ByteStream;
 
 /**
  * @internal

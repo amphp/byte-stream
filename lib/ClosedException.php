@@ -1,5 +1,5 @@
 <?php
 
-namespace Amp\Stream;
+namespace Amp\ByteStream;
 
 class ClosedException extends \Exception {}

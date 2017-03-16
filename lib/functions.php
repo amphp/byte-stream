@@ -1,9 +1,8 @@
 <?php
 
-namespace Amp\Stream;
+namespace Amp\ByteStream;
 
-use Amp\Coroutine;
-use AsyncInterop\Promise;
+use Amp\{ Coroutine, Promise };
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -13,11 +12,11 @@ if (\strlen('…') !== 3) {
 } // @codeCoverageIgnoreEnd
 
 /**
- * @param \Amp\Stream\ByteStream $source
- * @param \Amp\Stream\ByteStream $destination
+ * @param \Amp\ByteStream\ByteStream $source
+ * @param \Amp\ByteStream\ByteStream $destination
  * @param int|null $bytes
  *
- * @return \AsyncInterop\Promise
+ * @return \Amp\Promise
  */
 function pipe(ByteStream $source, ByteStream $destination, int $bytes = null): Promise {
     return new Coroutine(Internal\pipe($source, $destination, $bytes));

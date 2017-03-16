@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Stream;
+namespace Amp\ByteStream;
 
 /**
  */

@@ -1,18 +1,18 @@
 <?php
 
-namespace Amp\Stream;
+namespace Amp\ByteStream;
 
 /**
  */
 class BufferIterator implements \SeekableIterator {
-    /** @var \Amp\Stream\Buffer */
+    /** @var \Amp\ByteStream\Buffer */
     private $buffer;
     
     /** @var int */
     private $current = 0;
     
     /**
-     * @param \Amp\Stream\Buffer $buffer
+     * @param \Amp\ByteStream\Buffer $buffer
      */
     public function __construct(Buffer $buffer) {
         $this->buffer = $buffer;
