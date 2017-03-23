@@ -12,12 +12,12 @@ if (\strlen('…') !== 3) {
 } // @codeCoverageIgnoreEnd
 
 /**
- * @param \Amp\ByteStream\ByteStream $source
- * @param \Amp\ByteStream\ByteStream $destination
+ * @param \Amp\ByteStream\ReadableStream $source
+ * @param \Amp\ByteStream\WritableStream $destination
  * @param int|null $bytes
  *
  * @return \Amp\Promise
  */
-function pipe(ByteStream $source, ByteStream $destination, int $bytes = null): Promise {
+function pipe(ReadableStream $source, WritableStream $destination, int $bytes = null): Promise {
     return new Coroutine(Internal\pipe($source, $destination, $bytes));
 }

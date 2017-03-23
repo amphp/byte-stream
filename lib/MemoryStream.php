@@ -9,7 +9,7 @@ use Amp\{ Deferred, Failure, Promise, Success };
  * the buffer. This class by itself is not particularly useful, but it can be extended to add functionality upon reading
  * or writing, as well as acting as an example of how stream classes can be implemented.
  */
-class MemoryStream implements ByteStream {
+class MemoryStream implements DuplexStream {
     /** @var \Amp\ByteStream\Buffer */
     private $buffer;
     
@@ -60,11 +60,22 @@ class MemoryStream implements ByteStream {
             } while (!$this->reads->isEmpty());
         }
     }
-    
+
     /**
      * {@inheritdoc}
      */
-    public function read(int $bytes = null, string $delimiter = null): Promise {
+    public function read(int $bytes = null): Promise {
+        return $this->fetch($bytes);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function readTo(string $delimiter, int $limit = null): Promise {
+        return $this->fetch($limit, $delimiter);
+    }
+
+    private function fetch(int $bytes = null, string $delimiter = null): Promise {
         if ($bytes !== null && $bytes <= 0) {
             throw new \InvalidArgumentException("The number of bytes to read should be a positive integer or null");
         }
@@ -79,7 +90,7 @@ class MemoryStream implements ByteStream {
         
         return $deferred->promise();
     }
-    
+
     /**
      * Returns bytes from the buffer based on the current length or current search byte.
      */
