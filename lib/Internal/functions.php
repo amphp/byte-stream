@@ -2,14 +2,14 @@
 
 namespace Amp\ByteStream\Internal;
 
-use Amp\ByteStream\{ ReadableStream, WritableStream };
+use Amp\ByteStream\{ ReadableStream, StreamException, WritableStream };
 
 /**
  * @internal
  */
 function pipe(ReadableStream $source, WritableStream $destination, int $bytes = null): \Generator {
     if (!$destination->isWritable()) {
-        throw new \LogicException("The destination is not writable");
+        throw new StreamException("The destination is not writable");
     }
 
     if (null !== $bytes) {
@@ -24,7 +24,7 @@ function pipe(ReadableStream $source, WritableStream $destination, int $bytes = 
         $written += yield $destination->write(
             yield $source->read()
         );
-    } while ($source->isReadable() && $destination->isWritable());
+    } while ($source->isReadable());
 
     return $written;
 }

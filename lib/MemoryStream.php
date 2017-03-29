@@ -77,11 +77,11 @@ class MemoryStream implements DuplexStream {
 
     private function fetch(int $bytes = null, string $delimiter = null): Promise {
         if ($bytes !== null && $bytes <= 0) {
-            throw new \InvalidArgumentException("The number of bytes to read should be a positive integer or null");
+            throw new \Error("The number of bytes to read should be a positive integer or null");
         }
     
         if (!$this->readable) {
-            return new Failure(new \LogicException("The stream has been closed"));
+            return new Failure(new StreamException("The stream is not readable"));
         }
         
         $deferred = new Deferred;
@@ -153,7 +153,7 @@ class MemoryStream implements DuplexStream {
      */
     protected function send(string $data, bool $end = false): Promise {
         if (!$this->writable) {
-            return new Failure(new \LogicException("The stream is not writable"));
+            return new Failure(new StreamException("The stream is not writable"));
         }
         
         if ($end) {
