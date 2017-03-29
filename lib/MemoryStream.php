@@ -50,14 +50,16 @@ class MemoryStream implements DuplexStream {
     public function close() {
         $this->readable = false;
         $this->writable = false;
-        
-        if (!$this->reads->isEmpty()) {
-            $exception = new ClosedException("The stream was unexpectedly closed");
-            do {
-                /** @var \Amp\Deferred $deferred */
-                list( , , $deferred) = $this->reads->shift();
-                $deferred->fail($exception);
-            } while (!$this->reads->isEmpty());
+
+        while (!$this->reads->isEmpty()) {
+            /** @var \Amp\Deferred $deferred */
+            list($bytes, $delimiter, $deferred) = $this->reads->shift();
+            if ($delimiter !== null || $bytes !== null || isset($exception)) {
+                // If prior read failed, fail all subsequent reads.
+                $deferred->fail($exception = $exception ?? new ClosedException("The stream was unexpectedly closed"));
+            } else {
+                $deferred->resolve(""); // Resolve unbounded reads with empty string.
+            }
         }
     }
 
@@ -123,7 +125,7 @@ class MemoryStream implements DuplexStream {
             }
     
             $this->reads->unshift([$bytes, $delimiter, $deferred]);
-            return;
+            break;
         }
         
         if (!$this->writable && $this->buffer->isEmpty()) {
