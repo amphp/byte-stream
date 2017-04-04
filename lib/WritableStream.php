@@ -25,9 +25,4 @@ interface WritableStream {
      * @return \Amp\Promise<int>
      */
     public function end(string $data = ''): Promise;
-    
-    /**
-     * Closes the stream and fails any pending reads or writes.
-     */
-    public function close();
 }

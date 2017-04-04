@@ -16,12 +16,17 @@ class MessageStream implements ReadableStream {
 
         $coroutine = new Coroutine($this->pipe($message));
         $coroutine->onResolve(function () {
-            $this->stream->end();
+            if ($this->stream->isWritable()) {
+                $this->stream->end();
+            }
         });
     }
 
     private function pipe(Message $message): \Generator {
         while (yield $message->advance()) {
+            if (!$this->stream->isWritable()) {
+                break;
+            }
             $this->stream->write($message->getCurrent());
         }
     }
@@ -45,12 +50,5 @@ class MessageStream implements ReadableStream {
      */
     public function readTo(string $delimiter, int $limit = null): Promise {
         return $this->stream->readTo($delimiter, $limit);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function close() {
-        $this->stream->close();
     }
 }

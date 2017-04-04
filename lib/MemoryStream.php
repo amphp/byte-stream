@@ -47,7 +47,7 @@ class MemoryStream implements DuplexStream {
     /**
      * {@inheritdoc}
      */
-    public function close() {
+    protected function close() {
         $this->readable = false;
         $this->writable = false;
 
@@ -128,7 +128,7 @@ class MemoryStream implements DuplexStream {
             break;
         }
         
-        if (!$this->writable && $this->buffer->isEmpty()) {
+        if (!$this->writable) {
             $this->close();
         }
     }

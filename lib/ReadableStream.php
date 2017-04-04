@@ -30,9 +30,4 @@ interface ReadableStream {
      * @return \Amp\Promise
      */
     public function readTo(string $delimiter, int $limit = null): Promise;
-
-    /**
-     * Closes the stream and fails any pending reads or writes.
-     */
-    public function close();
 }
