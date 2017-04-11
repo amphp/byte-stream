@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\{ Deferred, Failure, Promise, Stream };
 
-class Message implements ReadableStream {
+final class Message implements ReadableStream {
     /** @var \Amp\ByteStream\Buffer */
     private $buffer;
 
@@ -36,15 +36,21 @@ class Message implements ReadableStream {
      */
     private function close() {
         $this->closed = true;
-        $this->checkPendingReads();
 
-        if (!$this->reads->isEmpty()) {
-            $exception = new ClosedException("The stream was unexpectedly closed");
-            do {
-                /** @var \Amp\Deferred $deferred */
-                list( , , $deferred) = $this->reads->shift();
+        while (!$this->reads->isEmpty()) {
+            /** @var \Amp\Deferred $deferred */
+            list($bytes, $delimiter, $deferred) = $this->reads->shift();
+            if ($delimiter === null && $bytes > 0) {
+                $exception = new ClosedException("The stream ended before the read request could be satisfied");
                 $deferred->fail($exception);
-            } while (!$this->reads->isEmpty());
+                while (!$this->reads->isEmpty()) { // If prior read failed, fail all subsequent reads.
+                    list( , , $deferred) = $this->reads->shift();
+                    $deferred->fail($exception);
+                }
+                return;
+            } else {
+                $deferred->resolve($this->buffer->drain()); // Resolve unbounded reads with remaining buffer.
+            }
         }
     }
 
@@ -124,14 +130,9 @@ class Message implements ReadableStream {
                 continue;
             }
 
-            if ($bytes === null && !$this->buffer->isEmpty()) {
+            if ($delimiter === null && $bytes === null && !$this->buffer->isEmpty()) {
                 $deferred->resolve($this->buffer->drain());
                 continue;
-            }
-
-            if ($this->closed && !$bytes) { // $bytes is null or 0
-                $deferred->resolve($this->buffer->drain());
-                return;
             }
 
             $this->reads->unshift([$bytes, $delimiter, $deferred]);

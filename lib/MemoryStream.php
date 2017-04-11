@@ -14,11 +14,8 @@ class MemoryStream implements DuplexStream {
     private $buffer;
     
     /** @var bool */
-    private $readable = true;
-    
-    /** @var bool */
-    private $writable = true;
-    
+    private $closed = false;
+
     /** @var \SplQueue */
     private $reads;
     
@@ -34,31 +31,35 @@ class MemoryStream implements DuplexStream {
      * {@inheritdoc}
      */
     public function isReadable(): bool {
-        return $this->readable;
+        return !$this->closed || !$this->buffer->isEmpty();
     }
     
     /**
      * {@inheritdoc}
      */
     public function isWritable(): bool {
-        return $this->writable;
+        return !$this->closed;
     }
     
     /**
      * {@inheritdoc}
      */
     protected function close() {
-        $this->readable = false;
-        $this->writable = false;
+        $this->closed = true;
 
         while (!$this->reads->isEmpty()) {
             /** @var \Amp\Deferred $deferred */
             list($bytes, $delimiter, $deferred) = $this->reads->shift();
-            if ($delimiter !== null || $bytes !== null || isset($exception)) {
-                // If prior read failed, fail all subsequent reads.
-                $deferred->fail($exception = $exception ?? new ClosedException("The stream was unexpectedly closed"));
+            if ($delimiter === null && $bytes > 0) {
+                $exception = new ClosedException("The stream ended before the read request could be satisfied");
+                $deferred->fail($exception);
+                while (!$this->reads->isEmpty()) { // If prior read failed, fail all subsequent reads.
+                    list( , , $deferred) = $this->reads->shift();
+                    $deferred->fail($exception);
+                }
+                return;
             } else {
-                $deferred->resolve(""); // Resolve unbounded reads with empty string.
+                $deferred->resolve($this->buffer->drain()); // Resolve unbounded reads with remaining buffer.
             }
         }
     }
@@ -77,12 +78,26 @@ class MemoryStream implements DuplexStream {
         return $this->fetch($limit, $delimiter);
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function readAll(): Promise {
+        if (!$this->isReadable()) {
+            return new Failure(new StreamException("The stream is no longer readable"));
+        }
+
+        $this->reads->push([0, null, $deferred = new Deferred]);
+        $this->checkPendingReads();
+
+        return $deferred->promise();
+    }
+
     private function fetch(int $bytes = null, string $delimiter = null): Promise {
         if ($bytes !== null && $bytes <= 0) {
             throw new \Error("The number of bytes to read should be a positive integer or null");
         }
     
-        if (!$this->readable) {
+        if (!$this->isReadable()) {
             return new Failure(new StreamException("The stream is not readable"));
         }
         
@@ -114,12 +129,12 @@ class MemoryStream implements DuplexStream {
                 }
             }
             
-            if ($bytes !== null && $this->buffer->getLength() >= $bytes) {
+            if ($bytes > 0 && $this->buffer->getLength() >= $bytes) {
                 $deferred->resolve($this->buffer->shift($bytes));
                 continue;
             }
-    
-            if ($bytes === null) {
+
+            if ($delimiter === null && $bytes === null && !$this->buffer->isEmpty()) {
                 $deferred->resolve($this->buffer->drain());
                 continue;
             }
@@ -128,7 +143,7 @@ class MemoryStream implements DuplexStream {
             break;
         }
         
-        if (!$this->writable) {
+        if (!$this->isWritable()) {
             $this->close();
         }
     }
@@ -154,17 +169,17 @@ class MemoryStream implements DuplexStream {
      * @return \Amp\Promise
      */
     protected function send(string $data, bool $end = false): Promise {
-        if (!$this->writable) {
+        if (!$this->isWritable()) {
             return new Failure(new StreamException("The stream is not writable"));
         }
-        
-        if ($end) {
-            $this->writable = false;
-        }
-        
+
         $this->buffer->push($data);
         $this->checkPendingReads();
-        
+
+        if ($end) {
+            $this->close();
+        }
+
         return new Success(\strlen($data));
     }
 }
