@@ -19,5 +19,9 @@ if (\strlen('…') !== 3) {
  * @return \Amp\Promise
  */
 function pipe(ReadableStream $source, WritableStream $destination, int $bytes = null): Promise {
+    if ($bytes !== null && $bytes <= 0) {
+        throw new \Error("The number of bytes to read should be a positive integer or null");
+    }
+
     return new Coroutine(Internal\pipe($source, $destination, $bytes));
 }
