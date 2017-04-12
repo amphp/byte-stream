@@ -6,13 +6,6 @@ use Amp\Promise;
 
 interface WritableStream {
     /**
-     * Determines if the stream is writable.
-     *
-     * @return bool
-     */
-    public function isWritable(): bool;
-
-    /**
      * @param string $data
      *
      * @return \Amp\Promise<int>
