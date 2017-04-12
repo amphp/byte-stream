@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\{ Deferred, Failure, Promise, Stream };
 
-final class Message implements ReadableStream {
+class Message implements ReadableStream {
     /** @var \Amp\ByteStream\Buffer */
     private $buffer;
 
