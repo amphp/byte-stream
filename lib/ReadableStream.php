@@ -4,14 +4,14 @@ namespace Amp\ByteStream;
 
 use Amp\Promise;
 
-interface ReadableStream extends Promise {
+interface ReadableStream {
     /**
      * Returns a promise that resolves with a boolean, true if there is another chunk available, false if the stream
      * has ended.
      *
      * @return bool
      */
-    public function advance(): Promise;
+    public function wait(): Promise;
 
     /**
      * Gets the current chunk that arrived on the stream.

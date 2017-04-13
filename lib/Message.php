@@ -22,7 +22,7 @@ use Amp\{ Deferred, Listener, Promise, Stream, Success };
  *     // Immediately use $chunk, reducing memory consumption since the entire message is never buffered.
  * }
  */
-class Message implements ReadableStream {
+class Message implements ReadableStream, Promise {
     const LISTENING = 0;
     const BUFFERING = 1;
     const WAITING = 2;
@@ -64,7 +64,7 @@ class Message implements ReadableStream {
     /**
      * {@inheritdoc}
      */
-    public function advance(): Promise {
+    public function wait(): Promise {
         if ($this->listener) {
             return $this->listener->advance();
         }
