@@ -17,5 +17,5 @@ interface WritableStream {
      *
      * @return \Amp\Promise Succeeds once the data has been successfully written to the stream and the stream ended.
      */
-    public function end(string $data = null): Promise;
+    public function end(string $data = ""): Promise;
 }
