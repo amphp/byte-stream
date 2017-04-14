@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\{ Deferred, Listener, Promise, Stream, Success };
+use Amp\{ Deferred, Promise, Stream, StreamIterator, Success };
 
 /**
  * Creates a buffered message from a Stream. The message can be consumed in chunks using the advance() and getCurrent()
@@ -28,8 +28,8 @@ class Message implements ReadableStream, Promise {
     const WAITING = 2;
     const COMPLETE = 4;
 
-    /** @var \Amp\Listener|null */
-    private $listener;
+    /** @var \Amp\StreamIterator|null */
+    private $iterator;
 
     /** @var int */
     private $status = self::LISTENING;
@@ -44,7 +44,7 @@ class Message implements ReadableStream, Promise {
      * @param \Amp\Stream $stream Stream that only emits strings.
      */
     public function __construct(Stream $stream) {
-        $this->listener = new Listener($stream);
+        $this->iterator = new StreamIterator($stream);
         $this->deferred = new Deferred;
 
         $stream->onResolve(function ($exception, $value) {
@@ -53,8 +53,8 @@ class Message implements ReadableStream, Promise {
                 return;
             }
 
-            $result = \implode($this->listener->drain());
-            $this->listener = null;
+            $result = \implode($this->iterator->drain());
+            $this->iterator = null;
             $this->status = \strlen($result) ? self::BUFFERING : self::WAITING;
             $this->result = $result;
             $this->deferred->resolve($result);
@@ -65,8 +65,8 @@ class Message implements ReadableStream, Promise {
      * {@inheritdoc}
      */
     public function advance(): Promise {
-        if ($this->listener) {
-            return $this->listener->advance();
+        if ($this->iterator) {
+            return $this->iterator->advance();
         }
 
         switch ($this->status) {
@@ -87,8 +87,8 @@ class Message implements ReadableStream, Promise {
      * {@inheritdoc}
      */
     public function getChunk(): string {
-        if ($this->listener) {
-            return $this->listener->getCurrent();
+        if ($this->iterator) {
+            return $this->iterator->getCurrent();
         }
 
         switch ($this->status) {
