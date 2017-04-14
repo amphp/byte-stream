@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\{ Deferred, Promise, Stream, StreamIterator, Success };
 
 /**
- * Creates a buffered message from a Stream. The message can be consumed in chunks using the advance() and getCurrent()
+ * Creates a buffered message from a Stream. The message can be consumed in chunks using the advance() and getChunk()
  * methods or it may be buffered and accessed in its entirety by waiting for the promise to resolve.
  *
  * Buffering Example:
@@ -18,7 +18,7 @@ use Amp\{ Deferred, Promise, Stream, StreamIterator, Success };
  * $message = new Message($stream); // $stream is a Stream emitting only strings.
  *
  * while (yield $message->advance()) {
- *     $chunk = $message->getCurrent();
+ *     $chunk = $message->getChunk();
  *     // Immediately use $chunk, reducing memory consumption since the entire message is never buffered.
  * }
  */
