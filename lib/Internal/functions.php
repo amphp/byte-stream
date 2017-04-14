@@ -11,7 +11,9 @@ function pipe(ReadableStream $source, WritableStream $destination): \Generator {
     $written = 0;
 
     while (yield $source->advance()) {
-        $written += yield $destination->write($source->getChunk());
+        $data = $source->getChunk();
+        $written += \strlen($data);
+        yield $destination->write($data);
     }
 
     return $written;
