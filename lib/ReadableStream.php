@@ -11,7 +11,7 @@ interface ReadableStream {
      *
      * @return bool
      */
-    public function wait(): Promise;
+    public function advance(): Promise;
 
     /**
      * Gets the current chunk that arrived on the stream.

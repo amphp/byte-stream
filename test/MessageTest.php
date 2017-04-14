@@ -42,7 +42,7 @@ class MessageTest extends TestCase {
             });
 
             $buffer = "";
-            while (yield $message->wait()) {
+            while (yield $message->advance()) {
                 $buffer .= $message->getChunk();
             }
 
@@ -65,7 +65,7 @@ class MessageTest extends TestCase {
             $emitter->resolve();
 
             $emitted = [];
-            while (yield $message->wait()) {
+            while (yield $message->advance()) {
                 $emitted[] = $message->getChunk();
             }
 
@@ -85,7 +85,7 @@ class MessageTest extends TestCase {
             }
 
             $buffer = "";
-            for ($i = 0; $i < 1 && yield $message->wait(); ++$i) {
+            for ($i = 0; $i < 1 && yield $message->advance(); ++$i) {
                 $buffer .= $message->getChunk();
             }
 
@@ -109,7 +109,7 @@ class MessageTest extends TestCase {
             $emitter->fail($exception);
 
             try {
-                while (yield $message->wait()) {
+                while (yield $message->advance()) {
                     $this->assertSame($value, $message->getChunk());
                 }
             } catch (\Exception $reason) {
@@ -123,7 +123,7 @@ class MessageTest extends TestCase {
             $value = 1;
             $message = new Message(new Success($value));
 
-            $this->assertFalse(yield $message->wait());
+            $this->assertFalse(yield $message->advance());
         });
     }
 
@@ -142,7 +142,7 @@ class MessageTest extends TestCase {
             $emitter->resolve();
 
             for ($i = 0; $i < 3; ++$i) {
-                yield $message->wait();
+                yield $message->advance();
             }
         });
     }
@@ -161,7 +161,7 @@ class MessageTest extends TestCase {
             $emitter->emit($value);
             $emitter->resolve();
 
-            while (yield $message->wait());
+            while (yield $message->advance());
 
             $message->getChunk();
         });

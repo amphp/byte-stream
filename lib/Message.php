@@ -64,7 +64,7 @@ class Message implements ReadableStream, Promise {
     /**
      * {@inheritdoc}
      */
-    public function wait(): Promise {
+    public function advance(): Promise {
         if ($this->listener) {
             return $this->listener->advance();
         }
