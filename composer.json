@@ -1,9 +1,9 @@
 {
-    "name": "amphp/stream",
-    "homepage": "https://github.com/amphp/stream",
+    "name": "amphp/byte-stream",
+    "homepage": "https://github.com/amphp/byte-stream",
     "description": "Async streams for the amp concurrency framework",
     "support": {
-        "issues": "https://github.com/amphp/stream/issues"
+        "issues": "https://github.com/amphp/byte-stream/issues"
     },
     "keywords": [
         "stream",
