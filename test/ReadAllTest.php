@@ -17,7 +17,7 @@ class ReadAllTest extends TestCase {
     public function setUp() {
         $stream = Stream\fromIterable(["a", "b", "c"], 5);
 
-        $this->stream = new class ($stream) implements ReadableStream {
+        $this->stream = new class($stream) implements ReadableStream {
             private $iterator;
 
             public function __construct(Stream $stream) {
