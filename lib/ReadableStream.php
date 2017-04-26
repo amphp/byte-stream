@@ -9,7 +9,7 @@ interface ReadableStream {
      * Returns a promise that resolves with a boolean, true if there is another chunk available, false if the stream
      * has ended.
      *
-     * @return bool
+     * @return Promise
      */
     public function advance(): Promise;
 

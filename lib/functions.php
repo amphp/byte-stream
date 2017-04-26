@@ -7,7 +7,7 @@ use Amp\{ Coroutine, Promise };
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
     throw new \Error(
-        'The mbstring.func_overload ini setting is enabled. It must be disable to use the stream package.'
+        'The mbstring.func_overload ini setting is enabled. It must be disabled to use the stream package.'
     );
 } // @codeCoverageIgnoreEnd
 
