@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 /**
  */
-class Buffer implements \ArrayAccess, \Countable, \IteratorAggregate {
+class Buffer implements \IteratorAggregate {
     /** @var string */
     private $data;
 
@@ -24,13 +24,6 @@ class Buffer implements \ArrayAccess, \Countable, \IteratorAggregate {
      */
     public function getLength(): int {
         return \strlen($this->data);
-    }
-
-    /**
-     * @return int
-     */
-    public function count(): int {
-        return $this->getLength();
     }
 
     /**
@@ -201,49 +194,6 @@ class Buffer implements \ArrayAccess, \Countable, \IteratorAggregate {
         }
 
         return \strpos($this->data, $string);
-    }
-
-    /**
-     * Determines if the buffer contains the given position.
-     *
-     * @param int $index
-     *
-     * @return bool
-     */
-    public function offsetExists($index) {
-        return isset($this->data[$index]);
-    }
-
-    /**
-     * Returns the character in the buffer at the given position.
-     *
-     * @param int $index
-     *
-     * @return string
-     */
-    public function offsetGet($index) {
-        return $this->data[$index];
-    }
-
-    /**
-     * Replaces the character in the buffer at the given position with the given string.
-     *
-     * @param int $index
-     * @param string $data
-     */
-    public function offsetSet($index, $data) {
-        $this->data = \substr_replace($this->data, $data, $index, 1);
-    }
-
-    /**
-     * Removes the character at the given index from the buffer.
-     *
-     * @param int $index
-     */
-    public function offsetUnset($index) {
-        if (isset($this->data[$index])) {
-            $this->data = \substr_replace($this->data, null, $index, 1);
-        }
     }
 
     /**
