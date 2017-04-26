@@ -2,7 +2,8 @@
 
 namespace Amp\ByteStream\Internal;
 
-use Amp\ByteStream\{ ReadableStream, WritableStream };
+use Amp\ByteStream\ReadableStream;
+use Amp\ByteStream\WritableStream;
 
 /**
  * @internal

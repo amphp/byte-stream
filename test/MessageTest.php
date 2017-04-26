@@ -2,9 +2,11 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\{ Emitter, Loop, Success };
 use Amp\ByteStream\Message;
+use Amp\Emitter;
+use Amp\Loop;
 use Amp\PHPUnit\TestCase;
+use Amp\Success;
 
 class MessageTest extends TestCase {
     public function testBufferingAll() {

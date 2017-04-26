@@ -7,24 +7,24 @@ namespace Amp\ByteStream;
 class BufferIterator implements \SeekableIterator {
     /** @var \Amp\ByteStream\Buffer */
     private $buffer;
-    
+
     /** @var int */
     private $current = 0;
-    
+
     /**
      * @param \Amp\ByteStream\Buffer $buffer
      */
     public function __construct(Buffer $buffer) {
         $this->buffer = $buffer;
     }
-    
+
     /**
      * Rewinds the iterator to the beginning of the buffer.
      */
     public function rewind() {
         $this->current = 0;
     }
-    
+
     /**
      * Determines if the iterator is valid.
      *
@@ -33,7 +33,7 @@ class BufferIterator implements \SeekableIterator {
     public function valid(): bool {
         return isset($this->buffer[$this->current]);
     }
-    
+
     /**
      * Returns the current position (key) of the iterator.
      *
@@ -42,7 +42,7 @@ class BufferIterator implements \SeekableIterator {
     public function key(): int {
         return $this->current;
     }
-    
+
     /**
      * Returns the current character in the buffer at the iterator position.
      *
@@ -51,22 +51,21 @@ class BufferIterator implements \SeekableIterator {
     public function current(): string {
         return $this->buffer[$this->current];
     }
-    
+
     /**
      * Moves to the next character in the buffer.
      */
-    public function next()
-    {
+    public function next() {
         ++$this->current;
     }
-    
+
     /**
      * Moves to the previous character in the buffer.
      */
     public function prev() {
         --$this->current;
     }
-    
+
     /**
      * Moves to the given position in the buffer.
      *
@@ -77,10 +76,10 @@ class BufferIterator implements \SeekableIterator {
         if (0 > $position) {
             $position = 0;
         }
-        
+
         $this->current = $position;
     }
-    
+
     /**
      * Inserts the given string into the buffer at the current iterator position.
      *
@@ -92,10 +91,10 @@ class BufferIterator implements \SeekableIterator {
         if (!$this->valid()) {
             throw new \OutOfBoundsException('The iterator is not valid!');
         }
-        
+
         $this->buffer[$this->current] = $data . $this->buffer[$this->current];
     }
-    
+
     /**
      * Replaces the byte at the current iterator position with the given string.
      *
@@ -109,14 +108,14 @@ class BufferIterator implements \SeekableIterator {
         if (!$this->valid()) {
             throw new \OutOfBoundsException('The iterator is not valid!');
         }
-        
+
         $temp = $this->buffer[$this->current];
-        
+
         $this->buffer[$this->current] = $data;
-        
+
         return $temp;
     }
-    
+
     /**
      * Removes the byte at the current iterator position and moves the iterator to the previous character.
      *
@@ -128,13 +127,13 @@ class BufferIterator implements \SeekableIterator {
         if (!$this->valid()) {
             throw new \OutOfBoundsException('The iterator is not valid!');
         }
-        
+
         $temp = $this->buffer[$this->current];
-        
+
         unset($this->buffer[$this->current]);
-        
+
         --$this->current;
-        
+
         return $temp;
     }
 }

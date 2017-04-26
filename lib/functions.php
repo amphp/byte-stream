@@ -2,7 +2,8 @@
 
 namespace Amp\ByteStream;
 
-use Amp\{ Coroutine, Promise };
+use Amp\Coroutine;
+use Amp\Promise;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {

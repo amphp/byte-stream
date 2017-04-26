@@ -2,7 +2,11 @@
 
 namespace Amp\ByteStream;
 
-use Amp\{ Failure, InvalidYieldError, Loop, Promise, Success };
+use Amp\Failure;
+use Amp\InvalidYieldError;
+use Amp\Loop;
+use Amp\Promise;
+use Amp\Success;
 
 class Parser implements WritableStream {
     const CHUNK_SIZE = 8192;

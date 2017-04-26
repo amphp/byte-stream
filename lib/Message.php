@@ -2,7 +2,11 @@
 
 namespace Amp\ByteStream;
 
-use Amp\{ Deferred, Promise, Stream, StreamIterator, Success };
+use Amp\Deferred;
+use Amp\Promise;
+use Amp\Stream;
+use Amp\StreamIterator;
+use Amp\Success;
 
 /**
  * Creates a buffered message from a Stream. The message can be consumed in chunks using the advance() and getChunk()

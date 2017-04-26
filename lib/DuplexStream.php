@@ -2,4 +2,5 @@
 
 namespace Amp\ByteStream;
 
-interface DuplexStream extends ReadableStream, WritableStream {}
+interface DuplexStream extends ReadableStream, WritableStream {
+}
