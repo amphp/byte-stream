@@ -4,6 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\Coroutine;
 use Amp\Promise;
+use function Amp\call;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -13,11 +14,44 @@ if (\strlen('…') !== 3) {
 } // @codeCoverageIgnoreEnd
 
 /**
- * @param \Amp\ByteStream\ReadableStream $source
- * @param \Amp\ByteStream\WritableStream $destination
+ * @param ReadableStream $source
+ * @param WritableStream $destination
  *
- * @return \Amp\Promise
+ * @return Promise
  */
 function pipe(ReadableStream $source, WritableStream $destination): Promise {
     return new Coroutine(Internal\pipe($source, $destination));
+}
+
+/**
+ * Reads a complete `ReadableStream` into a string. If `$maxLength` is given and the length exceeds the maximum
+ * length, the promise is failed with a `SizeExceededException`.
+ *
+ * @param ReadableStream $source Stream to read.
+ * @param int|null       $maxLength Maximum length to accept, `null` for unlimited.
+ *
+ * @return Promise
+ */
+function readAll(ReadableStream $source, int $maxLength = null): Promise {
+    return call(function () use ($source, $maxLength) {
+        if ($maxLength === null) {
+            $maxLength = \INF;
+        }
+
+        $buffer = "";
+
+        while (yield $source->advance()) {
+            $buffer .= $source->getChunk();
+
+            if (\strlen($buffer) > $maxLength) {
+                unset($buffer);
+
+                while (yield $source->advance()) ;
+
+                throw new SizeExceededException("The maximum size of {$maxLength} has been exceeded");
+            }
+        }
+
+        return $buffer;
+    });
 }
