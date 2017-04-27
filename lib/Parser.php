@@ -4,7 +4,6 @@ namespace Amp\ByteStream;
 
 use Amp\Failure;
 use Amp\InvalidYieldError;
-use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
 
@@ -31,7 +30,7 @@ class Parser implements WritableStream {
         $this->delimiter = $this->generator->current();
 
         if (!$this->generator->valid()) {
-            $this->dispose();
+            $this->generator = null;
             return;
         }
 
@@ -56,7 +55,7 @@ class Parser implements WritableStream {
      * @return string
      */
     public function cancel(): string {
-        $this->dispose();
+        $this->generator = null;
         return $this->buffer;
     }
 
@@ -76,7 +75,7 @@ class Parser implements WritableStream {
 
     private function send(string $data, bool $end = false): Promise {
         if ($this->generator === null) {
-            throw new StreamException("The parser is no longer writable");
+            return new Failure(new StreamException("The parser is no longer writable"));
         }
 
         $this->buffer .= $data;
@@ -107,11 +106,7 @@ class Parser implements WritableStream {
                 try {
                     $this->delimiter = $this->generator->send($send);
                 } catch (\Exception $exception) { // Wrap Exception instances into a StreamException.
-                    $end = true;
                     throw new StreamException("The generator parser threw an exception", 0, $exception);
-                } catch (\Throwable $exception) { // Rethrow Error instances.
-                    $end = true;
-                    throw $exception;
                 }
 
                 if (!$this->generator->valid()) {
@@ -135,25 +130,12 @@ class Parser implements WritableStream {
 
             return new Success(\strlen($data));
         } catch (\Throwable $exception) {
+            $end = true;
             return new Failure($exception);
         } finally {
             if ($end) {
-                $this->dispose();
+                $this->generator = null;
             }
-        }
-    }
-
-    /**
-     * Nulls the generator in a try/catch block and forwards any thrown exceptions from finally blocks to the loop
-     * error handler.
-     */
-    private function dispose() {
-        try {
-            $this->generator = null; // May throw from finally blocks.
-        } catch (\Throwable $exception) {
-            Loop::defer(function () use ($exception) {
-                throw $exception;
-            });
         }
     }
 }
