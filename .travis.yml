@@ -13,12 +13,13 @@ matrix:
   fast_finish: true
 
 before_script:
-  - composer self-update
-  - composer install
+  # --ignore-platform-reqs, because https://github.com/FriendsOfPHP/PHP-CS-Fixer/pull/2722
+  - composer update -n --prefer-dist --ignore-platform-reqs
+  - composer show
 
 script:
   - phpdbg -qrr vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml
-  - php vendor/bin/php-cs-fixer --diff --dry-run -v fix
+  - PHP_CS_FIXER_IGNORE_ENV=1 php vendor/bin/php-cs-fixer --diff --dry-run -v fix
 
 after_script:
   - composer require satooshi/php-coveralls:dev-master

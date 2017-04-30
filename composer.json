@@ -16,6 +16,10 @@
         {
             "name": "Aaron Piotrowski",
             "email": "aaron@trowski.com"
+        },
+        {
+            "name": "Niklas Keller",
+            "email": "me@kelunik.com"
         }
     ],
     "minimum-stability": "dev",
@@ -30,7 +34,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Amp\\ByteStream\\": "lib/"
+            "Amp\\ByteStream\\": "lib"
         },
         "files": [
             "lib/functions.php",
@@ -39,7 +43,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Amp\\ByteStream\\Test\\": "test/"
+            "Amp\\ByteStream\\Test\\": "test"
         }
     }
 }
