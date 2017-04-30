@@ -21,7 +21,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "amphp/amp": "dev-master as 2.0"
+        "amphp/amp": "dev-stream-refactor as 2.0"
     },
     "require-dev": {
         "amphp/phpunit-util": "dev-master",
