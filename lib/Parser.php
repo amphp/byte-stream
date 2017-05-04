@@ -8,8 +8,6 @@ use Amp\Promise;
 use Amp\Success;
 
 class Parser implements OutputStream {
-    const CHUNK_SIZE = 8192;
-
     /** @var \Generator */
     private $generator;
 
@@ -55,7 +53,7 @@ class Parser implements OutputStream {
      * @return string
      */
     public function cancel(): string {
-        $this->generator = null;
+        $this->close();
         return $this->buffer;
     }
 
@@ -143,6 +141,6 @@ class Parser implements OutputStream {
      * @inheritdoc
      */
     public function close() {
-        $this->dispose();
+        $this->generator = null;
     }
 }
