@@ -6,23 +6,22 @@ use Amp\ByteStream\IteratorStream;
 use Amp\Emitter;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
-use Amp\Success;
 
-class MessageTest extends TestCase {
+class IteratorStreamTest extends TestCase {
     public function testBufferingAll() {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $message = new IteratorStream($emitter->stream());
+            $stream = new IteratorStream($emitter->iterate());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
             }
 
-            $emitter->resolve();
+            $emitter->complete();
 
-            $result = yield $message;
+            $result = yield $stream;
 
             $this->assertSame(\implode($values), $result);
         });
@@ -33,23 +32,23 @@ class MessageTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $message = new IteratorStream($emitter->stream());
+            $stream = new IteratorStream($emitter->iterate());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
             }
 
             Loop::delay(5, function () use ($emitter) {
-                $emitter->resolve();
+                $emitter->complete();
             });
 
             $buffer = "";
-            while (yield $message->advance()) {
-                $buffer .= $message->getChunk();
+            while (($chunk = yield $stream->read()) !== null) {
+                $buffer .= $chunk;
             }
 
             $this->assertSame(\implode($values), $buffer);
-            $this->assertSame("", yield $message);
+            $this->assertSame("", yield $stream);
         });
     }
 
@@ -58,21 +57,21 @@ class MessageTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $message = new IteratorStream($emitter->stream());
+            $stream = new IteratorStream($emitter->iterate());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
             }
 
-            $emitter->resolve();
+            $emitter->complete();
 
             $emitted = [];
-            while (yield $message->advance()) {
-                $emitted[] = $message->getChunk();
+            while (($chunk = yield $stream->read()) !== null) {
+                $emitted[] = $chunk;
             }
 
             $this->assertSame([\implode($values)], $emitted);
-            $this->assertSame(\implode($values), yield $message);
+            $this->assertSame(\implode($values), yield $stream);
         });
     }
     public function testPartialStreamConsumption() {
@@ -80,22 +79,21 @@ class MessageTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $message = new IteratorStream($emitter->stream());
+            $stream = new IteratorStream($emitter->iterate());
+
+            $emitter->emit($values[0]);
+
+            $chunk = yield $stream->read();
+
+            $this->assertSame(\array_shift($values), $chunk);
 
             foreach ($values as $value) {
                 $emitter->emit($value);
             }
 
-            $buffer = "";
-            for ($i = 0; $i < 1 && yield $message->advance(); ++$i) {
-                $buffer .= $message->getChunk();
-            }
+            $emitter->complete();
 
-            $this->assertSame(\array_shift($values), $buffer);
-
-            $emitter->resolve();
-
-            $this->assertSame(\implode($values), yield $message);
+            $this->assertSame(\implode($values), yield $stream);
         });
     }
 
@@ -105,14 +103,14 @@ class MessageTest extends TestCase {
             $value = "abc";
 
             $emitter = new Emitter;
-            $message = new IteratorStream($emitter->stream());
+            $stream = new IteratorStream($emitter->iterate());
 
             $emitter->emit($value);
             $emitter->fail($exception);
 
             try {
-                while (yield $message->advance()) {
-                    $this->assertSame($value, $message->getChunk());
+                while (($chunk = yield $stream->read()) !== null) {
+                    $this->assertSame($value, $chunk);
                 }
             } catch (\Exception $reason) {
                 $this->assertSame($exception, $reason);
@@ -122,50 +120,26 @@ class MessageTest extends TestCase {
 
     public function testEmptyStream() {
         Loop::run(function () {
-            $value = 1;
-            $message = new IteratorStream(new Success($value));
+            $emitter = new Emitter;
+            $emitter->complete();
+            $stream = new IteratorStream($emitter->iterate());
 
-            $this->assertFalse(yield $message->advance());
+            $this->assertNull(yield $stream->read());
         });
     }
 
-    /**
-     * @expectedException \Error
-     * @expectedExceptionMessage The stream has resolved
-     */
-    public function testAdvanceAfterCompletion() {
+    public function testReadAfterCompletion() {
         Loop::run(function () {
             $value = "abc";
 
             $emitter = new Emitter;
-            $message = new IteratorStream($emitter->stream());
+            $stream = new IteratorStream($emitter->iterate());
 
             $emitter->emit($value);
-            $emitter->resolve();
+            $emitter->complete();
 
-            for ($i = 0; $i < 3; ++$i) {
-                yield $message->advance();
-            }
-        });
-    }
-
-    /**
-     * @expectedException \Error
-     * @expectedExceptionMessage The stream has resolved
-     */
-    public function testGetCurrentAfterCompletion() {
-        Loop::run(function () {
-            $value = "abc";
-
-            $emitter = new Emitter;
-            $message = new IteratorStream($emitter->stream());
-
-            $emitter->emit($value);
-            $emitter->resolve();
-
-            while (yield $message->advance());
-
-            $message->getChunk();
+            $this->assertSame($value, yield $stream->read());
+            $this->assertNull(yield $stream->read());
         });
     }
 }
