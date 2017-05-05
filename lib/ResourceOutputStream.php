@@ -157,7 +157,7 @@ class ResourceOutputStream implements OutputStream {
                 return new Failure(new StreamException($message));
             }
 
-            if ($length <= $written) {
+            if ($length === $written) {
                 if ($end) {
                     $this->close();
                 }
