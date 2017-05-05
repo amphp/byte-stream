@@ -1,5 +1,8 @@
 <?php
 
+// Adopted from ReactPHP's stream package
+// https://github.com/reactphp/stream/blob/b996af99fd1169ff74e93ef69c1513b7d0db19d0/examples/benchmark-throughput.php
+
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Loop;
