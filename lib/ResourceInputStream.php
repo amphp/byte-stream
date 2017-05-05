@@ -127,6 +127,10 @@ class ResourceInputStream implements InputStream {
         Loop::cancel($this->watcher);
     }
 
+    public function getResource() {
+        return $this->resource;
+    }
+
     public function __destruct() {
         if ($this->autoClose) {
             $this->close();
