@@ -1,6 +1,7 @@
 <?php
 
 namespace Amp\ByteStream;
+
 use Throwable;
 
 /**
