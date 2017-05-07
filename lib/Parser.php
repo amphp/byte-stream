@@ -7,9 +7,7 @@ use Amp\InvalidYieldError;
 use Amp\Promise;
 use Amp\Success;
 
-class Parser implements WritableStream {
-    const CHUNK_SIZE = 8192;
-
+class Parser implements OutputStream {
     /** @var \Generator */
     private $generator;
 
@@ -55,7 +53,7 @@ class Parser implements WritableStream {
      * @return string
      */
     public function cancel(): string {
-        $this->generator = null;
+        $this->close();
         return $this->buffer;
     }
 
@@ -137,5 +135,12 @@ class Parser implements WritableStream {
                 $this->generator = null;
             }
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function close() {
+        $this->generator = null;
     }
 }

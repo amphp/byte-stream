@@ -1,0 +1,56 @@
+<?php
+
+namespace Amp\ByteStream;
+
+use Amp\Promise;
+use function Amp\call;
+
+class GzipInputStream implements InputStream {
+    private $source;
+    private $resource;
+
+    public function __construct(InputStream $source) {
+        $this->source = $source;
+        $this->resource = \inflate_init(\ZLIB_ENCODING_GZIP);
+
+        if ($this->resource === false) {
+            throw new StreamException("Failed initializing deflate context");
+        }
+    }
+
+    public function read(): Promise {
+        return call(function () {
+            $data = yield $this->source->read();
+
+            if ($data === null) {
+                if ($this->resource === null) {
+                    return null;
+                }
+
+                $decompressed = \inflate_add($this->resource, "", \ZLIB_FINISH);
+
+                if ($decompressed === false) {
+                    throw new StreamException("Failed adding data to deflate context");
+                }
+
+                $this->resource = null;
+
+                return $decompressed;
+            }
+
+            $decompressed = \inflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+
+            if ($decompressed === false) {
+                throw new StreamException("Failed adding data to deflate context");
+            }
+
+            return $decompressed;
+        });
+    }
+
+    public function close() {
+        $this->resource = null;
+
+        $this->source->close();
+    }
+}

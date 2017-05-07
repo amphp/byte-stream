@@ -2,8 +2,8 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Coroutine;
 use Amp\Promise;
+use function Amp\call;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -13,11 +13,20 @@ if (\strlen('…') !== 3) {
 } // @codeCoverageIgnoreEnd
 
 /**
- * @param \Amp\ByteStream\ReadableStream $source
- * @param \Amp\ByteStream\WritableStream $destination
+ * @param \Amp\ByteStream\InputStream  $source
+ * @param \Amp\ByteStream\OutputStream $destination
  *
  * @return \Amp\Promise
  */
-function pipe(ReadableStream $source, WritableStream $destination): Promise {
-    return new Coroutine(Internal\pipe($source, $destination));
+function pipe(InputStream $source, OutputStream $destination): Promise {
+    return call(function () use ($source, $destination): \Generator {
+        $written = 0;
+
+        while (($chunk = yield $source->read()) !== null) {
+            $written += \strlen($chunk);
+            yield $destination->write($chunk);
+        }
+
+        return $written;
+    });
 }

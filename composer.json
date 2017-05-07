@@ -21,7 +21,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "amphp/amp": "dev-master as 2.0"
+        "amphp/amp": "^2.0"
     },
     "require-dev": {
         "amphp/phpunit-util": "dev-master",
@@ -33,8 +33,7 @@
             "Amp\\ByteStream\\": "lib/"
         },
         "files": [
-            "lib/functions.php",
-            "lib/Internal/functions.php"
+            "lib/functions.php"
         ]
     },
     "autoload-dev": {

@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\Message;
+use Amp\ByteStream\IteratorStream;
 use Amp\Emitter;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
@@ -14,7 +14,7 @@ class MessageTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $message = new Message($emitter->stream());
+            $message = new IteratorStream($emitter->stream());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
@@ -33,7 +33,7 @@ class MessageTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $message = new Message($emitter->stream());
+            $message = new IteratorStream($emitter->stream());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
@@ -58,7 +58,7 @@ class MessageTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $message = new Message($emitter->stream());
+            $message = new IteratorStream($emitter->stream());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
@@ -80,7 +80,7 @@ class MessageTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $message = new Message($emitter->stream());
+            $message = new IteratorStream($emitter->stream());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
@@ -105,7 +105,7 @@ class MessageTest extends TestCase {
             $value = "abc";
 
             $emitter = new Emitter;
-            $message = new Message($emitter->stream());
+            $message = new IteratorStream($emitter->stream());
 
             $emitter->emit($value);
             $emitter->fail($exception);
@@ -123,7 +123,7 @@ class MessageTest extends TestCase {
     public function testEmptyStream() {
         Loop::run(function () {
             $value = 1;
-            $message = new Message(new Success($value));
+            $message = new IteratorStream(new Success($value));
 
             $this->assertFalse(yield $message->advance());
         });
@@ -138,7 +138,7 @@ class MessageTest extends TestCase {
             $value = "abc";
 
             $emitter = new Emitter;
-            $message = new Message($emitter->stream());
+            $message = new IteratorStream($emitter->stream());
 
             $emitter->emit($value);
             $emitter->resolve();
@@ -158,7 +158,7 @@ class MessageTest extends TestCase {
             $value = "abc";
 
             $emitter = new Emitter;
-            $message = new Message($emitter->stream());
+            $message = new IteratorStream($emitter->stream());
 
             $emitter->emit($value);
             $emitter->resolve();
