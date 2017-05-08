@@ -26,6 +26,11 @@ class GzipInputStream implements InputStream {
 
             $data = yield $this->source->read();
 
+            // Needs a double guard, as stream might have been closed while reading
+            if ($this->resource === null) {
+                return null;
+            }
+
             if ($data === null) {
                 $decompressed = \inflate_add($this->resource, "", \ZLIB_FINISH);
 
