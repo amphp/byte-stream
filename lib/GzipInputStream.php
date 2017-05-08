@@ -20,20 +20,20 @@ class GzipInputStream implements InputStream {
 
     public function read(): Promise {
         return call(function () {
+            if ($this->resource === null) {
+                return null;
+            }
+
             $data = yield $this->source->read();
 
             if ($data === null) {
-                if ($this->resource === null) {
-                    return null;
-                }
-
                 $decompressed = \inflate_add($this->resource, "", \ZLIB_FINISH);
 
                 if ($decompressed === false) {
                     throw new StreamException("Failed adding data to deflate context");
                 }
 
-                $this->resource = null;
+                $this->close();
 
                 return $decompressed;
             }
@@ -52,5 +52,6 @@ class GzipInputStream implements InputStream {
         $this->resource = null;
 
         $this->source->close();
+        $this->source = null;
     }
 }

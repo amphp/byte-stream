@@ -61,8 +61,8 @@ class GzipOutputStream implements OutputStream {
 
     public function close() {
         $this->resource = null;
-        $this->destination = null;
 
         $this->destination->close();
+        $this->destination = null;
     }
 }
