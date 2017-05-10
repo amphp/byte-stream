@@ -15,18 +15,18 @@ use Amp\Success;
  *
  * Buffering Example:
  *
- * $stream = new IteratorStream($iterator); // $iterator is an instance of \Amp\Iterator emitting only strings.
+ * $stream = new Message($iterator); // $iterator is an instance of \Amp\Iterator emitting only strings.
  * $content = yield $stream;
  *
  * Streaming Example:
  *
- * $stream = new IteratorStream($iterator); // $iterator is an instance of \Amp\Iterator emitting only strings.
+ * $stream = new Message($iterator); // $iterator is an instance of \Amp\Iterator emitting only strings.
  *
  * while (($chunk = yield $stream->read()) !== null) {
  *     // Immediately use $chunk, reducing memory consumption since the entire message is never buffered.
  * }
  */
-class IteratorStream implements InputStream, Promise {
+class Message implements InputStream, Promise {
     /** @var string */
     private $buffer = "";
 

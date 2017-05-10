@@ -2,18 +2,18 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\IteratorStream;
+use Amp\ByteStream\Message;
 use Amp\Emitter;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 
-class IteratorStreamTest extends TestCase {
+class MessageTest extends TestCase {
     public function testBufferingAll() {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+            $stream = new Message($emitter->iterate());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
@@ -30,7 +30,7 @@ class IteratorStreamTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+            $stream = new Message($emitter->iterate());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
@@ -55,7 +55,7 @@ class IteratorStreamTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+            $stream = new Message($emitter->iterate());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
@@ -78,7 +78,7 @@ class IteratorStreamTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+            $stream = new Message($emitter->iterate());
 
             foreach ($values as $value) {
                 $emitter->emit($value);
@@ -95,7 +95,7 @@ class IteratorStreamTest extends TestCase {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+            $stream = new Message($emitter->iterate());
 
             $emitter->emit($values[0]);
 
@@ -119,7 +119,7 @@ class IteratorStreamTest extends TestCase {
             $value = "abc";
 
             $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+            $stream = new Message($emitter->iterate());
 
             $emitter->emit($value);
             $emitter->fail($exception);
@@ -138,7 +138,7 @@ class IteratorStreamTest extends TestCase {
         Loop::run(function () {
             $emitter = new Emitter;
             $emitter->complete();
-            $stream = new IteratorStream($emitter->iterate());
+            $stream = new Message($emitter->iterate());
 
             $this->assertNull(yield $stream->read());
         });
@@ -149,7 +149,7 @@ class IteratorStreamTest extends TestCase {
             $value = "abc";
 
             $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+            $stream = new Message($emitter->iterate());
 
             $emitter->emit($value);
             $emitter->complete();
