@@ -3,7 +3,6 @@
 namespace Amp\ByteStream;
 
 use Amp\Deferred;
-use Amp\Failure;
 use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
