@@ -4,6 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\Coroutine;
 use Amp\Deferred;
+use Amp\Failure;
 use Amp\Iterator;
 use Amp\Promise;
 use Amp\Success;
@@ -26,9 +27,6 @@ use Amp\Success;
  * }
  */
 class IteratorStream implements InputStream, Promise {
-    /** @var \Amp\Iterator|null */
-    private $iterator;
-
     /** @var string */
     private $buffer = "";
 
@@ -38,48 +36,73 @@ class IteratorStream implements InputStream, Promise {
     /** @var \Amp\Coroutine */
     private $coroutine;
 
+    /** @var bool True if onResolve() has been called. */
+    private $buffering = false;
+
+    /** @var \Amp\Deferred|null */
+    private $backpressure;
+
+    /** @var bool True if close() is called or the iterator has completed. */
+    private $closed = false;
+
     /**
      * @param \Amp\Iterator $iterator An iterator that only emits strings.
      */
     public function __construct(Iterator $iterator) {
-        $this->iterator = $iterator;
-        $this->coroutine = new Coroutine($this->iterate());
+        $this->coroutine = new Coroutine($this->iterate($iterator));
     }
 
-    private function iterate(): \Generator {
-        while ($this->iterator !== null && (yield $this->iterator->advance())) {
-            $this->buffer .= $this->iterator->getCurrent();
-            if ($this->pendingRead) {
+    private function iterate(Iterator $iterator): \Generator {
+        while (yield $iterator->advance()) {
+            $buffer = $this->buffer .= $iterator->getCurrent();
+
+            if ($buffer === "") {
+                continue; // Do not succeed reads with empty string.
+            } elseif ($this->pendingRead) {
                 $deferred = $this->pendingRead;
                 $this->pendingRead = null;
-                $buffer = $this->buffer;
                 $this->buffer = "";
                 $deferred->resolve($buffer);
+            } elseif (!$this->buffering) {
+                $this->backpressure = new Deferred;
+                yield $this->backpressure->promise();
             }
+
+            $buffer = ""; // Destroy last emitted chunk to free memory.
         }
 
-        $this->iterator = null;
+        $this->closed = true;
 
         if ($this->pendingRead) {
             $deferred = $this->pendingRead;
             $this->pendingRead = null;
-            $buffer = $this->buffer;
+            $deferred->resolve($this->buffer !== "" ? $this->buffer : null);
             $this->buffer = "";
-            $deferred->resolve($buffer);
         }
 
         return $this->buffer;
     }
 
     public function read(): Promise {
+        if ($this->pendingRead) {
+            return new Failure(new PendingReadException);
+        }
+
+        if ($this->closed) {
+            return new Success;
+        }
+
         if ($this->buffer !== "") {
             $buffer = $this->buffer;
             $this->buffer = "";
-            return new Success($buffer);
-        }
 
-        if ($this->iterator === null) {
-            return new Success;
+            if ($this->backpressure) {
+                $backpressure = $this->backpressure;
+                $this->backpressure = null;
+                $backpressure->resolve();
+            }
+
+            return new Success($buffer);
         }
 
         $this->pendingRead = new Deferred;
@@ -90,10 +113,26 @@ class IteratorStream implements InputStream, Promise {
      * {@inheritdoc}
      */
     public function onResolve(callable $onResolved) {
+        $this->buffering = true;
+
+        if ($this->backpressure) {
+            $backpressure = $this->backpressure;
+            $this->backpressure = null;
+            $backpressure->resolve();
+        }
+
         $this->coroutine->onResolve($onResolved);
     }
 
     public function close() {
-        $this->iterator = null;
+        $this->buffering = true;
+        $this->closed = true;
+
+        if ($this->pendingRead) {
+            $deferred = $this->pendingRead;
+            $this->pendingRead = null;
+            $deferred->resolve($this->buffer === "" ? $this->buffer : null);
+            $this->buffer = "";
+        }
     }
 }

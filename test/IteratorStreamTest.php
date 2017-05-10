@@ -21,9 +21,7 @@ class IteratorStreamTest extends TestCase {
 
             $emitter->complete();
 
-            $result = yield $stream;
-
-            $this->assertSame(\implode($values), $result);
+            $this->assertSame(\implode($values), yield $stream);
         });
     }
 
@@ -70,10 +68,28 @@ class IteratorStreamTest extends TestCase {
                 $emitted[] = $chunk;
             }
 
-            $this->assertSame([\implode($values)], $emitted);
+            $this->assertSame($values, $emitted);
+            $this->assertSame("", yield $stream);
+        });
+    }
+
+    public function testFastResolvingStreamBufferingOnly() {
+        Loop::run(function () {
+            $values = ["abc", "def", "ghi"];
+
+            $emitter = new Emitter;
+            $stream = new IteratorStream($emitter->iterate());
+
+            foreach ($values as $value) {
+                $emitter->emit($value);
+            }
+
+            $emitter->complete();
+
             $this->assertSame(\implode($values), yield $stream);
         });
     }
+
     public function testPartialStreamConsumption() {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
