@@ -188,7 +188,11 @@ class ResourceOutputStream implements OutputStream {
         }
 
         if (\is_resource($this->resource)) {
-            @\fclose($this->resource);
+            if (\substr(\stream_get_meta_data($this->resource)["stream_type"], 0, \strlen("tcp_socket"))  === "tcp_socket") {
+                \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
+            } else {
+                @\fclose($this->resource);
+            }
         }
 
         $this->resource = null;

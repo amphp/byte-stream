@@ -6,6 +6,7 @@ use Amp\Deferred;
 use Amp\Failure;
 use Amp\Loop;
 use Amp\Promise;
+use Amp\Success;
 
 class ResourceInputStream implements InputStream {
     const DEFAULT_CHUNK_SIZE = 8192;
@@ -89,7 +90,7 @@ class ResourceInputStream implements InputStream {
         }
 
         if (!$this->readable) {
-            return new Failure(new ClosedException("The stream has been closed"));
+            return new Success(null);
         }
 
         $this->deferred = new Deferred;
@@ -112,7 +113,11 @@ class ResourceInputStream implements InputStream {
         }
 
         if ($this->autoClose && \is_resource($this->resource)) {
-            @\fclose($this->resource);
+            if (\substr(\stream_get_meta_data($this->resource)["stream_type"], 0, \strlen("tcp_socket"))  === "tcp_socket") {
+                \stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
+            } else {
+                @\fclose($this->resource);
+            }
         }
 
         $this->resource = null;
