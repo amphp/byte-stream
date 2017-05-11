@@ -14,12 +14,4 @@ class InMemoryStreamTest extends TestCase {
             $this->assertNull(yield $stream->read());
         });
     }
-
-    public function testCloseClearsContents() {
-        Loop::run(function () {
-            $stream = new InMemoryStream("foobar");
-            $stream->close();
-            $this->assertNull(yield $stream->read());
-        });
-    }
 }

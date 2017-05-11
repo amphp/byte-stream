@@ -21,11 +21,8 @@ class ResourceOutputStream implements OutputStream {
     /** @var bool */
     private $writable = true;
 
-    /** @var bool */
-    private $autoClose = true;
-
-    public function __construct($stream, int $chunkSize = 8192, bool $autoClose = true) {
-        if (!is_resource($stream) || get_resource_type($stream) !== 'stream') {
+    public function __construct($stream, int $chunkSize = 8192) {
+        if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
         }
 
@@ -39,12 +36,12 @@ class ResourceOutputStream implements OutputStream {
         \stream_set_write_buffer($stream, 0);
 
         $this->resource = $stream;
-        $this->autoClose = $autoClose;
 
         $writes = $this->writes = new \SplQueue;
         $writable = &$this->writable;
+        $resource = &$this->resource;
 
-        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, &$writable) {
+        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, &$writable, &$resource) {
             try {
                 while (!$writes->isEmpty()) {
                     /** @var \Amp\Deferred $deferred */
@@ -61,17 +58,20 @@ class ResourceOutputStream implements OutputStream {
 
                     if ($written === false || $written === 0) {
                         $writable = false;
+                        $resource = null;
 
                         $message = "Failed to write to socket";
                         if ($error = \error_get_last()) {
                             $message .= \sprintf(" Errno: %d; %s", $error["type"], $error["message"]);
                         }
-                        $exception = new \Exception($message);
+                        $exception = new StreamException($message);
                         $deferred->fail($exception);
                         while (!$writes->isEmpty()) {
                             list(, , $deferred) = $writes->shift();
                             $deferred->fail($exception);
                         }
+
+                        Loop::cancel($watcher);
                         return;
                     }
 
@@ -127,8 +127,8 @@ class ResourceOutputStream implements OutputStream {
      * @return Promise
      */
     private function send(string $data, bool $end = false): Promise {
-        if (!$this->writable) {
-            return new Failure(new \Exception("The stream is not writable"));
+        if ($this->resource === null) {
+            return new Failure(new StreamException("The stream is not writable"));
         }
 
         $length = \strlen($data);
@@ -173,22 +173,22 @@ class ResourceOutputStream implements OutputStream {
         $promise = $deferred->promise();
 
         if ($end) {
-            $promise->onResolve([$this, 'close']);
+            $promise->onResolve(function () {
+                $this->close();
+            });
         }
 
         return $promise;
     }
 
     /**
-     * @inheritdoc
+     * Closes the stream forcefully. Multiple `close()` calls are ignored.
+     *
+     * @return void
      */
-    public function close() {
+    protected function close() {
         if ($this->resource !== null) {
             return;
-        }
-
-        if (\is_resource($this->resource)) {
-            @\fclose($this->resource);
         }
 
         $this->resource = null;
@@ -206,13 +206,10 @@ class ResourceOutputStream implements OutputStream {
         Loop::cancel($this->watcher);
     }
 
+    /**
+     * @return resource|null Stream resource or null if end() has been called or the stream closed.
+     */
     public function getResource() {
         return $this->resource;
-    }
-
-    public function __destruct() {
-        if ($this->autoClose) {
-            $this->close();
-        }
     }
 }

@@ -59,10 +59,8 @@ class GzipOutputStream implements OutputStream {
         return $promise;
     }
 
-    public function close() {
+    protected function close() {
         $this->resource = null;
-
-        $this->destination->close();
         $this->destination = null;
     }
 }

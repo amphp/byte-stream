@@ -33,13 +33,4 @@ class InMemoryStream implements InputStream {
 
         return $promise;
     }
-
-    /**
-     * Closes the stream forcefully. Multiple `close()` calls are ignored.
-     *
-     * @return void
-     */
-    public function close() {
-        $this->contents = null;
-    }
 }

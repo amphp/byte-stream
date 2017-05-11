@@ -53,7 +53,7 @@ class Parser implements OutputStream {
      * @return string
      */
     public function cancel(): string {
-        $this->close();
+        $this->generator = null;
         return $this->buffer;
     }
 
@@ -135,12 +135,5 @@ class Parser implements OutputStream {
                 $this->generator = null;
             }
         }
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function close() {
-        $this->generator = null;
     }
 }

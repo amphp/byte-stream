@@ -22,19 +22,16 @@ class ResourceInputStream implements InputStream {
     /** @var bool */
     private $readable = true;
 
-    /** @var bool */
-    private $autoClose = true;
-
-    public function __construct($stream, int $chunkSize = self::DEFAULT_CHUNK_SIZE, $autoClose = true) {
-        if (!is_resource($stream) || get_resource_type($stream) !== 'stream') {
+    public function __construct($stream, int $chunkSize = self::DEFAULT_CHUNK_SIZE) {
+        if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
         }
 
         $meta = \stream_get_meta_data($stream);
 
         if (isset($meta["mode"]) && $meta["mode"] !== ""
-            && strpos($meta["mode"], "r") === false
-            && strpos($meta["mode"], "+") === false
+            && \strpos($meta["mode"], "r") === false
+            && \strpos($meta["mode"], "+") === false
         ) {
             throw new \Error("Expected a readable stream");
         }
@@ -43,13 +40,13 @@ class ResourceInputStream implements InputStream {
         \stream_set_read_buffer($stream, 0);
 
         $this->resource = $stream;
-        $this->autoClose = $autoClose;
 
         $deferred = &$this->deferred;
         $readable = &$this->readable;
+        $resource = &$this->resource;
 
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (
-            &$deferred, &$readable, $chunkSize
+            &$deferred, &$readable, &$resource, $chunkSize
         ) {
             if ($deferred === null) {
                 return;
@@ -60,6 +57,7 @@ class ResourceInputStream implements InputStream {
 
             if ($data === false || ($data === '' && (\feof($stream) || !\is_resource($stream)))) {
                 $readable = false;
+                $resource = null;
                 Loop::cancel($watcher);
                 $data = null; // Stream closed, resolve read with null.
             }
@@ -101,18 +99,11 @@ class ResourceInputStream implements InputStream {
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
      *
-     * Note: If a class implements `InputStream` and `OutputStream`, `close()` will close both streams at once. If you
-     * want to allow half-closed duplex streams, you must use different objects for input and output.
-     *
      * @return void
      */
-    public function close() {
+    protected function close() {
         if ($this->resource === null) {
             return;
-        }
-
-        if ($this->autoClose && \is_resource($this->resource)) {
-            @\fclose($this->resource);
         }
 
         $this->resource = null;
@@ -127,13 +118,10 @@ class ResourceInputStream implements InputStream {
         Loop::cancel($this->watcher);
     }
 
+    /**
+     * @return resource|null The stream resource or null if the stream has closed.
+     */
     public function getResource() {
         return $this->resource;
-    }
-
-    public function __destruct() {
-        if ($this->autoClose) {
-            $this->close();
-        }
     }
 }

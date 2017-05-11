@@ -53,10 +53,8 @@ class GzipInputStream implements InputStream {
         });
     }
 
-    public function close() {
+    protected function close() {
         $this->resource = null;
-
-        $this->source->close();
         $this->source = null;
     }
 }

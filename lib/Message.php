@@ -42,8 +42,8 @@ class Message implements InputStream, Promise {
     /** @var \Amp\Deferred|null */
     private $backpressure;
 
-    /** @var bool True if close() is called or the iterator has completed. */
-    private $closed = false;
+    /** @var bool True if the iterator has completed. */
+    private $complete = false;
 
     /**
      * @param \Amp\Iterator $iterator An iterator that only emits strings.
@@ -71,7 +71,7 @@ class Message implements InputStream, Promise {
             $buffer = ""; // Destroy last emitted chunk to free memory.
         }
 
-        $this->closed = true;
+        $this->complete = true;
 
         if ($this->pendingRead) {
             $deferred = $this->pendingRead;
@@ -100,8 +100,8 @@ class Message implements InputStream, Promise {
 
             return new Success($buffer);
         }
-        
-        if ($this->closed) {
+
+        if ($this->complete) {
             return new Success;
         }
 
@@ -122,18 +122,5 @@ class Message implements InputStream, Promise {
         }
 
         $this->coroutine->onResolve($onResolved);
-    }
-
-    public function close() {
-        $this->buffering = true;
-        $this->closed = true;
-
-        if ($this->pendingRead) {
-            $deferred = $this->pendingRead;
-            $this->pendingRead = null;
-            $deferred->resolve($this->buffer === "" ? $this->buffer : null);
-        }
-        
-        $this->buffer = "";
     }
 }
