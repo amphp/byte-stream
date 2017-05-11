@@ -88,10 +88,6 @@ class Message implements InputStream, Promise {
             return new Failure(new PendingReadException);
         }
 
-        if ($this->closed) {
-            return new Success;
-        }
-
         if ($this->buffer !== "") {
             $buffer = $this->buffer;
             $this->buffer = "";
@@ -103,6 +99,10 @@ class Message implements InputStream, Promise {
             }
 
             return new Success($buffer);
+        }
+        
+        if ($this->closed) {
+            return new Success;
         }
 
         $this->pendingRead = new Deferred;
@@ -132,7 +132,8 @@ class Message implements InputStream, Promise {
             $deferred = $this->pendingRead;
             $this->pendingRead = null;
             $deferred->resolve($this->buffer === "" ? $this->buffer : null);
-            $this->buffer = "";
         }
+        
+        $this->buffer = "";
     }
 }
