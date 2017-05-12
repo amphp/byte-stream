@@ -186,11 +186,7 @@ class ResourceOutputStream implements OutputStream {
      *
      * @return void
      */
-    protected function close() {
-        if ($this->resource !== null) {
-            return;
-        }
-
+    public function close() {
         $this->resource = null;
         $this->writable = false;
 
