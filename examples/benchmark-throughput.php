@@ -38,15 +38,12 @@ try {
 
 $stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...'. PHP_EOL);
 
-$running = true;
-Loop::delay($t * 1000, function () use (&$running) {
-    $running = false;
-});
+Loop::delay($t * 1000, [$in, "close"]);
 
-Loop::run(function () use (&$running, $stderr, $in, $out) {
+Loop::run(function () use ($stderr, $in, $out) {
     $start = microtime(true);
 
-    while ($running && ($chunk = yield $in->read()) !== null) {
+    while (($chunk = yield $in->read()) !== null) {
         yield $out->write($chunk);
     }
 
