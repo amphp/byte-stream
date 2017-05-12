@@ -4,7 +4,6 @@ namespace Amp\ByteStream;
 
 use Amp\Coroutine;
 use Amp\Deferred;
-use Amp\Failure;
 use Amp\Iterator;
 use Amp\Promise;
 use Amp\Success;
@@ -85,7 +84,7 @@ class Message implements InputStream, Promise {
 
     public function read(): Promise {
         if ($this->pendingRead) {
-            return new Failure(new PendingReadException);
+            throw new PendingReadError;
         }
 
         if ($this->buffer !== "") {

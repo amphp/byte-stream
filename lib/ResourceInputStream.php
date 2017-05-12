@@ -3,7 +3,6 @@
 namespace Amp\ByteStream;
 
 use Amp\Deferred;
-use Amp\Failure;
 use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
@@ -80,11 +79,11 @@ class ResourceInputStream implements InputStream {
      *
      * @return Promise Resolves with a string when new data is available or `null` if the stream has closed.
      *
-     * @throws PendingReadException Thrown if another read operation is still pending.
+     * @throws PendingReadError Thrown if another read operation is still pending.
      */
     public function read(): Promise {
         if ($this->deferred !== null) {
-            throw new PendingReadException;
+            throw new PendingReadError;
         }
 
         if (!$this->readable) {
