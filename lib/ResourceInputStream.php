@@ -6,6 +6,7 @@ use Amp\Deferred;
 use Amp\Failure;
 use Amp\Loop;
 use Amp\Promise;
+use Amp\Success;
 
 class ResourceInputStream implements InputStream {
     const DEFAULT_CHUNK_SIZE = 8192;
@@ -87,7 +88,7 @@ class ResourceInputStream implements InputStream {
         }
 
         if (!$this->readable) {
-            return new Failure(new ClosedException("The stream has been closed"));
+            return new Success; // Resolve with null on closed stream.
         }
 
         $this->deferred = new Deferred;
