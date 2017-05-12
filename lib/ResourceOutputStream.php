@@ -208,4 +208,10 @@ class ResourceOutputStream implements OutputStream {
     public function getResource() {
         return $this->resource;
     }
+
+    public function __destruct() {
+        if ($this->resource !== null) {
+            $this->close();
+        }
+    }
 }

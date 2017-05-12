@@ -120,4 +120,10 @@ class ResourceInputStream implements InputStream {
     public function getResource() {
         return $this->resource;
     }
+
+    public function __destruct() {
+        if ($this->resource !== null) {
+            $this->close();
+        }
+    }
 }
