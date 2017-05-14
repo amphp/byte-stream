@@ -4,13 +4,21 @@ namespace Amp\ByteStream;
 
 use Amp\Promise;
 
-class GzipOutputStream implements OutputStream {
+class ZlibOutputStream implements OutputStream {
     private $destination;
+    private $encoding;
     private $resource;
 
-    public function __construct(OutputStream $destination) {
+    public function __construct(OutputStream $destination, int $encoding) {
+        $validEncodings = [\ZLIB_ENCODING_GZIP, \ZLIB_ENCODING_DEFLATE, \ZLIB_ENCODING_RAW];
+
+        if (!in_array($encoding, $validEncodings, true)) {
+            throw new \Error("Invalid encoding: " . $encoding);
+        }
+
         $this->destination = $destination;
-        $this->resource = \deflate_init(\ZLIB_ENCODING_GZIP);
+        $this->encoding = $encoding;
+        $this->resource = \deflate_init($encoding);
 
         if ($this->resource === false) {
             throw new StreamException("Failed initializing deflate context");
@@ -62,5 +70,9 @@ class GzipOutputStream implements OutputStream {
     protected function close() {
         $this->resource = null;
         $this->destination = null;
+    }
+
+    public function getEncoding(): int {
+        return $this->encoding;
     }
 }
