@@ -29,11 +29,11 @@ Loop::run(function () {
         $parser->write("an\nexample\nof\n");
     });
 
-    Loop::delay(2000, function ()  use ($parser) {
+    Loop::delay(2000, function () use ($parser) {
         $parser->write("a\nsimple\n");
     });
 
-    Loop::delay(3000, function ()  use ($parser) {
+    Loop::delay(3000, function () use ($parser) {
         $parser->write("incremental\nstream\nparser");
     });
 
