@@ -2,8 +2,10 @@
 
 namespace Amp\ByteStream\Test;
 
+use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\Message;
+use Amp\ByteStream\PendingReadError;
 use Amp\Emitter;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
@@ -157,6 +159,41 @@ class MessageTest extends TestCase {
 
             $this->assertSame($value, yield $stream->read());
             $this->assertNull(yield $stream->read());
+        });
+    }
+
+    public function testGetInputStream() {
+        Loop::run(function () {
+            $inputStream = new InMemoryStream("");
+            $message = new Message($inputStream);
+
+            $this->assertSame($inputStream, $message->getInputStream());
+            $this->assertSame("", yield $message->getInputStream()->read());
+        });
+    }
+
+    public function testPendingRead() {
+        Loop::run(function () {
+            $emitter = new Emitter;
+            $stream = new Message(new IteratorStream($emitter->iterate()));
+
+            Loop::delay(0, function () use ($emitter) {
+                $emitter->emit("test");
+            });
+
+            $this->assertSame("test", yield $stream->read());
+        });
+    }
+
+    public function testPendingReadError() {
+        Loop::run(function () {
+            $emitter = new Emitter;
+            $stream = new Message(new IteratorStream($emitter->iterate()));
+            $stream->read();
+
+            $this->expectException(PendingReadError::class);
+
+            $stream->read();
         });
     }
 }
