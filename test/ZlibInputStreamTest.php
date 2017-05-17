@@ -5,7 +5,6 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\ZlibInputStream;
-use Amp\Delayed;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\Producer;
