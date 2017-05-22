@@ -7,7 +7,7 @@ use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
 
-class ResourceInputStream implements InputStream {
+final class ResourceInputStream implements InputStream {
     const DEFAULT_CHUNK_SIZE = 8192;
 
     /** @var resource */

@@ -8,7 +8,7 @@ use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
 
-class ResourceOutputStream implements OutputStream {
+final class ResourceOutputStream implements OutputStream {
     /** @var resource */
     private $resource;
 
