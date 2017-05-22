@@ -7,7 +7,7 @@ use Amp\Failure;
 use Amp\Iterator;
 use Amp\Promise;
 
-class IteratorStream implements InputStream {
+final class IteratorStream implements InputStream {
     private $iterator;
     private $exception;
 

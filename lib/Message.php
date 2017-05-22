@@ -84,7 +84,7 @@ class Message implements InputStream, Promise {
         return $this->buffer;
     }
 
-    public function read(): Promise {
+    final public function read(): Promise {
         if ($this->pendingRead) {
             throw new PendingReadError;
         }
@@ -117,7 +117,7 @@ class Message implements InputStream, Promise {
     /**
      * {@inheritdoc}
      */
-    public function onResolve(callable $onResolved) {
+    final public function onResolve(callable $onResolved) {
         $this->buffering = true;
 
         if ($this->coroutine === null) {
@@ -141,7 +141,7 @@ class Message implements InputStream, Promise {
      *
      * @return InputStream
      */
-    public function getInputStream(): InputStream {
+    final public function getInputStream(): InputStream {
         return $this->source;
     }
 }

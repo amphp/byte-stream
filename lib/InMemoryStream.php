@@ -8,7 +8,7 @@ use Amp\Success;
 /**
  * Input stream with a single already known data chunk.
  */
-class InMemoryStream implements InputStream {
+final class InMemoryStream implements InputStream {
     private $contents;
 
     /**
