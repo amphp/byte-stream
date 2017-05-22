@@ -16,6 +16,10 @@
         {
             "name": "Aaron Piotrowski",
             "email": "aaron@trowski.com"
+        },
+        {
+            "name": "Niklas Keller",
+            "email": "me@kelunik.com"
         }
     ],
     "minimum-stability": "dev",
