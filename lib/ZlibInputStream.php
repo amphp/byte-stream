@@ -5,21 +5,29 @@ namespace Amp\ByteStream;
 use Amp\Promise;
 use function Amp\call;
 
-class ZlibInputStream implements InputStream {
+final class ZlibInputStream implements InputStream {
     private $source;
     private $encoding;
+    private $options;
     private $resource;
 
-    public function __construct(InputStream $source, int $encoding) {
-        $validEncodings = [\ZLIB_ENCODING_GZIP, \ZLIB_ENCODING_DEFLATE, \ZLIB_ENCODING_RAW];
-
-        if (!in_array($encoding, $validEncodings, true)) {
-            throw new \Error("Invalid encoding: " . $encoding);
-        }
-
+    /**
+     * ZlibInputStream constructor.
+     *
+     * @param InputStream $source
+     * @param int         $encoding
+     * @param array       $options
+     *
+     * @throws StreamException
+     * @throws \Error
+     *
+     * @see http://php.net/manual/en/function.inflate-init.php
+     */
+    public function __construct(InputStream $source, int $encoding, array $options = []) {
         $this->source = $source;
         $this->encoding = $encoding;
-        $this->resource = \inflate_init($encoding);
+        $this->options = $options;
+        $this->resource = \inflate_init($encoding, $options);
 
         if ($this->resource === false) {
             throw new StreamException("Failed initializing deflate context");
@@ -68,5 +76,9 @@ class ZlibInputStream implements InputStream {
 
     public function getEncoding(): int {
         return $this->encoding;
+    }
+
+    public function getOptions(): array {
+        return $this->options;
     }
 }
