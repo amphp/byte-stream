@@ -4,6 +4,7 @@ namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\IteratorStream;
+use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
@@ -36,7 +37,7 @@ class ZlibInputStreamTest extends TestCase {
     }
 
     public function testInvalidEncoding() {
-        $this->expectException(\Error::class);
+        $this->expectException(StreamException::class);
 
         new ZlibInputStream(new InMemoryStream(""), 1337);
     }

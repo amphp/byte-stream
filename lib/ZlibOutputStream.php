@@ -24,7 +24,7 @@ final class ZlibOutputStream implements OutputStream {
         $this->destination = $destination;
         $this->encoding = $encoding;
         $this->options = $options;
-        $this->resource = \deflate_init($encoding, $options);
+        $this->resource = @\deflate_init($encoding, $options);
 
         if ($this->resource === false) {
             throw new StreamException("Failed initializing deflate context");

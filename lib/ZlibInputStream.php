@@ -27,7 +27,7 @@ final class ZlibInputStream implements InputStream {
         $this->source = $source;
         $this->encoding = $encoding;
         $this->options = $options;
-        $this->resource = \inflate_init($encoding, $options);
+        $this->resource = @\inflate_init($encoding, $options);
 
         if ($this->resource === false) {
             throw new StreamException("Failed initializing deflate context");
