@@ -4,7 +4,7 @@
 [![CoverageStatus](https://img.shields.io/coveralls/amphp/byte-stream/master.svg?style=flat-square)](https://coveralls.io/github/amphp/byte-stream?branch=master)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 
-`amphp/byte-stream` is Amp's stream abstraction to make working with non-blocking I/O simple.
+`amphp/byte-stream` is a stream abstraction to make working with non-blocking I/O simple.
 
 ## Installation
 

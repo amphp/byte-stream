@@ -1,7 +1,7 @@
 {
     "name": "amphp/byte-stream",
     "homepage": "https://github.com/amphp/byte-stream",
-    "description": "Async streams for the amp concurrency framework",
+    "description": "A stream abstraction to make working with non-blocking I/O simple.",
     "support": {
         "issues": "https://github.com/amphp/byte-stream/issues"
     },
