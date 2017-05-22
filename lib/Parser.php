@@ -47,6 +47,16 @@ class Parser implements OutputStream {
     }
 
     /**
+     * Allows inspecting the current buffer. This might be required to get the remaining buffer data in case an input
+     * stream ends and there's still something in the buffer.
+     *
+     * @return string
+     */
+    public function getBuffer(): string {
+        return $this->buffer;
+    }
+
+    /**
      * Cancels the generator parser and returns any remaining data in the internal buffer. Writing data after calling
      * this method will result in an error.
      *
