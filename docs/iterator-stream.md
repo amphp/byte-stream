@@ -10,6 +10,8 @@ asyncCoroutine(function () use ($emitter) {
         yield new Delayed(1000);
         yield $emitter->emit(".");
     }
+
+    $emitter->complete();
 });
 
 $inputStream = new IteratorStream($emitter->iterate());
