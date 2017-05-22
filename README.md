@@ -1,4 +1,4 @@
-# amp
+# byte-stream
 
 [![Build Status](https://img.shields.io/travis/amphp/byte-stream/master.svg?style=flat-square)](https://travis-ci.org/amphp/byte-stream)
 [![CoverageStatus](https://img.shields.io/coveralls/amphp/byte-stream/master.svg?style=flat-square)](https://coveralls.io/github/amphp/byte-stream?branch=master)
