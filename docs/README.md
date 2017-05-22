@@ -25,11 +25,13 @@ while (($chunk = yield $inputStream->read()) !== null) {
 
 ### Implementations
 
-This package offers some basic implementations, other libraries might provide even more implementations, such as `amphp/socket`.
+This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
 
  * [`InMemoryStream`](./in-memory-stream.md)
- * [`ResourceInputStream`](./resource-streams.md)
  * [`IteratorStream`](./iterator-stream.md)
+ * [`Message`](./message.md)
+ * [`ResourceInputStream`](./resource-streams.md)
+ * [`ZlibInputStream`](./compression-streams.md)
 
 ## OutputStream
 
@@ -62,3 +64,12 @@ while (($chunk = yield $inputStream->read()) !== null) {
 
 yield $outputStream->end();
 ```
+
+### Implementations
+
+This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
+
+ * [`Parser`](./parser.md)
+ * [`ResourceOutputStream`](./resource-streams.md)
+ * [`ZlibOutputStream`](./compression-streams.md)
+
