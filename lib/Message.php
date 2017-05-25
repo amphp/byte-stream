@@ -11,6 +11,9 @@ use Amp\Success;
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
  * be buffered and accessed in its entirety by waiting for the promise to resolve.
  *
+ * Other implementations may extend this class to add custom properties such as a `isBinary()` flag for WebSocket
+ * messages.
+ *
  * Buffering Example:
  *
  * $stream = new Message($inputStream);
@@ -84,6 +87,7 @@ class Message implements InputStream, Promise {
         return $this->buffer;
     }
 
+    /** @inheritdoc */
     final public function read(): Promise {
         if ($this->pendingRead) {
             throw new PendingReadError;
@@ -114,9 +118,7 @@ class Message implements InputStream, Promise {
         return $this->pendingRead->promise();
     }
 
-    /**
-     * {@inheritdoc}
-     */
+    /** @inheritdoc */
     final public function onResolve(callable $onResolved) {
         $this->buffering = true;
 

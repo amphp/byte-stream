@@ -7,7 +7,7 @@ use Amp\InvalidYieldError;
 use Amp\Promise;
 use Amp\Success;
 
-class Parser implements OutputStream {
+final class Parser implements OutputStream {
     /** @var \Generator */
     private $generator;
 
