@@ -5,6 +5,9 @@ namespace Amp\ByteStream;
 use Amp\Promise;
 use function Amp\call;
 
+/**
+ * Allows decompression of input streams using Zlib.
+ */
 final class ZlibInputStream implements InputStream {
     private $source;
     private $encoding;
@@ -12,11 +15,9 @@ final class ZlibInputStream implements InputStream {
     private $resource;
 
     /**
-     * ZlibInputStream constructor.
-     *
-     * @param InputStream $source
-     * @param int         $encoding
-     * @param array       $options
+     * @param InputStream $source Input stream to read compressed data from.
+     * @param int         $encoding Compression algorithm used, see `inflate_init()`.
+     * @param array       $options Algorithm options, see `inflate_init()`.
      *
      * @throws StreamException
      * @throws \Error
@@ -34,6 +35,7 @@ final class ZlibInputStream implements InputStream {
         }
     }
 
+    /** @inheritdoc */
     public function read(): Promise {
         return call(function () {
             if ($this->resource === null) {
@@ -69,15 +71,25 @@ final class ZlibInputStream implements InputStream {
         });
     }
 
-    protected function close() {
+    /** @internal */
+    private function close() {
         $this->resource = null;
         $this->source = null;
     }
 
+    /**
+     * Gets the used compression encoding.
+     *
+     * @return int Encoding specified on construction time.
+     */
     public function getEncoding(): int {
         return $this->encoding;
     }
-
+    /**
+     * Gets the used compression options.
+     *
+     * @return array Options array passed on construction time.
+     */
     public function getOptions(): array {
         return $this->options;
     }

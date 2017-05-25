@@ -4,6 +4,9 @@ namespace Amp\ByteStream;
 
 use Amp\Promise;
 
+/**
+ * Allows compression of output streams using Zlib.
+ */
 final class ZlibOutputStream implements OutputStream {
     private $destination;
     private $encoding;
@@ -11,12 +14,11 @@ final class ZlibOutputStream implements OutputStream {
     private $resource;
 
     /**
-     * @param OutputStream $destination
-     * @param int          $encoding
-     * @param array        $options
+     * @param OutputStream $destination Output stream to write the compressed data to.
+     * @param int          $encoding Compression encoding to use, see `deflate_init()`.
+     * @param array        $options Compression options to use, see `deflate_init()`.
      *
-     * @throws StreamException
-     * @throws \Error
+     * @throws StreamException If an invalid encoding or invalid options have been passed.
      *
      * @see http://php.net/manual/en/function.deflate-init.php
      */
@@ -31,6 +33,7 @@ final class ZlibOutputStream implements OutputStream {
         }
     }
 
+    /** @inheritdoc */
     public function write(string $data): Promise {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
@@ -52,6 +55,7 @@ final class ZlibOutputStream implements OutputStream {
         return $promise;
     }
 
+    /** @inheritdoc */
     public function end(string $finalData = ""): Promise {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
@@ -73,15 +77,26 @@ final class ZlibOutputStream implements OutputStream {
         return $promise;
     }
 
-    protected function close() {
+    /** @internal */
+    private function close() {
         $this->resource = null;
         $this->destination = null;
     }
 
+    /**
+     * Gets the used compression encoding.
+     *
+     * @return int Encoding specified on construction time.
+     */
     public function getEncoding(): int {
         return $this->encoding;
     }
 
+    /**
+     * Gets the used compression options.
+     *
+     * @return array Options array passed on construction time.
+     */
     public function getOptions(): array {
         return $this->options;
     }
