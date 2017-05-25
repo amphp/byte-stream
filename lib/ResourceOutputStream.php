@@ -8,6 +8,9 @@ use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
 
+/**
+ * Output stream abstraction for PHP's stream resources.
+ */
 final class ResourceOutputStream implements OutputStream {
     /** @var resource */
     private $resource;
@@ -21,7 +24,14 @@ final class ResourceOutputStream implements OutputStream {
     /** @var bool */
     private $writable = true;
 
-    public function __construct($stream, int $chunkSize = 8192) {
+    /** @var int|null */
+    private $chunkSize;
+
+    /**
+     * @param          $stream Stream resource.
+     * @param int|null $chunkSize Chunk size per `fwrite()` operation.
+     */
+    public function __construct($stream, int $chunkSize = null) {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
         }
@@ -39,12 +49,13 @@ final class ResourceOutputStream implements OutputStream {
         \stream_set_write_buffer($stream, 0);
 
         $this->resource = $stream;
+        $this->chunkSize = $chunkSize;
 
         $writes = $this->writes = new \SplQueue;
         $writable = &$this->writable;
         $resource = &$this->resource;
 
-        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, &$writable, &$resource) {
+        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, $chunkSize, &$writable, &$resource) {
             try {
                 while (!$writes->isEmpty()) {
                     /** @var \Amp\Deferred $deferred */
@@ -57,7 +68,7 @@ final class ResourceOutputStream implements OutputStream {
                     }
 
                     // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
-                    $written = @\fwrite($stream, $data);
+                    $written = @\fwrite($stream, $data, $chunkSize);
 
                     if ($written === false || $written === 0) {
                         $writable = false;
@@ -123,12 +134,6 @@ final class ResourceOutputStream implements OutputStream {
         return $this->send($finalData, true);
     }
 
-    /**
-     * @param string $data
-     * @param bool   $end
-     *
-     * @return Promise
-     */
     private function send(string $data, bool $end = false): Promise {
         if ($this->resource === null) {
             return new Failure(new StreamException("The stream is not writable"));
@@ -150,7 +155,7 @@ final class ResourceOutputStream implements OutputStream {
             }
 
             // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
-            $written = @\fwrite($this->resource, $data);
+            $written = @\fwrite($this->resource, $data, $this->chunkSize);
 
             if ($written === false) {
                 $message = "Failed to write to stream";

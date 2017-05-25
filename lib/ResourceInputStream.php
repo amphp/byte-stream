@@ -7,6 +7,9 @@ use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
 
+/**
+ * Input stream abstraction for PHP's stream resources.
+ */
 final class ResourceInputStream implements InputStream {
     const DEFAULT_CHUNK_SIZE = 8192;
 
@@ -22,6 +25,10 @@ final class ResourceInputStream implements InputStream {
     /** @var bool */
     private $readable = true;
 
+    /**
+     * @param resource $stream Stream resource.
+     * @param int $chunkSize Chunk size per `fread()` operation.
+     */
     public function __construct($stream, int $chunkSize = self::DEFAULT_CHUNK_SIZE) {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
@@ -74,13 +81,7 @@ final class ResourceInputStream implements InputStream {
         Loop::disable($this->watcher);
     }
 
-    /**
-     * Reads data from the stream.
-     *
-     * @return Promise Resolves with a string when new data is available or `null` if the stream has closed.
-     *
-     * @throws PendingReadError Thrown if another read operation is still pending.
-     */
+    /** @inheritdoc */
     public function read(): Promise {
         if ($this->deferred !== null) {
             throw new PendingReadError;
@@ -98,6 +99,9 @@ final class ResourceInputStream implements InputStream {
 
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
+     *
+     * This does only free the resource internally, the underlying file descriptor isn't closed. This is left to PHP's
+     * garbage collection system.
      *
      * @return void
      */
