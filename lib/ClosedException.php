@@ -2,5 +2,5 @@
 
 namespace Amp\ByteStream;
 
-class ClosedException extends StreamException {
+final class ClosedException extends StreamException {
 }
