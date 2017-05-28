@@ -1,5 +1,7 @@
-# InMemoryStream
-
+---
+title: InMemoryStream
+permalink: /in-memory-stream
+---
 An `InMemoryStream` allows creating an `InputStream` from a single known string chunk. This is helpful if the complete stream contents are already known.
 
 ```php

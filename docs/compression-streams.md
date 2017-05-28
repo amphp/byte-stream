@@ -1,5 +1,7 @@
-# Compression Streams
-
+---
+title: Compression Streams
+permalink: /compression-streams
+---
 This package implements compression and decompression streams based on Zlib. `ZlibOutputStream` can be used for compression, while `ZlibInputStream` can be used for decompression. Both can simply wrap an existing stream to apply them. Both accept an `$encoding` and `$options` parameter in their constructor.
 
 ## Examples

@@ -1,3 +1,5 @@
-# Parser
-
+---
+title: Parser
+permalink: /parser
+---
 TBD.

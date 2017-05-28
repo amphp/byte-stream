@@ -1,5 +1,7 @@
-# Message
-
+---
+title: Message
+permalink: /message
+---
 `Message` implements both `InputStream` _and_ `Promise`. This allows consuming a message either in chunks (streaming) or consume everything at once (buffering).
 
 ## Buffering

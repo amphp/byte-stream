@@ -1,0 +1,31 @@
+kramdown:
+  input: GFM
+  toc_levels: 2..3
+
+baseurl: "/byte-stream"
+layouts_dir: ".shared/layout"
+
+exclude: ["Gemfile", "Gemfile.lock", "README.md", "vendor"]
+include: [".shared"]
+
+repository: amphp/byte-stream
+gems:
+ - "jekyll-github-metadata"
+ - "jekyll-relative-links"
+
+defaults:
+ - scope:
+     path: ""
+     type: "pages"
+   values:
+     layout: "docs"
+
+asset_path: "/byte-stream/.shared/asset"
+
+navigation:
+ - resource-streams
+ - in-memory-stream
+ - iterator-stream
+ - compression-streams
+ - message
+ - parser

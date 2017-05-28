@@ -1,5 +1,7 @@
-# IteratorStream
-
+---
+title: IteratorStream
+permalink: /iterator-stream
+---
 `IteratorStream` allows converting an `Amp\Iterator` that yields strings into an `InputStream`.
 
 ```php

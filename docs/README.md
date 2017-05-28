@@ -1,75 +1,25 @@
-# Streams
+# Documentation
 
-Streams are an abstraction over ordered sequences of bytes. This package provides the fundamental interfaces `InputStream` and `OutputStream`.
+This directory contains the documentation for `amphp/byte-stream`. Documentation and code are bundled within a single repository for easier maintenance. Additionally, this preserves the documentation for older versions.
 
-## InputStream
+## Reading
 
-`InputStream` offers a single method: `read()`. It returns a promise that gets either resolved with a `string` or `null`. `null` indicates that the stream has ended.
+You can read this documentation either directly on GitHub or on our website. While the website will always contain the latest version, viewing on GitHub also works with older versions.
 
-### Example
+## Writing
 
-This example shows a simple `InputStream` consumption that buffers the complete stream contents inside a coroutine.
+Our documentation is built using Jekyll.
 
-```php
-$inputStream = ...;
-$buffer = "";
-
-while (($chunk = yield $inputStream->read()) !== null) {
-    $buffer .= $chunk;
-}
-
-// do something with $buffer
+```
+sudo gem install bundler jekyll
 ```
 
-> **Note:** While buffering a stream that way is extremely straightforward, you might want to use `yield new Message($inputStream)` to buffer a complete `InputStream`, making it even easier.
-
-### Implementations
-
-This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
-
- * [`InMemoryStream`](./in-memory-stream.md)
- * [`IteratorStream`](./iterator-stream.md)
- * [`Message`](./message.md)
- * [`ResourceInputStream`](./resource-streams.md)
- * [`ZlibInputStream`](./compression-streams.md)
-
-## OutputStream
-
-`OutputStream` offers two methods: `write()` and `end()`.
-
-### `write()`
-
-`write()` writes the given string to the stream. The returned `Promise` might be used to wait for completion. Waiting for completion allows writing only as fast as the underlying stream can write and potentially send over a network. TCP streams will resolve the returned `Promise` immediately as long as the write buffer isn't full.
-
-The write order is always ensured, even if the writer doesn't wait on the promise.
-
-> **Tip:** Use `Amp\Promise\rethrow` on the returned `Promise` if you do not wait on it to get notified about write errors instead of silently doing nothing on errors.
-
-### `end()`
-
-`end()` marks the stream as ended, optionally writing a last data chunk before. TCP streams might close the underlying stream for writing, but MUST NOT close it. Instead, all resources should be freed and actual resource handles be closed by PHP's garbage collection process.
-
-## Example
-
-This example uses the previous example to read from a stream and simply writes all data to an `OutputStream`.
-
-```php
-$inputStream = ...;
-$outputStream = ...;
-$buffer = "";
-
-while (($chunk = yield $inputStream->read()) !== null) {
-    yield $outputStream->write($chunk);
-}
-
-yield $outputStream->end();
 ```
+git submodule init
+git submodule update
 
-### Implementations
+cd docs
 
-This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
-
- * [`Parser`](./parser.md)
- * [`ResourceOutputStream`](./resource-streams.md)
- * [`ZlibOutputStream`](./compression-streams.md)
-
+bundle install --path vendor/bundle
+bundle exec jekyll serve
+```
