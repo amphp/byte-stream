@@ -46,7 +46,8 @@ This package offers some basic implementations, other libraries might provide ev
 
 The write order is always ensured, even if the writer doesn't wait on the promise.
 
-> **Tip:** Use `Amp\Promise\rethrow` on the returned `Promise` if you do not wait on it to get notified about write errors instead of silently doing nothing on errors.
+{:.note}
+> Use `Amp\Promise\rethrow` on the returned `Promise` if you do not wait on it to get notified about write errors instead of silently doing nothing on errors.
 
 ### `end()`
 
