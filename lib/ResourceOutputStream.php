@@ -12,6 +12,8 @@ use Amp\Success;
  * Output stream abstraction for PHP's stream resources.
  */
 final class ResourceOutputStream implements OutputStream {
+    const DEFAULT_CHUNK_SIZE = 8192;
+    
     /** @var resource */
     private $resource;
 
@@ -31,7 +33,7 @@ final class ResourceOutputStream implements OutputStream {
      * @param          $stream Stream resource.
      * @param int|null $chunkSize Chunk size per `fwrite()` operation.
      */
-    public function __construct($stream, int $chunkSize = null) {
+    public function __construct($stream, int $chunkSize = ResourceOutputStream::DEFAULT_CHUNK_SIZE) {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
         }
