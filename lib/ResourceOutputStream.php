@@ -28,7 +28,7 @@ final class ResourceOutputStream implements OutputStream {
     private $chunkSize;
 
     /**
-     * @param          $stream Stream resource.
+     * @param resource $stream Stream resource.
      * @param int|null $chunkSize Chunk size per `fwrite()` operation.
      */
     public function __construct($stream, int $chunkSize = null) {
@@ -155,7 +155,12 @@ final class ResourceOutputStream implements OutputStream {
             }
 
             // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
-            $written = @\fwrite($this->resource, $data, $this->chunkSize);
+            // Use conditional, because PHP doesn't like getting null passed.
+            if ($this->chunkSize) {
+                $written = @\fwrite($this->resource, $data, $this->chunkSize);
+            } else {
+                $written = @\fwrite($this->resource, $data);
+            }
 
             if ($written === false) {
                 $message = "Failed to write to stream";
