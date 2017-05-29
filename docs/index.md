@@ -23,7 +23,8 @@ while (($chunk = yield $inputStream->read()) !== null) {
 // do something with $buffer
 ```
 
-> **Note:** While buffering a stream that way is extremely straightforward, you might want to use `yield new Message($inputStream)` to buffer a complete `InputStream`, making it even easier.
+{:.note}
+> While buffering a stream that way is relatively straightforward, you might want to use `yield new Message($inputStream)` to buffer a complete `InputStream`, making it even easier.
 
 ### Implementations
 
