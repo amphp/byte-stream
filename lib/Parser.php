@@ -85,19 +85,19 @@ final class Parser implements OutputStream {
                         break; // Too few bytes in buffer.
                     }
 
-                    $length = $this->delimiter;
+                    $send = \substr($this->buffer, 0, $this->delimiter);
+                    $this->buffer = \substr($this->buffer, $this->delimiter);
                 } elseif (\is_string($this->delimiter)) {
                     if (($position = \strpos($this->buffer, $this->delimiter)) === false) {
                         break;
                     }
 
-                    $length = $position + \strlen($this->delimiter);
+                    $send = \substr($this->buffer, 0, $position);
+                    $this->buffer = \substr($this->buffer, $position + \strlen($this->delimiter));
                 } else {
-                    $length = \strlen($this->buffer);
+                    $send = $this->buffer;
+                    $this->buffer = "";
                 }
-
-                $send = \substr($this->buffer, 0, $length);
-                $this->buffer = \substr($this->buffer, $length);
 
                 try {
                     $this->delimiter = $this->generator->send($send);

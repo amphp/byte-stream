@@ -11,7 +11,6 @@ Loop::run(function () {
     $generator = function (callable $printer): \Generator {
         while (true) {
             $buffer = yield "\n"; // Reads until a new-line character is found.
-            $buffer = trim($buffer);
             $printer($buffer); // Use the received data.
         }
     };
