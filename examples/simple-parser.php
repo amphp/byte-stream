@@ -34,7 +34,7 @@ Loop::run(function () {
     });
 
     Loop::delay(3000, function () use ($parser) {
-        $parser->write("incremental\nstream\nparser");
+        $parser->write("incremental\nstream\nparser\n");
     });
 
     Loop::delay(4000, function () use ($parser) {

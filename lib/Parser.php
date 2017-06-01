@@ -87,13 +87,11 @@ final class Parser implements OutputStream {
 
                     $length = $this->delimiter;
                 } elseif (\is_string($this->delimiter)) {
-                    if (($position = \strpos($this->buffer, $this->delimiter)) !== false) {
-                        $length = $position + \strlen($this->delimiter);
-                    } elseif ($end) { // Send remaining buffer to parser when ending.
-                        $length = \strlen($this->buffer);
-                    } else {
-                        break; // Delimiter not found in buffer.
+                    if (($position = \strpos($this->buffer, $this->delimiter)) === false) {
+                        break;
                     }
+
+                    $length = $position + \strlen($this->delimiter);
                 } else {
                     $length = \strlen($this->buffer);
                 }
