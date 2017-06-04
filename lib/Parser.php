@@ -3,7 +3,6 @@
 namespace Amp\ByteStream;
 
 use Amp\InvalidYieldError;
-use Amp\Promise;
 
 final class Parser {
     /** @var \Generator */
@@ -55,7 +54,7 @@ final class Parser {
         return $this->buffer;
     }
 
-    public function push(string $data): Promise {
+    public function push(string $data) {
         if ($this->generator === null) {
             throw new StreamException("The parser is no longer writable");
         }
