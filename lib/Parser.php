@@ -2,12 +2,10 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Failure;
 use Amp\InvalidYieldError;
 use Amp\Promise;
-use Amp\Success;
 
-final class Parser implements OutputStream {
+final class Parser {
     /** @var \Generator */
     private $generator;
 
@@ -57,26 +55,13 @@ final class Parser implements OutputStream {
         return $this->buffer;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function write(string $data): Promise {
-        return $this->send($data, false);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function end(string $data = ""): Promise {
-        return $this->send($data, true);
-    }
-
-    private function send(string $data, bool $end = false): Promise {
+    public function push(string $data): Promise {
         if ($this->generator === null) {
-            return new Failure(new StreamException("The parser is no longer writable"));
+            throw new StreamException("The parser is no longer writable");
         }
 
         $this->buffer .= $data;
+        $end = false;
 
         try {
             while ($this->buffer !== "") {
@@ -123,11 +108,9 @@ final class Parser implements OutputStream {
                     );
                 }
             }
-
-            return new Success(\strlen($data));
         } catch (\Throwable $exception) {
             $end = true;
-            return new Failure($exception);
+            throw $exception;
         } finally {
             if ($end) {
                 $this->generator = null;

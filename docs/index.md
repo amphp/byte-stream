@@ -73,7 +73,9 @@ yield $outputStream->end();
 
 This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
 
- * [`Parser`](./parser.md)
  * [`ResourceOutputStream`](./resource-streams.md)
  * [`ZlibOutputStream`](./compression-streams.md)
 
+## Parser
+
+ * [`Parser`](./parser.md)
