@@ -76,8 +76,8 @@ final class Parser {
                         break;
                     }
 
-                    $send = \substr($this->buffer, 0, $position);
-                    $this->buffer = \substr($this->buffer, $position + \strlen($this->delimiter));
+                    $send = \substr($this->buffer, 0, $position - \strlen($this->delimiter));
+                    $this->buffer = \substr($this->buffer, $position);
                 } else {
                     $send = $this->buffer;
                     $this->buffer = "";
