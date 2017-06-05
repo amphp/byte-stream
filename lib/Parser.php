@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\InvalidYieldError;
 
-final class Parser {
+class Parser {
     /** @var \Generator */
     private $generator;
 
@@ -49,12 +49,12 @@ final class Parser {
      *
      * @return string
      */
-    public function cancel(): string {
+    final public function cancel(): string {
         $this->generator = null;
         return $this->buffer;
     }
 
-    public function push(string $data) {
+    final public function push(string $data) {
         if ($this->generator === null) {
             throw new StreamException("The parser is no longer writable");
         }
