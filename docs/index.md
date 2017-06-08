@@ -75,7 +75,3 @@ This package offers some basic implementations, other libraries might provide ev
 
  * [`ResourceOutputStream`](./resource-streams.md)
  * [`ZlibOutputStream`](./compression-streams.md)
-
-## Parser
-
- * [`Parser`](./parser.md)
