@@ -28,4 +28,3 @@ navigation:
  - iterator-stream
  - compression-streams
  - message
- - parser
