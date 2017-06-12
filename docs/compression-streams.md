@@ -29,4 +29,4 @@ yield $gzOutputStream->end();
 ## See also
 
  * [`./examples/gzip-compress.php`](https://github.com/amphp/byte-stream/blob/master/examples/gzip-compress.php)
- * [`./examples/gzip-decompress.php`](https://github.com/amphp/byte-stream/blob/master/examples/gzip-compress.php)
+ * [`./examples/gzip-decompress.php`](https://github.com/amphp/byte-stream/blob/master/examples/gzip-decompress.php)
