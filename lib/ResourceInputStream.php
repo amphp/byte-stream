@@ -62,7 +62,7 @@ final class ResourceInputStream implements InputStream {
             // Error reporting suppressed since fread() produces a warning if the stream unexpectedly closes.
             $data = @\fread($stream, $chunkSize);
 
-            if ($data === false || ($data === '' && (\feof($stream) || !\is_resource($stream)))) {
+            if ($data === false || ($data === '' && (!\is_resource($stream) || \feof($stream)))) {
                 $readable = false;
                 $resource = null;
                 Loop::cancel($watcher);
