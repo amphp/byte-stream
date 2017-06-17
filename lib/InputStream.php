@@ -29,7 +29,7 @@ interface InputStream {
      *
      * @return Promise Resolves with a string when new data is available or `null` if the stream has closed.
      *
-     * @throws PendingReadException Thrown if another read operation is still pending.
+     * @throws PendingReadError Thrown if another read operation is still pending.
      */
     public function read(): Promise;
 }
