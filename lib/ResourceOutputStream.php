@@ -27,6 +27,9 @@ final class ResourceOutputStream implements OutputStream {
     /** @var int|null */
     private $chunkSize;
 
+    /** @var bool Flag to avoid \fclose() inside destructor */
+    private $inDestructor = false;
+
     /**
      * @param resource $stream Stream resource.
      * @param int|null $chunkSize Chunk size per `fwrite()` operation.
@@ -203,8 +206,14 @@ final class ResourceOutputStream implements OutputStream {
      * @return void
      */
     public function close() {
-        if ($this->resource) {
-            \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
+        if ($this->resource && !$this->inDestructor) {
+            $meta = \stream_get_meta_data($this->resource);
+
+            if (strpos($meta["mode"], "+") !== false) {
+                \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
+            } else {
+                \fclose($this->resource);
+            }
         }
 
         $this->resource = null;
@@ -230,6 +239,8 @@ final class ResourceOutputStream implements OutputStream {
     }
 
     public function __destruct() {
+        $this->inDestructor = true;
+
         if ($this->resource !== null) {
             $this->close();
         }
