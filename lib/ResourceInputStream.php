@@ -25,6 +25,9 @@ final class ResourceInputStream implements InputStream {
     /** @var bool */
     private $readable = true;
 
+    /** @var bool Flag to avoid \fclose() inside destructor */
+    private $inDestructor = false;
+
     /**
      * @param resource $stream Stream resource.
      * @param int $chunkSize Chunk size per `fread()` operation.
@@ -103,6 +106,16 @@ final class ResourceInputStream implements InputStream {
      * @return void
      */
     public function close() {
+        if ($this->resource && !$this->inDestructor) {
+            $meta = \stream_get_meta_data($this->resource);
+
+            if (strpos($meta["mode"], "+") !== false) {
+                \stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
+            } else {
+                \fclose($this->resource);
+            }
+        }
+
         $this->resource = null;
         $this->readable = false;
 
@@ -123,6 +136,8 @@ final class ResourceInputStream implements InputStream {
     }
 
     public function __destruct() {
+        $this->inDestructor = true;
+
         if ($this->resource !== null) {
             $this->close();
         }
