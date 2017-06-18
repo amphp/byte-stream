@@ -68,7 +68,12 @@ final class ResourceOutputStream implements OutputStream {
                     }
 
                     // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
-                    $written = @\fwrite($stream, $data, $chunkSize);
+                    // Use conditional, because PHP doesn't like getting null passed.
+                    if ($chunkSize) {
+                        $written = @\fwrite($stream, $data, $chunkSize);
+                    } else {
+                        $written = @\fwrite($stream, $data);
+                    }
 
                     if ($written === false || $written === 0) {
                         $writable = false;
@@ -163,6 +168,7 @@ final class ResourceOutputStream implements OutputStream {
             }
 
             if ($written === false) {
+                $this->close();
                 $message = "Failed to write to stream";
                 if ($error = \error_get_last()) {
                     $message .= \sprintf(" Errno: %d; %s", $error["type"], $error["message"]);
