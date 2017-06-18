@@ -38,10 +38,7 @@ final class ResourceOutputStream implements OutputStream {
 
         $meta = \stream_get_meta_data($stream);
 
-        if (isset($meta["mode"])
-            && \strpos($meta["mode"], "r") !== false
-            && \strpos($meta["mode"], "+") === false
-        ) {
+        if (\strpos($meta["mode"], "r") !== false && \strpos($meta["mode"], "+") === false) {
             throw new \Error("Expected a writable stream");
         }
 

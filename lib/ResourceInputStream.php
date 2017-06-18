@@ -36,10 +36,7 @@ final class ResourceInputStream implements InputStream {
 
         $meta = \stream_get_meta_data($stream);
 
-        if (isset($meta["mode"]) && $meta["mode"] !== ""
-            && \strpos($meta["mode"], "r") === false
-            && \strpos($meta["mode"], "+") === false
-        ) {
+        if (\strpos($meta["mode"], "r") === false && \strpos($meta["mode"], "+") === false) {
             throw new \Error("Expected a readable stream");
         }
 
