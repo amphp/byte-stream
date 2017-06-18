@@ -206,6 +206,10 @@ final class ResourceOutputStream implements OutputStream {
      * @return void
      */
     public function close() {
+        if ($this->resource) {
+            \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
+        }
+
         $this->resource = null;
         $this->writable = false;
 

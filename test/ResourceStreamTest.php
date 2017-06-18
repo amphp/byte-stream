@@ -17,17 +17,9 @@ class ResourceStreamTest extends TestCase {
             $b = new ResourceInputStream($right);
 
             $length = 1 * 1024 * 1024; // 1M
+            $message = \str_repeat(".", $length);
 
-            $message = "";
-            for ($i = 0; $i < $length; $i++) {
-                $message .= \chr(\mt_rand(33, 125));
-            }
-
-            $a->end($message)->onResolve(function () use (&$a, &$left) {
-                // Let GC close resource
-                $a = null;
-                $left = null;
-            });
+            $a->end($message);
 
             $received = "";
             while (null !== $chunk = yield $b->read()) {
