@@ -27,9 +27,6 @@ final class ResourceOutputStream implements OutputStream {
     /** @var int|null */
     private $chunkSize;
 
-    /** @var bool Flag to avoid \fclose() inside destructor */
-    private $inDestructor = false;
-
     /**
      * @param resource $stream Stream resource.
      * @param int|null $chunkSize Chunk size per `fwrite()` operation.
@@ -77,7 +74,6 @@ final class ResourceOutputStream implements OutputStream {
 
                     if ($written === false || $written === 0) {
                         $writable = false;
-                        $resource = null;
 
                         $message = "Failed to write to socket";
                         if ($error = \error_get_last()) {
@@ -192,9 +188,7 @@ final class ResourceOutputStream implements OutputStream {
         $promise = $deferred->promise();
 
         if ($end) {
-            $promise->onResolve(function () {
-                $this->close();
-            });
+            $promise->onResolve([$this, "close"]);
         }
 
         return $promise;
@@ -206,16 +200,23 @@ final class ResourceOutputStream implements OutputStream {
      * @return void
      */
     public function close() {
-        if ($this->resource && !$this->inDestructor) {
+        if ($this->resource) {
             $meta = \stream_get_meta_data($this->resource);
 
-            if (strpos($meta["mode"], "+") !== false) {
+            if (\strpos($meta["mode"], "+") !== false) {
                 \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
             } else {
                 \fclose($this->resource);
             }
         }
 
+        $this->free();
+    }
+
+    /**
+     * Nulls reference to resource, marks stream unwritable, and fails any pending write.
+     */
+    private function free() {
         $this->resource = null;
         $this->writable = false;
 
@@ -239,10 +240,8 @@ final class ResourceOutputStream implements OutputStream {
     }
 
     public function __destruct() {
-        $this->inDestructor = true;
-
         if ($this->resource !== null) {
-            $this->close();
+            $this->free();
         }
     }
 }

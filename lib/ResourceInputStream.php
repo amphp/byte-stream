@@ -25,9 +25,6 @@ final class ResourceInputStream implements InputStream {
     /** @var bool */
     private $readable = true;
 
-    /** @var bool Flag to avoid \fclose() inside destructor */
-    private $inDestructor = false;
-
     /**
      * @param resource $stream Stream resource.
      * @param int $chunkSize Chunk size per `fread()` operation.
@@ -55,16 +52,11 @@ final class ResourceInputStream implements InputStream {
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (
             &$deferred, &$readable, &$resource, $chunkSize
         ) {
-            if ($deferred === null) {
-                return;
-            }
-
             // Error reporting suppressed since fread() produces a warning if the stream unexpectedly closes.
             $data = @\fread($stream, $chunkSize);
 
             if ($data === false || ($data === '' && (!\is_resource($stream) || \feof($stream)))) {
                 $readable = false;
-                $resource = null;
                 Loop::cancel($watcher);
                 $data = null; // Stream closed, resolve read with null.
             }
@@ -106,16 +98,23 @@ final class ResourceInputStream implements InputStream {
      * @return void
      */
     public function close() {
-        if ($this->resource && !$this->inDestructor) {
+        if ($this->resource) {
             $meta = \stream_get_meta_data($this->resource);
 
-            if (strpos($meta["mode"], "+") !== false) {
+            if (\strpos($meta["mode"], "+") !== false) {
                 \stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
             } else {
                 \fclose($this->resource);
             }
         }
 
+        $this->free();
+    }
+
+    /**
+     * Nulls reference to resource, marks stream unreadable, and succeeds any pending read with null.
+     */
+    private function free() {
         $this->resource = null;
         $this->readable = false;
 
@@ -136,10 +135,8 @@ final class ResourceInputStream implements InputStream {
     }
 
     public function __destruct() {
-        $this->inDestructor = true;
-
         if ($this->resource !== null) {
-            $this->close();
+            $this->free();
         }
     }
 }
