@@ -201,12 +201,13 @@ final class ResourceOutputStream implements OutputStream {
      */
     public function close() {
         if ($this->resource) {
-            $meta = \stream_get_meta_data($this->resource);
+            // Error suppression, as resource might already be closed
+            $meta = @\stream_get_meta_data($this->resource);
 
-            if (\strpos($meta["mode"], "+") !== false) {
+            if ($meta && \strpos($meta["mode"], "+") !== false) {
                 \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
             } else {
-                \fclose($this->resource);
+                @\fclose($this->resource);
             }
         }
 
