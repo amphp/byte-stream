@@ -135,6 +135,32 @@ final class ResourceInputStream implements InputStream {
         return $this->resource;
     }
 
+    /**
+     * References the read watcher, so the loop keeps running in case there's an active read.
+     *
+     * @see Loop::reference()
+     */
+    public function reference() {
+        if (!$this->resource) {
+            throw new \Error("Resource has already been freed");
+        }
+
+        Loop::reference($this->watcher);
+    }
+
+    /**
+     * Unreferences the read watcher, so the loop doesn't keep running even if there are active reads.
+     *
+     * @see Loop::unreference()
+     */
+    public function unreference() {
+        if (!$this->resource) {
+            throw new \Error("Resource has already been freed");
+        }
+
+        Loop::unreference($this->watcher);
+    }
+
     public function __destruct() {
         if ($this->resource !== null) {
             $this->free();
