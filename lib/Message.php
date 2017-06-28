@@ -4,6 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\Coroutine;
 use Amp\Deferred;
+use Amp\Failure;
 use Amp\Promise;
 use Amp\Success;
 
@@ -48,6 +49,9 @@ class Message implements InputStream, Promise {
 
     /** @var bool True if the iterator has completed. */
     private $complete = false;
+
+    /** @var \Throwable Used to fail future reads on failure. */
+    private $error;
 
     /**
      * @param InputStream $source An iterator that only emits strings.
@@ -95,6 +99,15 @@ class Message implements InputStream, Promise {
 
         if ($this->coroutine === null) {
             $this->coroutine = new Coroutine($this->consume());
+            $this->coroutine->onResolve(function ($error) {
+                if ($error) {
+                    $this->error = $error;
+                }
+            });
+        }
+
+        if ($this->error) {
+            return new Failure($this->error);
         }
 
         if ($this->buffer !== "") {

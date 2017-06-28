@@ -9,6 +9,7 @@ use Amp\ByteStream\PendingReadError;
 use Amp\Emitter;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\TestException;
 
 class MessageTest extends TestCase {
     public function testBufferingAll() {
@@ -118,7 +119,7 @@ class MessageTest extends TestCase {
 
     public function testFailingStream() {
         Loop::run(function () {
-            $exception = new \Exception;
+            $exception = new TestException;
             $value = "abc";
 
             $emitter = new Emitter;
@@ -127,12 +128,17 @@ class MessageTest extends TestCase {
             $emitter->emit($value);
             $emitter->fail($exception);
 
+            $callable = $this->createCallback(1);
+
             try {
                 while (($chunk = yield $stream->read()) !== null) {
                     $this->assertSame($value, $chunk);
                 }
-            } catch (\Exception $reason) {
+
+                $this->fail("No exception has been thrown");
+            } catch (TestException $reason) {
                 $this->assertSame($exception, $reason);
+                $callable(); // <-- ensure this point is reached
             }
         });
     }
