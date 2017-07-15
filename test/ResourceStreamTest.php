@@ -62,6 +62,10 @@ class ResourceStreamTest extends TestCase {
         $this->expectException(StreamException::class);
 
         Loop::run(function () {
+            try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
+                Loop::onSignal(defined("SIGPIPE") ? SIGPIPE : 13, function () {});
+            } catch (Loop\UnsupportedFeatureException $e) {}
+
             list($a, $b) = $this->getStreamPair();
 
             $message = \str_repeat(".", self::LARGE_MESSAGE_SIZE);
@@ -79,6 +83,10 @@ class ResourceStreamTest extends TestCase {
         $this->expectException(StreamException::class);
 
         Loop::run(function () {
+            try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
+                Loop::onSignal(defined("SIGPIPE") ? SIGPIPE : 13, function () {});
+            } catch (Loop\UnsupportedFeatureException $e) {}
+
             list($a, $b) = $this->getStreamPair();
 
             $message = \str_repeat(".", 8192 /* default chunk size */);
