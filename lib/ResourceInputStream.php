@@ -49,13 +49,12 @@ final class ResourceInputStream implements InputStream {
         $readable = &$this->readable;
         $resource = &$this->resource;
 
-        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (
-            &$deferred, &$readable, &$resource, $chunkSize
-        ) {
-            // Error reporting suppressed since fread() produces a warning if the stream unexpectedly closes.
+        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, &$resource, $chunkSize) {
+            // Error reporting suppressed since fread() produces a warning if the stream has been shutdown
             $data = @\fread($stream, $chunkSize);
 
-            if ($data === false || ($data === '' && (!\is_resource($stream) || \feof($stream)))) {
+            \assert($data !== false, "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
+            if ($data === '' && \feof($stream)) {
                 $readable = false;
                 Loop::cancel($watcher);
                 $data = null; // Stream closed, resolve read with null.

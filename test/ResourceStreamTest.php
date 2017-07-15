@@ -64,7 +64,8 @@ class ResourceStreamTest extends TestCase {
         Loop::run(function () {
             try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
                 Loop::onSignal(defined("SIGPIPE") ? SIGPIPE : 13, function () {});
-            } catch (Loop\UnsupportedFeatureException $e) {}
+            } catch (Loop\UnsupportedFeatureException $e) {
+            }
 
             list($a, $b) = $this->getStreamPair();
 
@@ -85,7 +86,8 @@ class ResourceStreamTest extends TestCase {
         Loop::run(function () {
             try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
                 Loop::onSignal(defined("SIGPIPE") ? SIGPIPE : 13, function () {});
-            } catch (Loop\UnsupportedFeatureException $e) {}
+            } catch (Loop\UnsupportedFeatureException $e) {
+            }
 
             list($a, $b) = $this->getStreamPair();
 
