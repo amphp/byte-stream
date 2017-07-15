@@ -53,6 +53,7 @@ final class ResourceOutputStream implements OutputStream {
         $resource = &$this->resource;
 
         $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, $chunkSize, &$writable, &$resource) {
+            $firstWrite = true;
             try {
                 while (!$writes->isEmpty()) {
                     /** @var \Amp\Deferred $deferred */
@@ -65,14 +66,21 @@ final class ResourceOutputStream implements OutputStream {
                     }
 
                     // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
-                    // Use conditional, because PHP doesn't like getting null passed.
+                    // Use conditional, because PHP doesn't like getting null passed
                     if ($chunkSize) {
                         $written = @\fwrite($stream, $data, $chunkSize);
                     } else {
                         $written = @\fwrite($stream, $data);
                     }
 
-                    if ($written === false || $written === 0) {
+                    \assert($written !== false, "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
+                    if ($written === 0) {
+                        // fwrite will also return 0 if the buffer is already full. Let's test it on the next call to this writability callback, this guarantees that the buffer isn't full.
+                        if (!$firstWrite) {
+                            $writes->unshift([$data, $previous, $deferred]);
+                            return;
+                        }
+
                         $writable = false;
 
                         $message = "Failed to write to socket";
@@ -90,14 +98,14 @@ final class ResourceOutputStream implements OutputStream {
                         return;
                     }
 
-                    if ($length <= $written) {
-                        $deferred->resolve($written + $previous);
-                        continue;
+                    if ($length > $written) {
+                        $data = \substr($data, $written);
+                        $writes->unshift([$data, $written + $previous, $deferred]);
+                        return;
                     }
 
-                    $data = \substr($data, $written);
-                    $writes->unshift([$data, $written + $previous, $deferred]);
-                    return;
+                    $deferred->resolve($written + $previous);
+                    $firstWrite = false;
                 }
             } finally {
                 if ($writes->isEmpty()) {
@@ -163,14 +171,7 @@ final class ResourceOutputStream implements OutputStream {
                 $written = @\fwrite($this->resource, $data);
             }
 
-            if ($written === false) {
-                $this->close();
-                $message = "Failed to write to stream";
-                if ($error = \error_get_last()) {
-                    $message .= \sprintf(" Errno: %d; %s", $error["type"], $error["message"]);
-                }
-                return new Failure(new StreamException($message));
-            }
+            \assert($written !== false, "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
 
             if ($length === $written) {
                 if ($end) {
