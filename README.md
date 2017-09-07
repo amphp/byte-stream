@@ -1,8 +1,10 @@
-# byte-stream
+[![byte-stream](https://raw.githubusercontent.com/amphp/logo/master/repos/byte-stream.png?v=07-09-2017)](https://amphp.org/byte-stream/)
 
-[![Build Status](https://img.shields.io/travis/amphp/byte-stream/master.svg?style=flat-square)](https://travis-ci.org/amphp/byte-stream)
-[![CoverageStatus](https://img.shields.io/coveralls/amphp/byte-stream/master.svg?style=flat-square)](https://coveralls.io/github/amphp/byte-stream?branch=master)
-![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
+<p align="center">
+<a href="https://travis-ci.org/amphp/byte-stream"><img src="https://img.shields.io/travis/amphp/byte-stream/master.svg?style=flat-square"></a>
+<a href="https://coveralls.io/github/amphp/byte-stream?branch=master"><img src="https://img.shields.io/coveralls/amphp/byte-stream/master.svg?style=flat-square"></a>
+<a href="blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square"></a>
+</p>
 
 `amphp/byte-stream` is a stream abstraction to make working with non-blocking I/O simple.
 
