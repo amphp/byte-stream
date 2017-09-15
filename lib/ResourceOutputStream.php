@@ -81,6 +81,7 @@ final class ResourceOutputStream implements OutputStream {
                             return;
                         }
 
+                        $resource = null;
                         $writable = false;
 
                         $message = "Failed to write to socket";
@@ -144,7 +145,7 @@ final class ResourceOutputStream implements OutputStream {
     }
 
     private function send(string $data, bool $end = false): Promise {
-        if ($this->resource === null) {
+        if (!$this->writable) {
             return new Failure(new StreamException("The stream is not writable"));
         }
 
