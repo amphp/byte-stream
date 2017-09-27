@@ -20,6 +20,8 @@ defaults:
      type: "pages"
    values:
      layout: "docs"
+     description: "amphp/byte-stream is a byte stream abstraction for Amp providing interfaces for InputStream and OutputStream."
+     keywords: ['amphp', 'amp', 'byte-stream', 'non-blocking', 'io', 'stream', 'compression']
 
 shared_asset_path: "/byte-stream/asset"
 
