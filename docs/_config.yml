@@ -4,9 +4,10 @@ kramdown:
 
 baseurl: "/byte-stream"
 layouts_dir: ".shared/layout"
+includes_dir: ".shared/includes"
 
 exclude: ["Gemfile", "Gemfile.lock", "README.md", "vendor"]
-include: [".shared"]
+safe: true
 
 repository: amphp/byte-stream
 gems:
@@ -20,7 +21,7 @@ defaults:
    values:
      layout: "docs"
 
-asset_path: "/byte-stream/.shared/asset"
+shared_asset_path: "/byte-stream/asset"
 
 navigation:
  - resource-streams
