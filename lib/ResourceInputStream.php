@@ -47,9 +47,8 @@ final class ResourceInputStream implements InputStream {
 
         $deferred = &$this->deferred;
         $readable = &$this->readable;
-        $resource = &$this->resource;
 
-        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, &$resource, $chunkSize) {
+        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, $chunkSize) {
             // Error reporting suppressed since fread() produces a warning if the stream has been shutdown
             $data = @\fread($stream, $chunkSize);
 
