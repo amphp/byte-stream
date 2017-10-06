@@ -25,9 +25,17 @@ final class ResourceInputStream implements InputStream {
     /** @var bool */
     private $readable = true;
 
+    /** @var int */
+    private $chunkSize;
+
+    /** @var bool */
+    private $useSingleRead;
+
     /**
      * @param resource $stream Stream resource.
      * @param int $chunkSize Chunk size per read operation.
+     *
+     * @throws \Error If an invalid stream or parameter has been passed.
      */
     public function __construct($stream, int $chunkSize = self::DEFAULT_CHUNK_SIZE) {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
@@ -35,7 +43,8 @@ final class ResourceInputStream implements InputStream {
         }
 
         $meta = \stream_get_meta_data($stream);
-        $useFread = $meta["stream_type"] === "udp_socket" || $meta["stream_type"] === "STDIO";
+        $useSingleRead = $meta["stream_type"] === "udp_socket" || $meta["stream_type"] === "STDIO";
+        $this->useSingleRead = $useSingleRead;
 
         if (\strpos($meta["mode"], "r") === false && \strpos($meta["mode"], "+") === false) {
             throw new \Error("Expected a readable stream");
@@ -45,12 +54,15 @@ final class ResourceInputStream implements InputStream {
         \stream_set_read_buffer($stream, 0);
 
         $this->resource = $stream;
+        $this->chunkSize = $chunkSize;
 
         $deferred = &$this->deferred;
         $readable = &$this->readable;
 
-        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, $chunkSize, $useFread) {
-            if ($useFread) {
+        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (
+            &$deferred, &$readable, $chunkSize, $useSingleRead
+        ) {
+            if ($useSingleRead) {
                 $data = @\fread($stream, $chunkSize);
             } else {
                 $data = @\stream_get_contents($stream, $chunkSize);
@@ -89,10 +101,32 @@ final class ResourceInputStream implements InputStream {
             return new Success; // Resolve with null on closed stream.
         }
 
-        $this->deferred = new Deferred;
-        Loop::enable($this->watcher);
+        // Attempt a direct read, because Windows suffers from slow I/O on STDIN otherwise.
+        if ($this->useSingleRead) {
+            $data = @\fread($this->resource, $this->chunkSize);
+        } else {
+            $data = @\stream_get_contents($this->resource, $this->chunkSize);
+        }
 
-        return $this->deferred->promise();
+        \assert($data !== false, "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
+
+        if ($data === '') {
+            // Error suppression, because pthreads does crazy things with resources,
+            // which might be closed during two operations.
+            // See https://github.com/amphp/byte-stream/issues/32
+            if (@\feof($this->resource)) {
+                $this->readable = false;
+                Loop::cancel($this->watcher);
+                $data = null; // Stream closed, resolve read with null.
+            } else {
+                $this->deferred = new Deferred;
+                Loop::enable($this->watcher);
+
+                return $this->deferred->promise();
+            }
+        }
+
+        return new Success($data);
     }
 
     /**
@@ -125,7 +159,7 @@ final class ResourceInputStream implements InputStream {
         if ($this->deferred !== null) {
             $deferred = $this->deferred;
             $this->deferred = null;
-            $deferred->resolve(null);
+            $deferred->resolve();
         }
 
         Loop::cancel($this->watcher);
