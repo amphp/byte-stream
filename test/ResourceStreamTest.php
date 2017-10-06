@@ -2,21 +2,24 @@
 
 namespace Amp\ByteStream\Test;
 
+use Amp\ByteStream\ClosedException;
+use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
+use Amp\Success;
 use Amp\Loop;
 use PHPUnit\Framework\TestCase;
 
 class ResourceStreamTest extends TestCase {
     const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
 
-    public function getStreamPair() {
+    public function getStreamPair($outputChunkSize = null, $inputChunkSize = ResourceInputStream::DEFAULT_CHUNK_SIZE) {
         $domain = \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX;
         list($left, $right) = @\stream_socket_pair($domain, \STREAM_SOCK_STREAM, \STREAM_IPPROTO_IP);
 
-        $a = new ResourceOutputStream($left);
-        $b = new ResourceInputStream($right);
+        $a = new ResourceOutputStream($left, $outputChunkSize);
+        $b = new ResourceInputStream($right, $inputChunkSize);
 
         return [$a, $b];
     }
@@ -101,6 +104,134 @@ class ResourceStreamTest extends TestCase {
             $b->close();
 
             yield $lastWritePromise;
+        });
+    }
+
+    public function testThrowsOnCloseBeforeWritingComplete() {
+        $this->expectException(ClosedException::class);
+
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair(4096);
+
+            $message = \str_repeat(".", 8192 /* default chunk size */);
+
+            $lastWritePromise = $a->end($message);
+
+            $a->close();
+
+            yield $lastWritePromise;
+        });
+    }
+
+    public function testThrowsOnStreamNotWritable() {
+        $this->expectException(StreamException::class);
+
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair();
+
+            $message = \str_repeat(".", 8192 /* default chunk size */);
+
+            $a->close();
+
+            $lastWritePromise = $a->end($message);
+
+            yield $lastWritePromise;
+        });
+    }
+
+    public function testThrowsOnReferencingClosedStream() {
+        $this->expectException(\Error::class);
+
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair();
+
+            $b->close();
+
+            $b->reference();
+        });
+    }
+
+    public function testThrowsOnUnreferencingClosedStream() {
+        $this->expectException(\Error::class);
+
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair();
+
+            $b->close();
+
+            $b->unreference();
+        });
+    }
+
+    public function testThrowsOnPendingRead() {
+        $this->expectException(PendingReadError::class);
+
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair();
+
+            $b->read();
+            $b->read();
+        });
+    }
+
+    public function testResolveSuccessOnClosedStream() {
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair();
+
+            $b->close();
+
+            $this->assertInstanceOf(Success::class, $b->read());
+        });
+    }
+
+    public function testChunkedPayload() {
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair(4096);
+
+            $message = \str_repeat(".", 8192 /* default chunk size */);
+
+            \Amp\Promise\rethrow($a->end($message));
+
+            $received = "";
+            while (null !== $chunk = yield $b->read()) {
+                $received .= $chunk;
+            }
+
+            $this->assertSame($message, $received);
+        });
+    }
+
+    public function testEmptyPayload() {
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair(4096);
+
+            $message = "";
+
+            \Amp\Promise\rethrow($a->end($message));
+
+            $received = "";
+            while (null !== $chunk = yield $b->read()) {
+                $received .= $chunk;
+            }
+
+            $this->assertSame($message, $received);
+        });
+    }
+
+    public function testCloseStreamAfterEndPayload() {
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair();
+
+            $message = \str_repeat(".", 8192 /* default chunk size */);
+
+            \Amp\Promise\rethrow($a->end($message));
+
+            $received = "";
+            while (null !== $chunk = yield $b->read()) {
+                $received .= $chunk;
+            }
+
+            $this->assertSame($message, $received);
         });
     }
 }

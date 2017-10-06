@@ -177,6 +177,21 @@ class MessageTest extends TestCase {
         });
     }
 
+    public function testEmptyStringStream() {
+        Loop::run(function () {
+            $value = "";
+
+            $emitter = new Emitter;
+            $stream = new Message(new IteratorStream($emitter->iterate()));
+
+            $emitter->emit($value);
+
+            $emitter->complete();
+
+            $this->assertSame("", yield $stream);
+        });
+    }
+
     public function testReadAfterCompletion() {
         Loop::run(function () {
             $value = "abc";

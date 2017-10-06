@@ -50,7 +50,7 @@ final class ZlibInputStream implements InputStream {
             }
 
             if ($data === null) {
-                $decompressed = \inflate_add($this->resource, "", \ZLIB_FINISH);
+                $decompressed = @\inflate_add($this->resource, "", \ZLIB_FINISH);
 
                 if ($decompressed === false) {
                     throw new StreamException("Failed adding data to deflate context");
@@ -61,7 +61,7 @@ final class ZlibInputStream implements InputStream {
                 return $decompressed;
             }
 
-            $decompressed = \inflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+            $decompressed = @\inflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
 
             if ($decompressed === false) {
                 throw new StreamException("Failed adding data to deflate context");
