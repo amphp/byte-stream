@@ -2,17 +2,16 @@
 
 namespace Amp\ByteStream\Test;
 
+use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\OutputStream;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\StreamException;
-use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\ByteStream\ZlibOutputStream;
 use Amp\Deferred;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
-use Amp\Producer;
 use Amp\Promise;
 use Amp\Success;
 

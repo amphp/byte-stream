@@ -6,7 +6,6 @@ use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\StreamException;
 use Amp\Emitter;
 use Amp\Loop;
-use Amp\Producer;
 use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
 
