@@ -7,8 +7,8 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
-use Amp\Success;
 use Amp\Loop;
+use Amp\Success;
 use PHPUnit\Framework\TestCase;
 
 class ResourceStreamTest extends TestCase {
