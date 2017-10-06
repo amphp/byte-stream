@@ -143,6 +143,30 @@ class MessageTest extends TestCase {
         });
     }
 
+    public function testFailingStreamWithPendingRead() {
+        Loop::run(function () {
+            $exception = new TestException;
+            $value = "abc";
+
+            $emitter = new Emitter;
+            $stream = new Message(new IteratorStream($emitter->iterate()));
+
+            $readPromise = $stream->read();
+            $emitter->fail($exception);
+
+            $callable = $this->createCallback(1);
+
+            try {
+                yield $readPromise;
+
+                $this->fail("No exception has been thrown");
+            } catch (TestException $reason) {
+                $this->assertSame($exception, $reason);
+                $callable(); // <-- ensure this point is reached
+            }
+        });
+    }
+
     public function testEmptyStream() {
         Loop::run(function () {
             $emitter = new Emitter;
