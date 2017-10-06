@@ -36,9 +36,38 @@ class ZlibInputStreamTest extends TestCase {
         });
     }
 
+    public function testGetEncoding() {
+        $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
+
+        $this->assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
+    }
+
     public function testInvalidEncoding() {
         $this->expectException(StreamException::class);
 
         new ZlibInputStream(new InMemoryStream(""), 1337);
+    }
+
+    public function testGetOptions() {
+        $options = [
+            "level" => -1,
+            "memory" => 8,
+            "window" => 15,
+            "strategy" => \ZLIB_DEFAULT_STRATEGY,
+        ];
+
+        $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP, $options);
+
+        $this->assertSame($options, $gzStream->getOptions());
+    }
+
+    public function testInvalidStream() {
+        $this->expectException(StreamException::class);
+
+        Loop::run(function () {
+            $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
+
+            yield $gzStream->read();
+        });
     }
 }
