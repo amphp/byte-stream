@@ -103,6 +103,12 @@ class Message implements InputStream, Promise {
                 if ($error) {
                     $this->error = $error;
                 }
+
+                if ($this->pendingRead) {
+                    $deferred = $this->pendingRead;
+                    $this->pendingRead = null;
+                    $deferred->fail($error);
+                }
             });
         }
 
