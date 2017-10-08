@@ -27,7 +27,7 @@ final class ResourceInputStream implements InputStream {
 
     /**
      * @param resource $stream Stream resource.
-     * @param int $chunkSize Chunk size per `fread()` operation.
+     * @param int $chunkSize Chunk size per read operation.
      */
     public function __construct($stream, int $chunkSize = self::DEFAULT_CHUNK_SIZE) {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
@@ -35,6 +35,7 @@ final class ResourceInputStream implements InputStream {
         }
 
         $meta = \stream_get_meta_data($stream);
+        $isUdp = $meta["stream_type"] === "udp_socket";
 
         if (\strpos($meta["mode"], "r") === false && \strpos($meta["mode"], "+") === false) {
             throw new \Error("Expected a readable stream");
@@ -48,9 +49,12 @@ final class ResourceInputStream implements InputStream {
         $deferred = &$this->deferred;
         $readable = &$this->readable;
 
-        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, $chunkSize) {
-            // Error reporting suppressed since fread() produces a warning if the stream has been shutdown
-            $data = @\fread($stream, $chunkSize);
+        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, $chunkSize, $isUdp) {
+            if ($isUdp) {
+                $data = @\fread($stream, $chunkSize);
+            } else {
+                $data = @\stream_get_contents($stream, $chunkSize);
+            }
 
             \assert($data !== false, "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
             if ($data === '' && \feof($stream)) {
