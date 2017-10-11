@@ -24,7 +24,9 @@ function pipe(InputStream $source, OutputStream $destination): Promise {
 
         while (($chunk = yield $source->read()) !== null) {
             $written += \strlen($chunk);
-            yield $destination->write($chunk);
+            $writePromise = $destination->write($chunk);
+            $chunk = null; // free memory
+            yield $writePromise;
         }
 
         return $written;
