@@ -39,7 +39,7 @@ final class ZlibOutputStream implements OutputStream {
             throw new ClosedException("The stream has already been closed");
         }
 
-        $compressed = @\deflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+        $compressed = \deflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
 
         if ($compressed === false) {
             throw new StreamException("Failed adding data to deflate context");
@@ -61,7 +61,7 @@ final class ZlibOutputStream implements OutputStream {
             throw new ClosedException("The stream has already been closed");
         }
 
-        $compressed = @\deflate_add($this->resource, $finalData, \ZLIB_FINISH);
+        $compressed = \deflate_add($this->resource, $finalData, \ZLIB_FINISH);
 
         if ($compressed === false) {
             throw new StreamException("Failed adding data to deflate context");
