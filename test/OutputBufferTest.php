@@ -3,7 +3,6 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\ClosedException;
-use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\OutputBuffer;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
@@ -15,9 +14,7 @@ class OutputBufferTest extends TestCase {
             $output->write('foo');
             $output->end();
 
-            $memory = new InMemoryStream(yield $output);
-
-            $this->assertSame('foo', yield $memory->read());
+            $this->assertSame('foo', yield $output);
         });
     }
 
@@ -27,9 +24,7 @@ class OutputBufferTest extends TestCase {
             $output->write('foo');
             $output->end('bar');
 
-            $memory = new InMemoryStream(yield $output);
-
-            $this->assertSame('foobar', yield $memory->read());
+            $this->assertSame('foobar', yield $output);
         });
     }
 
