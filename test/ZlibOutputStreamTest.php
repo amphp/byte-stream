@@ -4,16 +4,13 @@ namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\OutputStream;
+use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\ByteStream\ZlibOutputStream;
-use Amp\Deferred;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
-use Amp\Promise;
-use Amp\Success;
 
 class ZlibOutputStreamTest extends TestCase {
     public function testWrite() {
@@ -91,47 +88,5 @@ class ZlibOutputStreamTest extends TestCase {
         $this->expectException(StreamException::class);
 
         new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
-    }
-}
-
-class OutputBuffer implements OutputStream, Promise {
-    /** @var \Amp\Deferred|null */
-    private $deferred;
-
-    /** @var string */
-    private $contents;
-
-    private $closed = false;
-
-    public function __construct() {
-        $this->deferred = new Deferred;
-    }
-
-    public function write(string $data): Promise {
-        if ($this->closed) {
-            throw new ClosedException("The stream has already been closed.");
-        }
-
-        $this->contents .= $data;
-
-        return new Success(\strlen($data));
-    }
-
-    public function end(string $finalData = ""): Promise {
-        if ($this->closed) {
-            throw new ClosedException("The stream has already been closed.");
-        }
-
-        $this->contents .= $finalData;
-        $this->closed = true;
-
-        $this->deferred->resolve($this->contents);
-        $this->contents = "";
-
-        return new Success(\strlen($finalData));
-    }
-
-    public function onResolve(callable $onResolved) {
-        $this->deferred->promise()->onResolve($onResolved);
     }
 }
