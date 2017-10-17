@@ -109,6 +109,7 @@ final class ResourceInputStream implements InputStream {
             } else {
                 @\fclose($this->resource);
             }
+            $this->resource = null;
         }
 
         $this->free();
@@ -118,7 +119,6 @@ final class ResourceInputStream implements InputStream {
      * Nulls reference to resource, marks stream unreadable, and succeeds any pending read with null.
      */
     private function free() {
-        $this->resource = null;
         $this->readable = false;
 
         if ($this->deferred !== null) {
