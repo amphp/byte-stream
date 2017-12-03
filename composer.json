@@ -45,5 +45,10 @@
         "psr-4": {
             "Amp\\ByteStream\\Test\\": "test"
         }
+    },
+    "config": {
+        "platform": {
+            "php": "7.0.0"
+        }
     }
 }
