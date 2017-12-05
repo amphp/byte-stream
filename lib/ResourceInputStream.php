@@ -35,7 +35,7 @@ final class ResourceInputStream implements InputStream {
         }
 
         $meta = \stream_get_meta_data($stream);
-        $isUdp = $meta["stream_type"] === "udp_socket";
+        $useFread = $meta["stream_type"] === "udp_socket" || $meta["stream_type"] === "STDIO";
 
         if (\strpos($meta["mode"], "r") === false && \strpos($meta["mode"], "+") === false) {
             throw new \Error("Expected a readable stream");
@@ -49,8 +49,8 @@ final class ResourceInputStream implements InputStream {
         $deferred = &$this->deferred;
         $readable = &$this->readable;
 
-        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, $chunkSize, $isUdp) {
-            if ($isUdp) {
+        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, $chunkSize, $useFread) {
+            if ($useFread) {
                 $data = @\fread($stream, $chunkSize);
             } else {
                 $data = @\stream_get_contents($stream, $chunkSize);
