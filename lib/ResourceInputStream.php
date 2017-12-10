@@ -58,8 +58,9 @@ final class ResourceInputStream implements InputStream {
 
             \assert($data !== false, "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
 
-            // error suppression, because pthreads does crazy things with resources, which might be closed during two operations
-            // see https://github.com/amphp/byte-stream/issues/32
+            // Error suppression, because pthreads does crazy things with resources,
+            // which might be closed during two operations.
+            // See https://github.com/amphp/byte-stream/issues/32
             if ($data === '' && @\feof($stream)) {
                 $readable = false;
                 Loop::cancel($watcher);
@@ -108,7 +109,7 @@ final class ResourceInputStream implements InputStream {
             $meta = @\stream_get_meta_data($this->resource);
 
             if ($meta && \strpos($meta["mode"], "+") !== false) {
-                \stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
+                @\stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
             } else {
                 @\fclose($this->resource);
             }

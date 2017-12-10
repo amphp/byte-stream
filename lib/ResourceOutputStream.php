@@ -207,7 +207,7 @@ final class ResourceOutputStream implements OutputStream {
             $meta = @\stream_get_meta_data($this->resource);
 
             if ($meta && \strpos($meta["mode"], "+") !== false) {
-                \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
+                @\stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
             } else {
                 @\fclose($this->resource);
             }
