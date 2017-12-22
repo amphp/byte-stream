@@ -10,6 +10,7 @@ use Amp\Promise;
 final class IteratorStream implements InputStream {
     private $iterator;
     private $exception;
+    private $pending = false;
 
     public function __construct(Iterator $iterator) {
         $this->iterator = $iterator;
@@ -21,9 +22,16 @@ final class IteratorStream implements InputStream {
             return new Failure($this->exception);
         }
 
+        if ($this->pending) {
+            throw new PendingReadError;
+        }
+
+        $this->pending = true;
         $deferred = new Deferred;
 
         $this->iterator->advance()->onResolve(function ($error, $hasNextElement) use ($deferred) {
+            $this->pending = false;
+
             if ($error) {
                 $this->exception = $error;
                 $deferred->fail($error);
@@ -43,7 +51,7 @@ final class IteratorStream implements InputStream {
 
                 $deferred->resolve($chunk);
             } else {
-                $deferred->resolve(null);
+                $deferred->resolve();
             }
         });
 
