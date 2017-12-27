@@ -98,9 +98,6 @@ final class ResourceInputStream implements InputStream {
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
      *
-     * This does only free the resource internally, the underlying file descriptor isn't closed. This is left to PHP's
-     * garbage collection system.
-     *
      * @return void
      */
     public function close() {
