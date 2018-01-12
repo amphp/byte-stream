@@ -12,6 +12,14 @@ if (\strlen('…') !== 3) {
     );
 } // @codeCoverageIgnoreEnd
 
+if (!\defined('STDOUT')) {
+    \define('STDOUT', \fopen('php://stdout', 'w'));
+}
+
+if (!\defined('STDERR')) {
+    \define('STDERR', \fopen('php://stderr', 'w'));
+}
+
 /**
  * @param \Amp\ByteStream\InputStream  $source
  * @param \Amp\ByteStream\OutputStream $destination
