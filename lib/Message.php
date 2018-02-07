@@ -2,11 +2,9 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Coroutine;
-use Amp\Deferred;
-use Amp\Failure;
 use Amp\Promise;
-use Amp\Success;
+use function Amp\asyncCall;
+use function Amp\call;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
@@ -30,128 +28,78 @@ use Amp\Success;
  */
 class Message implements InputStream, Promise {
     /** @var InputStream */
-    private $source;
+    private $stream;
 
-    /** @var string */
-    private $buffer = "";
+    /** @var Promise|null */
+    private $promise;
 
-    /** @var \Amp\Deferred|null */
-    private $pendingRead;
-
-    /** @var \Amp\Coroutine */
-    private $coroutine;
-
-    /** @var bool True if onResolve() has been called. */
-    private $buffering = false;
-
-    /** @var \Amp\Deferred|null */
-    private $backpressure;
-
-    /** @var bool True if the iterator has completed. */
-    private $complete = false;
-
-    /** @var \Throwable Used to fail future reads on failure. */
-    private $error;
+    /** @var Promise|null */
+    private $lastRead;
 
     /**
-     * @param InputStream $source An iterator that only emits strings.
+     * @param InputStream $stream Any input stream.
      */
-    public function __construct(InputStream $source) {
-        $this->source = $source;
+    public function __construct(InputStream $stream) {
+        $this->stream = $stream;
     }
 
-    private function consume(): \Generator {
-        while (($chunk = yield $this->source->read()) !== null) {
-            $buffer = $this->buffer .= $chunk;
+    public function __destruct() {
+        if (!$this->promise) {
+            if ($this->lastRead) {
+                asyncCall(function () {
+                    try {
+                        yield $this->lastRead;
+                    } catch (\Throwable $e) {
+                        // ignore
+                    }
 
-            if ($buffer === "") {
-                continue; // Do not succeed reads with empty string.
-            } elseif ($this->pendingRead) {
-                $deferred = $this->pendingRead;
-                $this->pendingRead = null;
-                $this->buffer = "";
-                $deferred->resolve($buffer);
-                $buffer = ""; // Destroy last emitted chunk to free memory.
-            } elseif (!$this->buffering) {
-                $buffer = ""; // Destroy last emitted chunk to free memory.
-                $this->backpressure = new Deferred;
-                yield $this->backpressure->promise();
+                    yield discard($this->stream);
+                });
+            } else {
+                Promise\rethrow(discard($this->stream));
             }
         }
-
-        $this->complete = true;
-
-        if ($this->pendingRead) {
-            $deferred = $this->pendingRead;
-            $this->pendingRead = null;
-            $deferred->resolve($this->buffer !== "" ? $this->buffer : null);
-            $this->buffer = "";
-        }
-
-        return $this->buffer;
     }
 
     /** @inheritdoc */
     final public function read(): Promise {
-        if ($this->pendingRead) {
-            throw new PendingReadError;
+        if ($this->promise) {
+            throw new PendingReadError('Cannot stream message data once a buffered message has been requested');
         }
 
-        if ($this->coroutine === null) {
-            $this->coroutine = new Coroutine($this->consume());
-            $this->coroutine->onResolve(function ($error) {
-                if ($error) {
-                    $this->error = $error;
-                }
+        return $this->lastRead = $this->stream->read();
+    }
 
-                if ($this->pendingRead) {
-                    $deferred = $this->pendingRead;
-                    $this->pendingRead = null;
-                    $deferred->fail($error);
-                }
-            });
+    /**
+     * Buffers the entire message and resolves the returned promise then.
+     *
+     * @param int|null $sizeLimit Size limit in bytes or `null` for no limit.
+     *
+     * @return Promise<string> Resolves with the entire message contents.
+     *
+     * @see buffer()
+     */
+    final public function buffer(int $sizeLimit = null): Promise {
+        if ($this->promise) {
+            return $this->promise;
         }
 
-        if ($this->error) {
-            return new Failure($this->error);
+        if (!$this->lastRead) {
+            return $this->promise = buffer($this->stream, $sizeLimit);
         }
 
-        if ($this->buffer !== "") {
-            $buffer = $this->buffer;
-            $this->buffer = "";
+        return call(function () use ($sizeLimit) {
+            yield $this->lastRead; // discarded
 
-            if ($this->backpressure) {
-                $backpressure = $this->backpressure;
-                $this->backpressure = null;
-                $backpressure->resolve();
-            }
-
-            return new Success($buffer);
-        }
-
-        if ($this->complete) {
-            return new Success;
-        }
-
-        $this->pendingRead = new Deferred;
-        return $this->pendingRead->promise();
+            return buffer($this->stream, $sizeLimit);
+        });
     }
 
     /** @inheritdoc */
     final public function onResolve(callable $onResolved) {
-        $this->buffering = true;
+        \trigger_error('Message::onResolve() and yielding Message objects directly is now deprecated and will be removed in a future version. Use Message::buffer() instead.', \E_USER_DEPRECATED);
 
-        if ($this->coroutine === null) {
-            $this->coroutine = new Coroutine($this->consume());
-        }
-
-        if ($this->backpressure) {
-            $backpressure = $this->backpressure;
-            $this->backpressure = null;
-            $backpressure->resolve();
-        }
-
-        $this->coroutine->onResolve($onResolved);
+        $this->buffer()->onResolve($onResolved);
     }
 
     /**
@@ -163,6 +111,6 @@ class Message implements InputStream, Promise {
      * @return InputStream
      */
     final public function getInputStream(): InputStream {
-        return $this->source;
+        return $this->stream;
     }
 }

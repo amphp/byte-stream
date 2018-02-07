@@ -12,6 +12,16 @@ use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
 
 class MessageTest extends TestCase {
+    private $errorReporting;
+
+    public function setUp() {
+        $this->errorReporting = \error_reporting(\E_ALL ^ \E_USER_DEPRECATED);
+    }
+
+    public function tearDown() {
+        \error_reporting($this->errorReporting);
+    }
+
     public function testBufferingAll() {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
@@ -146,7 +156,6 @@ class MessageTest extends TestCase {
     public function testFailingStreamWithPendingRead() {
         Loop::run(function () {
             $exception = new TestException;
-            $value = "abc";
 
             $emitter = new Emitter;
             $stream = new Message(new IteratorStream($emitter->iterate()));
