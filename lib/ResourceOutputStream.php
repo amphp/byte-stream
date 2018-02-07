@@ -146,7 +146,7 @@ final class ResourceOutputStream implements OutputStream {
 
     private function send(string $data, bool $end = false): Promise {
         if (!$this->writable) {
-            return new Failure(new StreamException("The stream is not writable"));
+            return new Failure(new ClosedException("The stream is not writable"));
         }
 
         $length = \strlen($data);
