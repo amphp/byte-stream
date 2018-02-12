@@ -2,8 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-
 /**
  * An `InputStream` allows reading byte streams in chunks.
  *
@@ -11,15 +9,13 @@ use Amp\Promise;
  *
  * ```php
  * function readAll(InputStream $in): Promise {
- *     return Amp\call(function () use ($in) {
- *         $buffer = "";
+ *     $buffer = "";
  *
- *         while (($chunk = yield $in->read()) !== null) {
- *             $buffer .= $chunk;
- *         }
+ *     while (null !== $chunk = $in->read()) {
+ *         $buffer .= $chunk;
+ *     }
  *
- *         return $buffer;
- *     });
+ *     return $buffer;
  * }
  * ```
  */
@@ -27,9 +23,9 @@ interface InputStream {
     /**
      * Reads data from the stream.
      *
-     * @return Promise Resolves with a string when new data is available or `null` if the stream has closed.
+     * @return string Available data or `null` if the stream has closed.
      *
      * @throws PendingReadError Thrown if another read operation is still pending.
      */
-    public function read(): Promise;
+    public function read(): ?string;
 }

@@ -18,7 +18,7 @@ use Amp\Success;
  * Buffering Example:
  *
  * $stream = new Message($inputStream);
- * $content = yield $stream;
+ * $content = $stream->buffer();
  *
  * Streaming Example:
  *
@@ -28,27 +28,15 @@ use Amp\Success;
  *     // Immediately use $chunk, reducing memory consumption since the entire message is never buffered.
  * }
  */
-class Message implements InputStream, Promise {
+class Message implements InputStream {
     /** @var InputStream */
     private $source;
-
-    /** @var string */
-    private $buffer = "";
 
     /** @var \Amp\Deferred|null */
     private $pendingRead;
 
-    /** @var \Amp\Coroutine */
-    private $coroutine;
-
     /** @var bool True if onResolve() has been called. */
     private $buffering = false;
-
-    /** @var \Amp\Deferred|null */
-    private $backpressure;
-
-    /** @var bool True if the iterator has completed. */
-    private $complete = false;
 
     /** @var \Throwable Used to fail future reads on failure. */
     private $error;
@@ -60,98 +48,30 @@ class Message implements InputStream, Promise {
         $this->source = $source;
     }
 
-    private function consume(): \Generator {
-        while (($chunk = yield $this->source->read()) !== null) {
-            $buffer = $this->buffer .= $chunk;
-
-            if ($buffer === "") {
-                continue; // Do not succeed reads with empty string.
-            } elseif ($this->pendingRead) {
-                $deferred = $this->pendingRead;
-                $this->pendingRead = null;
-                $this->buffer = "";
-                $deferred->resolve($buffer);
-                $buffer = ""; // Destroy last emitted chunk to free memory.
-            } elseif (!$this->buffering) {
-                $buffer = ""; // Destroy last emitted chunk to free memory.
-                $this->backpressure = new Deferred;
-                yield $this->backpressure->promise();
-            }
-        }
-
-        $this->complete = true;
-
-        if ($this->pendingRead) {
-            $deferred = $this->pendingRead;
-            $this->pendingRead = null;
-            $deferred->resolve($this->buffer !== "" ? $this->buffer : null);
-            $this->buffer = "";
-        }
-
-        return $this->buffer;
-    }
-
     /** @inheritdoc */
-    final public function read(): Promise {
+    final public function read(): ?string {
         if ($this->pendingRead) {
             throw new PendingReadError;
         }
 
-        if ($this->coroutine === null) {
-            $this->coroutine = new Coroutine($this->consume());
-            $this->coroutine->onResolve(function ($error) {
-                if ($error) {
-                    $this->error = $error;
-                }
-
-                if ($this->pendingRead) {
-                    $deferred = $this->pendingRead;
-                    $this->pendingRead = null;
-                    $deferred->fail($error);
-                }
-            });
-        }
-
         if ($this->error) {
-            return new Failure($this->error);
+            throw $this->error;
         }
 
-        if ($this->buffer !== "") {
-            $buffer = $this->buffer;
-            $this->buffer = "";
-
-            if ($this->backpressure) {
-                $backpressure = $this->backpressure;
-                $this->backpressure = null;
-                $backpressure->resolve();
-            }
-
-            return new Success($buffer);
-        }
-
-        if ($this->complete) {
-            return new Success;
-        }
-
-        $this->pendingRead = new Deferred;
-        return $this->pendingRead->promise();
+        return $this->source->read();
     }
 
     /** @inheritdoc */
-    final public function onResolve(callable $onResolved) {
+    final public function buffer() {
         $this->buffering = true;
 
-        if ($this->coroutine === null) {
-            $this->coroutine = new Coroutine($this->consume());
+        $buffer = "";
+
+        while (null !== $chunk = $this->source->read()) {
+            $buffer .= $chunk;
         }
 
-        if ($this->backpressure) {
-            $backpressure = $this->backpressure;
-            $this->backpressure = null;
-            $backpressure->resolve();
-        }
-
-        $this->coroutine->onResolve($onResolved);
+        return $buffer;
     }
 
     /**

@@ -3,15 +3,18 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\InMemoryStream;
+use function Amp\GreenThread\async;
 use Amp\Loop;
 use PHPUnit\Framework\TestCase;
 
 class InMemoryStreamTest extends TestCase {
     public function testSingleReadConsumesEverything() {
-        Loop::run(function () {
+        async(function () {
             $stream = new InMemoryStream("foobar");
-            $this->assertSame("foobar", yield $stream->read());
-            $this->assertNull(yield $stream->read());
+            $this->assertSame("foobar", $stream->read());
+            $this->assertNull($stream->read());
         });
+
+        Loop::run();
     }
 }

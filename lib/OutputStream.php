@@ -13,11 +13,9 @@ interface OutputStream {
      *
      * @param string $data Bytes to write.
      *
-     * @return Promise Succeeds once the data has been successfully written to the stream.
-     *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function write(string $data): Promise;
+    public function write(string $data): void;
 
     /**
      * Marks the stream as no longer writable. Optionally writes a final data chunk before. Note that this is not the
@@ -26,9 +24,7 @@ interface OutputStream {
      *
      * @param string $finalData Bytes to write.
      *
-     * @return Promise Succeeds once the data has been successfully written to the stream.
-     *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function end(string $finalData = ""): Promise;
+    public function end(string $finalData = ""): void;
 }

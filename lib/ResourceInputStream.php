@@ -4,14 +4,13 @@ namespace Amp\ByteStream;
 
 use Amp\Deferred;
 use Amp\Loop;
-use Amp\Promise;
-use Amp\Success;
+use function Amp\GreenThread\await;
 
 /**
  * Input stream abstraction for PHP's stream resources.
  */
 final class ResourceInputStream implements InputStream {
-    const DEFAULT_CHUNK_SIZE = 8192;
+    private const DEFAULT_CHUNK_SIZE = 8192;
 
     /** @var resource */
     private $resource;
@@ -80,19 +79,19 @@ final class ResourceInputStream implements InputStream {
     }
 
     /** @inheritdoc */
-    public function read(): Promise {
+    public function read(): ?string {
         if ($this->deferred !== null) {
             throw new PendingReadError;
         }
 
         if (!$this->readable) {
-            return new Success; // Resolve with null on closed stream.
+            return null; // Resolve with null on closed stream.
         }
 
         $this->deferred = new Deferred;
         Loop::enable($this->watcher);
 
-        return $this->deferred->promise();
+        return await($this->deferred->promise());
     }
 
     /**
@@ -125,7 +124,7 @@ final class ResourceInputStream implements InputStream {
         if ($this->deferred !== null) {
             $deferred = $this->deferred;
             $this->deferred = null;
-            $deferred->resolve(null);
+            $deferred->resolve();
         }
 
         Loop::cancel($this->watcher);

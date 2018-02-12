@@ -7,13 +7,15 @@ use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\Message;
 use Amp\ByteStream\PendingReadError;
 use Amp\Emitter;
+use function Amp\GreenThread\async;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
+use function Amp\Promise\wait;
 
 class MessageTest extends TestCase {
     public function testBufferingAll() {
-        Loop::run(function () {
+        wait(async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -25,12 +27,12 @@ class MessageTest extends TestCase {
 
             $emitter->complete();
 
-            $this->assertSame(\implode($values), yield $stream);
-        });
+            $this->assertSame(\implode($values), $stream);
+        }));
     }
 
     public function testFullStreamConsumption() {
-        Loop::run(function () use (&$invoked) {
+        wait(async(function () use (&$invoked) {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -45,17 +47,17 @@ class MessageTest extends TestCase {
             });
 
             $buffer = "";
-            while (($chunk = yield $stream->read()) !== null) {
+            while (($chunk = $stream->read()) !== null) {
                 $buffer .= $chunk;
             }
 
             $this->assertSame(\implode($values), $buffer);
-            $this->assertSame("", yield $stream);
-        });
+            $this->assertSame("", $stream);
+        }));
     }
 
     public function testFastResolvingStream() {
-        Loop::run(function () {
+        wait(async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -68,17 +70,17 @@ class MessageTest extends TestCase {
             $emitter->complete();
 
             $emitted = [];
-            while (($chunk = yield $stream->read()) !== null) {
+            while (($chunk = $stream->read()) !== null) {
                 $emitted[] = $chunk;
             }
 
             $this->assertSame($values, $emitted);
-            $this->assertSame("", yield $stream);
-        });
+            $this->assertSame("", $stream);
+        }));
     }
 
     public function testFastResolvingStreamBufferingOnly() {
-        Loop::run(function () {
+        wait(async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -90,12 +92,12 @@ class MessageTest extends TestCase {
 
             $emitter->complete();
 
-            $this->assertSame(\implode($values), yield $stream);
-        });
+            $this->assertSame(\implode($values), $stream);
+        }));
     }
 
     public function testPartialStreamConsumption() {
-        Loop::run(function () {
+        wait(async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -103,7 +105,7 @@ class MessageTest extends TestCase {
 
             $emitter->emit($values[0]);
 
-            $chunk = yield $stream->read();
+            $chunk = $stream->read();
 
             $this->assertSame(\array_shift($values), $chunk);
 
@@ -113,12 +115,12 @@ class MessageTest extends TestCase {
 
             $emitter->complete();
 
-            $this->assertSame(\implode($values), yield $stream);
-        });
+            $this->assertSame(\implode($values), $stream);
+        }));
     }
 
     public function testFailingStream() {
-        Loop::run(function () {
+        wait(async(function () {
             $exception = new TestException;
             $value = "abc";
 
@@ -131,7 +133,7 @@ class MessageTest extends TestCase {
             $callable = $this->createCallback(1);
 
             try {
-                while (($chunk = yield $stream->read()) !== null) {
+                while (($chunk = $stream->read()) !== null) {
                     $this->assertSame($value, $chunk);
                 }
 
@@ -140,11 +142,11 @@ class MessageTest extends TestCase {
                 $this->assertSame($exception, $reason);
                 $callable(); // <-- ensure this point is reached
             }
-        });
+        }));
     }
 
     public function testFailingStreamWithPendingRead() {
-        Loop::run(function () {
+        wait(async(function () {
             $exception = new TestException;
             $value = "abc";
 
@@ -157,28 +159,28 @@ class MessageTest extends TestCase {
             $callable = $this->createCallback(1);
 
             try {
-                yield $readPromise;
+                $readPromise;
 
                 $this->fail("No exception has been thrown");
             } catch (TestException $reason) {
                 $this->assertSame($exception, $reason);
                 $callable(); // <-- ensure this point is reached
             }
-        });
+        }));
     }
 
     public function testEmptyStream() {
-        Loop::run(function () {
+        wait(async(function () {
             $emitter = new Emitter;
             $emitter->complete();
             $stream = new Message(new IteratorStream($emitter->iterate()));
 
-            $this->assertNull(yield $stream->read());
-        });
+            $this->assertNull($stream->read());
+        }));
     }
 
     public function testEmptyStringStream() {
-        Loop::run(function () {
+        wait(async(function () {
             $value = "";
 
             $emitter = new Emitter;
@@ -188,12 +190,12 @@ class MessageTest extends TestCase {
 
             $emitter->complete();
 
-            $this->assertSame("", yield $stream);
-        });
+            $this->assertSame("", $stream);
+        }));
     }
 
     public function testReadAfterCompletion() {
-        Loop::run(function () {
+        wait(async(function () {
             $value = "abc";
 
             $emitter = new Emitter;
@@ -202,23 +204,23 @@ class MessageTest extends TestCase {
             $emitter->emit($value);
             $emitter->complete();
 
-            $this->assertSame($value, yield $stream->read());
-            $this->assertNull(yield $stream->read());
-        });
+            $this->assertSame($value, $stream->read());
+            $this->assertNull($stream->read());
+        }));
     }
 
     public function testGetInputStream() {
-        Loop::run(function () {
+        wait(async(function () {
             $inputStream = new InMemoryStream("");
             $message = new Message($inputStream);
 
             $this->assertSame($inputStream, $message->getInputStream());
-            $this->assertSame("", yield $message->getInputStream()->read());
-        });
+            $this->assertSame("", $message->getInputStream()->read());
+        }));
     }
 
     public function testPendingRead() {
-        Loop::run(function () {
+        wait(async(function () {
             $emitter = new Emitter;
             $stream = new Message(new IteratorStream($emitter->iterate()));
 
@@ -226,12 +228,12 @@ class MessageTest extends TestCase {
                 $emitter->emit("test");
             });
 
-            $this->assertSame("test", yield $stream->read());
-        });
+            $this->assertSame("test", $stream->read());
+        }));
     }
 
     public function testPendingReadError() {
-        Loop::run(function () {
+        wait(async(function () {
             $emitter = new Emitter;
             $stream = new Message(new IteratorStream($emitter->iterate()));
             $stream->read();
@@ -239,6 +241,6 @@ class MessageTest extends TestCase {
             $this->expectException(PendingReadError::class);
 
             $stream->read();
-        });
+        }));
     }
 }

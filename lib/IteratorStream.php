@@ -3,9 +3,8 @@
 namespace Amp\ByteStream;
 
 use Amp\Deferred;
-use Amp\Failure;
 use Amp\Iterator;
-use Amp\Promise;
+use function Amp\GreenThread\await;
 
 final class IteratorStream implements InputStream {
     private $iterator;
@@ -17,9 +16,9 @@ final class IteratorStream implements InputStream {
     }
 
     /** @inheritdoc */
-    public function read(): Promise {
+    public function read(): ?string {
         if ($this->exception) {
-            return new Failure($this->exception);
+            return $this->exception;
         }
 
         if ($this->pending) {
@@ -55,6 +54,6 @@ final class IteratorStream implements InputStream {
             }
         });
 
-        return $deferred->promise();
+        return await($deferred->promise());
     }
 }

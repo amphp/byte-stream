@@ -2,9 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-use Amp\Success;
-
 /**
  * Input stream with a single already known data chunk.
  */
@@ -18,19 +15,15 @@ final class InMemoryStream implements InputStream {
         $this->contents = $contents;
     }
 
-    /**
-     * Reads data from the stream.
-     *
-     * @return Promise Resolves with the full contents or `null` if the stream has closed / already been consumed.
-     */
-    public function read(): Promise {
+    /** @inheritdoc */
+    public function read(): ?string {
         if ($this->contents === null) {
-            return new Success;
+            return null;
         }
 
-        $promise = new Success($this->contents);
+        $contents = $this->contents;
         $this->contents = null;
 
-        return $promise;
+        return $contents;
     }
 }

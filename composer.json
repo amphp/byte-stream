@@ -26,7 +26,10 @@
         }
     ],
     "require": {
-        "amphp/amp": "^2"
+        "php": ">=7.2",
+        "ext-fiber": "*",
+        "amphp/amp": "^2",
+        "amphp/green-thread": "dev-master"
     },
     "require-dev": {
         "amphp/phpunit-util": "^1",
@@ -48,7 +51,11 @@
     },
     "config": {
         "platform": {
-            "php": "7.0.0"
+            "php": "7.2.0"
         }
-    }
+    },
+    "repositories": [{
+        "type": "vcs",
+        "url": "https://github.com/amphp/green-thread"
+    }]
 }

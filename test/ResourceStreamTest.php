@@ -7,14 +7,17 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
+use function Amp\GreenThread\async;
 use Amp\Loop;
+use function Amp\Promise\rethrow;
+use function Amp\Promise\wait;
 use Amp\Success;
 use PHPUnit\Framework\TestCase;
 
 class ResourceStreamTest extends TestCase {
     const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
 
-    public function getStreamPair($outputChunkSize = null, $inputChunkSize = ResourceInputStream::DEFAULT_CHUNK_SIZE) {
+    public function getStreamPair($outputChunkSize = null, $inputChunkSize = 8192) {
         $domain = \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX;
         list($left, $right) = @\stream_socket_pair($domain, \STREAM_SOCK_STREAM, \STREAM_IPPROTO_IP);
 
@@ -25,24 +28,25 @@ class ResourceStreamTest extends TestCase {
     }
 
     public function testLargePayloads() {
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair();
 
             $message = \str_repeat(".", self::LARGE_MESSAGE_SIZE);
-
-            \Amp\Promise\rethrow($a->end($message));
+            rethrow(async(function () use ($a) {
+                $a->end($message);
+            }));
 
             $received = "";
-            while (null !== $chunk = yield $b->read()) {
+            while (null !== $chunk = $b->read()) {
                 $received .= $chunk;
             }
 
             $this->assertSame($message, $received);
-        });
+        }));
     }
 
     public function testManySmallPayloads() {
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair();
 
             $message = \str_repeat(".", 8192 /* default chunk size */);
@@ -53,18 +57,18 @@ class ResourceStreamTest extends TestCase {
             $a->end();
 
             $received = "";
-            while (null !== $chunk = yield $b->read()) {
+            while (null !== $chunk = $b->read()) {
                 $received .= $chunk;
             }
 
             $this->assertSame(\str_repeat($message, $i), $received);
-        });
+        }));
     }
 
     public function testThrowsOnExternallyShutdownStreamWithLargePayload() {
         $this->expectException(StreamException::class);
 
-        Loop::run(function () {
+        wait(async(function () {
             try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
                 Loop::onSignal(defined("SIGPIPE") ? SIGPIPE : 13, function () {});
             } catch (Loop\UnsupportedFeatureException $e) {
@@ -74,19 +78,19 @@ class ResourceStreamTest extends TestCase {
 
             $message = \str_repeat(".", self::LARGE_MESSAGE_SIZE);
 
-            $writePromise = $a->write($message);
+            $writePromise = async([$a, 'write'], $message);
 
-            yield $b->read();
+            $b->read();
             $b->close();
 
-            yield $writePromise;
-        });
+            await($writePromise);
+        }));
     }
 
     public function testThrowsOnExternallyShutdownStreamWithSmallPayloads() {
         $this->expectException(StreamException::class);
 
-        Loop::run(function () {
+        wait(async(function () {
             try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
                 Loop::onSignal(defined("SIGPIPE") ? SIGPIPE : 13, function () {});
             } catch (Loop\UnsupportedFeatureException $e) {
@@ -97,20 +101,20 @@ class ResourceStreamTest extends TestCase {
             $message = \str_repeat(".", 8192 /* default chunk size */);
 
             for ($i = 0; $i < 128; $i++) {
-                $lastWritePromise = $a->write($message);
+                $lastWritePromise = async([$a, 'write'], $message);
             }
 
-            yield $b->read();
+            $b->read();
             $b->close();
 
-            yield $lastWritePromise;
-        });
+            await($lastWritePromise);
+        }));
     }
 
     public function testThrowsOnCloseBeforeWritingComplete() {
         $this->expectException(ClosedException::class);
 
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair(4096);
 
             $message = \str_repeat(".", 8192 /* default chunk size */);
@@ -119,14 +123,14 @@ class ResourceStreamTest extends TestCase {
 
             $a->close();
 
-            yield $lastWritePromise;
-        });
+            $lastWritePromise;
+        }));
     }
 
     public function testThrowsOnStreamNotWritable() {
         $this->expectException(StreamException::class);
 
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair();
 
             $message = \str_repeat(".", 8192 /* default chunk size */);
@@ -135,57 +139,57 @@ class ResourceStreamTest extends TestCase {
 
             $lastWritePromise = $a->end($message);
 
-            yield $lastWritePromise;
-        });
+            $lastWritePromise;
+        }));
     }
 
     public function testThrowsOnReferencingClosedStream() {
         $this->expectException(\Error::class);
 
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair();
 
             $b->close();
 
             $b->reference();
-        });
+        }));
     }
 
     public function testThrowsOnUnreferencingClosedStream() {
         $this->expectException(\Error::class);
 
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair();
 
             $b->close();
 
             $b->unreference();
-        });
+        }));
     }
 
     public function testThrowsOnPendingRead() {
         $this->expectException(PendingReadError::class);
 
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair();
 
             $b->read();
             $b->read();
-        });
+        }));
     }
 
     public function testResolveSuccessOnClosedStream() {
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair();
 
             $b->close();
 
             $this->assertInstanceOf(Success::class, $b->read());
-        });
+        }));
     }
 
     public function testChunkedPayload() {
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair(4096);
 
             $message = \str_repeat(".", 8192 /* default chunk size */);
@@ -193,16 +197,16 @@ class ResourceStreamTest extends TestCase {
             \Amp\Promise\rethrow($a->end($message));
 
             $received = "";
-            while (null !== $chunk = yield $b->read()) {
+            while (null !== $chunk = $b->read()) {
                 $received .= $chunk;
             }
 
             $this->assertSame($message, $received);
-        });
+        }));
     }
 
     public function testEmptyPayload() {
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair(4096);
 
             $message = "";
@@ -210,16 +214,16 @@ class ResourceStreamTest extends TestCase {
             \Amp\Promise\rethrow($a->end($message));
 
             $received = "";
-            while (null !== $chunk = yield $b->read()) {
+            while (null !== $chunk = $b->read()) {
                 $received .= $chunk;
             }
 
             $this->assertSame($message, $received);
-        });
+        }));
     }
 
     public function testCloseStreamAfterEndPayload() {
-        Loop::run(function () {
+        wait(async(function () {
             list($a, $b) = $this->getStreamPair();
 
             $message = \str_repeat(".", 8192 /* default chunk size */);
@@ -227,11 +231,11 @@ class ResourceStreamTest extends TestCase {
             \Amp\Promise\rethrow($a->end($message));
 
             $received = "";
-            while (null !== $chunk = yield $b->read()) {
+            while (null !== $chunk = $b->read()) {
                 $received .= $chunk;
             }
 
             $this->assertSame($message, $received);
-        });
+        }));
     }
 }

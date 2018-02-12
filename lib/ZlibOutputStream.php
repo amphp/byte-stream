@@ -34,7 +34,7 @@ final class ZlibOutputStream implements OutputStream {
     }
 
     /** @inheritdoc */
-    public function write(string $data): Promise {
+    public function write(string $data): void {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
         }
@@ -45,18 +45,17 @@ final class ZlibOutputStream implements OutputStream {
             throw new StreamException("Failed adding data to deflate context");
         }
 
-        $promise = $this->destination->write($compressed);
-        $promise->onResolve(function ($error) {
-            if ($error) {
-                $this->close();
-            }
-        });
+        try {
+            $this->destination->write($compressed);
+        } catch (\Throwable $e) {
+            $this->close();
 
-        return $promise;
+            throw $e;
+        }
     }
 
     /** @inheritdoc */
-    public function end(string $finalData = ""): Promise {
+    public function end(string $finalData = ""): void {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
         }
@@ -67,12 +66,13 @@ final class ZlibOutputStream implements OutputStream {
             throw new StreamException("Failed adding data to deflate context");
         }
 
-        $promise = $this->destination->end($compressed);
-        $promise->onResolve(function () {
+        try {
+            $this->destination->write($finalData);
+        } catch (\Throwable $e) {
             $this->close();
-        });
 
-        return $promise;
+            throw $e;
+        }
     }
 
     /** @internal */

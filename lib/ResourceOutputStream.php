@@ -7,6 +7,7 @@ use Amp\Failure;
 use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
+use function Amp\GreenThread\await;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -125,8 +126,8 @@ final class ResourceOutputStream implements OutputStream {
      *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function write(string $data): Promise {
-        return $this->send($data, false);
+    public function write(string $data): void {
+        await($this->send($data));
     }
 
     /**
@@ -138,8 +139,8 @@ final class ResourceOutputStream implements OutputStream {
      *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function end(string $finalData = ""): Promise {
-        return $this->send($finalData, true);
+    public function end(string $finalData = ""): void {
+        await($this->send($finalData, true));
     }
 
     private function send(string $data, bool $end = false): Promise {

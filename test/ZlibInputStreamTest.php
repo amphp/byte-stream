@@ -6,13 +6,15 @@ use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
+use function Amp\GreenThread\async;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\Producer;
+use function Amp\Promise\wait;
 
 class ZlibInputStreamTest extends TestCase {
     public function testRead() {
-        Loop::run(function () {
+        wait(async(function () {
             $file1 = __DIR__ . "/fixtures/foobar.txt";
             $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
 
@@ -20,7 +22,7 @@ class ZlibInputStreamTest extends TestCase {
                 $content = \file_get_contents($file2);
 
                 while ($content !== "") {
-                    yield $emit($content[0]);
+                    $emit($content[0]);
                     $content = \substr($content, 1);
                 }
             }));
@@ -28,12 +30,12 @@ class ZlibInputStreamTest extends TestCase {
             $gzStream = new ZlibInputStream($stream, \ZLIB_ENCODING_GZIP);
 
             $buffer = "";
-            while (($chunk = yield $gzStream->read()) !== null) {
+            while (($chunk = $gzStream->read()) !== null) {
                 $buffer .= $chunk;
             }
 
             $this->assertSame(\file_get_contents($file1), $buffer);
-        });
+        }));
     }
 
     public function testGetEncoding() {
@@ -64,10 +66,9 @@ class ZlibInputStreamTest extends TestCase {
     public function testInvalidStream() {
         $this->expectException(StreamException::class);
 
-        Loop::run(function () {
+        wait(async(function () {
             $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
-
-            yield $gzStream->read();
-        });
+            $gzStream->read();
+        }));
     }
 }

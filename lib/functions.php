@@ -24,19 +24,15 @@ if (!\defined('STDERR')) {
  * @param \Amp\ByteStream\InputStream  $source
  * @param \Amp\ByteStream\OutputStream $destination
  *
- * @return \Amp\Promise
+ * @return int
  */
-function pipe(InputStream $source, OutputStream $destination): Promise {
-    return call(function () use ($source, $destination): \Generator {
-        $written = 0;
+function pipe(InputStream $source, OutputStream $destination): int {
+    $written = 0;
 
-        while (($chunk = yield $source->read()) !== null) {
-            $written += \strlen($chunk);
-            $writePromise = $destination->write($chunk);
-            $chunk = null; // free memory
-            yield $writePromise;
-        }
+    while (null !== $chunk = $source->read()) {
+        $written += \strlen($chunk);
+        $destination->write($chunk);
+    }
 
-        return $written;
-    });
+    return $written;
 }
