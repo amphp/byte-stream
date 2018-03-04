@@ -52,7 +52,7 @@ class MessageTest extends TestCase {
             }
 
             $this->assertSame(\implode($values), $buffer);
-            $this->assertSame("", $stream);
+            $this->assertSame("", $stream->buffer());
         }));
     }
 
