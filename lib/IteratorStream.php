@@ -26,34 +26,27 @@ final class IteratorStream implements InputStream {
         }
 
         $this->pending = true;
-        $deferred = new Deferred;
 
-        $this->iterator->advance()->onResolve(function ($error, $hasNextElement) use ($deferred) {
-            $this->pending = false;
-
-            if ($error) {
-                $this->exception = $error;
-                $deferred->fail($error);
-            } elseif ($hasNextElement) {
-                $chunk = $this->iterator->getCurrent();
-
-                if (!\is_string($chunk)) {
-                    $this->exception = new StreamException(\sprintf(
-                        "Unexpected iterator value of type '%s', expected string",
-                        \is_object($chunk) ? \get_class($chunk) : \gettype($chunk)
-                    ));
-
-                    $deferred->fail($this->exception);
-
-                    return;
-                }
-
-                $deferred->resolve($chunk);
-            } else {
-                $deferred->resolve();
+        try {
+            if (!await($this->iterator->advance())) {
+                return null;
             }
-        });
 
-        return await($deferred->promise());
+            $chunk = $this->iterator->getCurrent();
+
+            if (!\is_string($chunk)) {
+                throw new StreamException(\sprintf(
+                    "Unexpected iterator value of type '%s', expected string",
+                    \is_object($chunk) ? \get_class($chunk) : \gettype($chunk)
+                ));
+            }
+
+            return $chunk;
+        } catch (\Throwable $e) {
+            $this->exception = $e;
+            throw $e;
+        } finally {
+            $this->pending = false;
+        }
     }
 }
