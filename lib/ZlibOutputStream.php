@@ -69,9 +69,9 @@ final class ZlibOutputStream implements OutputStream {
         try {
             $this->destination->write($finalData);
         } catch (\Throwable $e) {
-            $this->close();
-
             throw $e;
+        } finally {
+            $this->close();
         }
     }
 

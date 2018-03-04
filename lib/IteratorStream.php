@@ -18,7 +18,7 @@ final class IteratorStream implements InputStream {
     /** @inheritdoc */
     public function read(): ?string {
         if ($this->exception) {
-            return $this->exception;
+            throw $this->exception;
         }
 
         if ($this->pending) {

@@ -77,12 +77,9 @@ class IteratorStreamTest extends TestCase {
     public function testFailsAfterException() {
         $this->expectException(StreamException::class);
         wait(async(function () {
-            $value = 42;
-
             $emitter = new Emitter;
             $stream = new IteratorStream($emitter->iterate());
-
-            $emitter->emit($value);
+            $emitter->emit(42);
 
             try {
                 $stream->read();

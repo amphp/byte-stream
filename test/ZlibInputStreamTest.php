@@ -22,7 +22,7 @@ class ZlibInputStreamTest extends TestCase {
                 $content = \file_get_contents($file2);
 
                 while ($content !== "") {
-                    $emit($content[0]);
+                    yield $emit($content[0]);
                     $content = \substr($content, 1);
                 }
             }));
