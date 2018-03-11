@@ -85,13 +85,11 @@ final class ResourceInputStream implements InputStream {
                 $data = null; // Stream closed, resolve read with null.
             }
 
+            Loop::disable($watcher);
+
             $temp = $deferred;
             $deferred = null;
             $temp->resolve($data);
-
-            if ($deferred === null) { // Only disable watcher if no further read was requested.
-                Loop::disable($watcher);
-            }
         });
 
         $this->immediateCallable = static function ($watcherId, $data) use (&$deferred) {
