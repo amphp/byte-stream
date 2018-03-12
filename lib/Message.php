@@ -27,6 +27,8 @@ use Amp\Success;
  * while (($chunk = yield $stream->read()) !== null) {
  *     // Immediately use $chunk, reducing memory consumption since the entire message is never buffered.
  * }
+ *
+ * @deprecated Use Amp\ByteStream\Payload instead.
  */
 class Message implements InputStream, Promise {
     /** @var InputStream */
