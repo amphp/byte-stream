@@ -2,6 +2,10 @@
 title: Message
 permalink: /message
 ---
+
+{:.note}
+> `Message` has been deprecated. Use [`Payload`](./payload.md) instead.
+
 `Message` implements both `InputStream` _and_ `Promise`. This allows consuming a message either in chunks (streaming) or consume everything at once (buffering).
 
 ## Buffering
