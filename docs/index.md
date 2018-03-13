@@ -33,6 +33,7 @@ This package offers some basic implementations, other libraries might provide ev
  * [`InMemoryStream`](./in-memory-stream.md)
  * [`IteratorStream`](./iterator-stream.md)
  * [`Message`](./message.md)
+ * [`Payload`](./payload.md)
  * [`ResourceInputStream`](./resource-streams.md)
  * [`ZlibInputStream`](./compression-streams.md)
 
