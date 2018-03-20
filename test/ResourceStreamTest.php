@@ -7,12 +7,13 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
-use function Amp\GreenThread\async;
 use Amp\Loop;
-use function Amp\Promise\rethrow;
-use function Amp\Promise\wait;
 use Amp\Success;
 use PHPUnit\Framework\TestCase;
+use function Amp\GreenThread\async;
+use function Amp\GreenThread\await;
+use function Amp\Promise\rethrow;
+use function Amp\Promise\wait;
 
 class ResourceStreamTest extends TestCase {
     const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
@@ -69,8 +70,6 @@ class ResourceStreamTest extends TestCase {
     }
 
     public function testThrowsOnExternallyShutdownStreamWithLargePayload() {
-        $this->markTestSkipped("Segfaults");
-
         $this->expectException(StreamException::class);
 
         wait(async(function () {
@@ -92,8 +91,6 @@ class ResourceStreamTest extends TestCase {
     }
 
     public function testThrowsOnExternallyShutdownStreamWithSmallPayloads() {
-        $this->markTestSkipped("Segfaults");
-
         $this->expectException(StreamException::class);
 
         wait(async(function () {
@@ -118,8 +115,6 @@ class ResourceStreamTest extends TestCase {
     }
 
     public function testThrowsOnCloseBeforeWritingComplete() {
-        $this->markTestSkipped("Segfaults");
-
         $this->expectException(ClosedException::class);
 
         wait(async(function () {
@@ -138,7 +133,6 @@ class ResourceStreamTest extends TestCase {
     }
 
     public function testThrowsOnStreamNotWritable() {
-        $this->markTestSkipped("Segfaults");
         $this->expectException(StreamException::class);
 
         wait(async(function () {

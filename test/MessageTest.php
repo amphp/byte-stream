@@ -7,10 +7,11 @@ use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\Message;
 use Amp\ByteStream\PendingReadError;
 use Amp\Emitter;
-use function Amp\GreenThread\async;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
+use function Amp\GreenThread\async;
+use function Amp\GreenThread\await;
 use function Amp\Promise\wait;
 
 class MessageTest extends TestCase {
@@ -146,8 +147,6 @@ class MessageTest extends TestCase {
     }
 
     public function testFailingStreamWithPendingRead() {
-        $this->markTestSkipped("Segfaults");
-
         wait(async(function () {
             $exception = new TestException;
 

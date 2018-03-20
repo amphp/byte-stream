@@ -2,8 +2,10 @@
 
 namespace Amp\ByteStream\Test;
 
+use Amp\Iterator;
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\InMemoryStream;
+use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\StreamException;
@@ -11,20 +13,20 @@ use Amp\ByteStream\ZlibInputStream;
 use Amp\ByteStream\ZlibOutputStream;
 use Amp\PHPUnit\TestCase;
 use function Amp\GreenThread\async;
+use function Amp\GreenThread\await;
 use function Amp\Promise\wait;
 
 class ZlibOutputStreamTest extends TestCase {
     public function testWrite() {
-        $this->markTestSkipped("Segfaults");
-
         wait(async(function () {
             $file1 = __DIR__ . "/fixtures/foobar.txt";
 
             $bufferStream = new OutputBuffer;
             $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
-            $fileStream = new ResourceInputStream(fopen($file1, "r"));
-            while (($chunk = $fileStream->read()) !== null) {
+            $input = \file_get_contents($file1);
+            $inputStream = new IteratorStream(Iterator\fromIterable(str_split($input, 1)));
+            while (($chunk = $inputStream->read()) !== null) {
                 $outputStream->write($chunk);
             }
 

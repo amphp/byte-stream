@@ -10,7 +10,7 @@ class OutputBuffer implements OutputStream, Promise {
     private $deferred;
 
     /** @var string */
-    private $contents;
+    private $contents = '';
 
     private $closed = false;
 
