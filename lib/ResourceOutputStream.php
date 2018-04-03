@@ -83,9 +83,9 @@ final class ResourceOutputStream implements OutputStream {
                         $resource = null;
                         $writable = false;
 
-                        $message = "Failed to write to socket";
+                        $message = "Failed to write to stream";
                         if ($error = \error_get_last()) {
-                            $message .= \sprintf(" Errno: %d; %s", $error["type"], $error["message"]);
+                            $message .= \sprintf("; %s", $error["message"]);
                         }
                         $exception = new StreamException($message);
                         $deferred->fail($exception);
