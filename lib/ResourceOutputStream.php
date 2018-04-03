@@ -12,6 +12,8 @@ use Amp\Success;
  * Output stream abstraction for PHP's stream resources.
  */
 final class ResourceOutputStream implements OutputStream {
+    const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
+
     /** @var resource */
     private $resource;
 
@@ -53,6 +55,8 @@ final class ResourceOutputStream implements OutputStream {
         $resource = &$this->resource;
 
         $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, $chunkSize, &$writable, &$resource) {
+            static $emptyWrites = 0;
+
             try {
                 while (!$writes->isEmpty()) {
                     /** @var \Amp\Deferred $deferred */
@@ -75,7 +79,7 @@ final class ResourceOutputStream implements OutputStream {
                     \assert($written !== false, "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
                     if ($written === 0) {
                         // fwrite will also return 0 if the buffer is already full.
-                        if (\is_resource($stream) && !@\feof($stream)) {
+                        if ($emptyWrites++ < self::MAX_CONSECUTIVE_EMPTY_WRITES && \is_resource($stream) && !@\feof($stream)) {
                             $writes->unshift([$data, $previous, $deferred]);
                             return;
                         }
@@ -97,6 +101,8 @@ final class ResourceOutputStream implements OutputStream {
                         Loop::cancel($watcher);
                         return;
                     }
+
+                    $emptyWrites = 0;
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
