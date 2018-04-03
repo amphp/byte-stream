@@ -60,4 +60,36 @@ class ResourceOutputStreamTest extends TestCase {
         wait($stream->write("foobar"));
         wait($stream->write("foobar"));
     }
+
+    public function testClosedRemoteSocketWithFork() {
+        $server = \stream_socket_server("tcp://127.0.0.1:0");
+        $address = \stream_socket_get_name($server, false);
+
+        $a = \stream_socket_client("tcp://" . $address);
+        $b = \stream_socket_accept($server);
+
+        // Creates a fork without having to deal with it…
+        // The fork inherits the FDs of the current process.
+        $proc = \proc_open("sleep 3", [
+            ['pipe', 'r'],
+            ['pipe', 'w'],
+            ['pipe', 'w'],
+        ], $pipes);
+
+        $stream = new ResourceOutputStream($a);
+        \stream_socket_shutdown($b, \STREAM_SHUT_RDWR);
+        \fclose($b);
+
+        $this->expectException(StreamException::class);
+        $this->expectExceptionMessage("Failed to write to stream; fwrite():");
+
+        try {
+            // The first write still succeeds somehow...
+            wait($stream->write("foobar"));
+            wait($stream->write("foobar"));
+        } finally {
+            \proc_terminate($proc);
+            \proc_close($proc);
+        }
+    }
 }
