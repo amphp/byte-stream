@@ -4,6 +4,7 @@ namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
+use Amp\Delayed;
 use PHPUnit\Framework\TestCase;
 use function Amp\Promise\wait;
 
@@ -70,7 +71,7 @@ class ResourceOutputStreamTest extends TestCase {
 
         // Creates a fork without having to deal with it…
         // The fork inherits the FDs of the current process.
-        $proc = \proc_open("sleep 3", [
+        $proc = \proc_open("sleep 1", [
             ['pipe', 'r'],
             ['pipe', 'w'],
             ['pipe', 'w'],
@@ -82,6 +83,8 @@ class ResourceOutputStreamTest extends TestCase {
 
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage("Failed to write to stream; fwrite():");
+
+        wait(new Delayed(2000));
 
         try {
             // The first write still succeeds somehow...
