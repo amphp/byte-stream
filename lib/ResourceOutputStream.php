@@ -68,6 +68,10 @@ final class ResourceOutputStream implements OutputStream {
                         continue;
                     }
 
+                    if (!\is_resource($stream) || @\feof($stream)) {
+                        throw new StreamException("The stream was closed by the peer");
+                    }
+
                     // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
                     // Use conditional, because PHP doesn't like getting null passed
                     if ($chunkSize) {
@@ -77,28 +81,18 @@ final class ResourceOutputStream implements OutputStream {
                     }
 
                     \assert($written !== false, "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
+
+                    // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
                     if ($written === 0) {
-                        // fwrite will also return 0 if the buffer is already full.
-                        if ($emptyWrites++ < self::MAX_CONSECUTIVE_EMPTY_WRITES && \is_resource($stream) && !@\feof($stream)) {
-                            $writes->unshift([$data, $previous, $deferred]);
-                            return;
+                        if ($emptyWrites++ > self::MAX_CONSECUTIVE_EMPTY_WRITES) {
+                            $message = "Failed to write to stream";
+                            if ($error = \error_get_last()) {
+                                $message .= \sprintf("; %s", $error["message"]);
+                            }
+                            throw new StreamException($message);
                         }
 
-                        $resource = null;
-                        $writable = false;
-
-                        $message = "Failed to write to stream";
-                        if ($error = \error_get_last()) {
-                            $message .= \sprintf("; %s", $error["message"]);
-                        }
-                        $exception = new StreamException($message);
-                        $deferred->fail($exception);
-                        while (!$writes->isEmpty()) {
-                            list(, , $deferred) = $writes->shift();
-                            $deferred->fail($exception);
-                        }
-
-                        Loop::cancel($watcher);
+                        $writes->unshift([$data, $previous, $deferred]);
                         return;
                     }
 
@@ -112,6 +106,18 @@ final class ResourceOutputStream implements OutputStream {
 
                     $deferred->resolve($written + $previous);
                 }
+            } catch (\Throwable $exception) {
+                $resource = null;
+                $writable = false;
+
+                $exception = new StreamException("The stream was closed by the peer");
+                $deferred->fail($exception);
+                while (!$writes->isEmpty()) {
+                    list(, , $deferred) = $writes->shift();
+                    $deferred->fail($exception);
+                }
+
+                Loop::cancel($watcher);
             } finally {
                 if ($writes->isEmpty()) {
                     Loop::disable($watcher);
@@ -166,6 +172,10 @@ final class ResourceOutputStream implements OutputStream {
                     $this->close();
                 }
                 return new Success(0);
+            }
+
+            if (!\is_resource($this->resource) || @\feof($this->resource)) {
+                return new Failure(new StreamException("The stream was closed by the peer"));
             }
 
             // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
