@@ -32,7 +32,8 @@ class ZlibInputStreamTest extends TestCase {
                 $buffer .= $chunk;
             }
 
-            $this->assertSame(\file_get_contents($file1), $buffer);
+            $expected = \str_replace("\r\n", "\n", \file_get_contents($file1));
+            $this->assertSame($expected, $buffer);
         });
     }
 
