@@ -13,6 +13,7 @@ use Amp\Success;
  */
 final class ResourceOutputStream implements OutputStream {
     const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
+    const LARGE_CHUNK_SIZE = 128 * 1024;
 
     /** @var resource */
     private $resource;
@@ -64,6 +65,9 @@ final class ResourceOutputStream implements OutputStream {
                     $length = \strlen($data);
 
                     if ($length === 0) {
+                        // If there's no deferred at this place, there's a bug somewhere else and the item should have
+                        // been removed earlier from the queue.
+                        \assert($deferred !== null);
                         $deferred->resolve(0);
                         continue;
                     }
@@ -104,16 +108,24 @@ final class ResourceOutputStream implements OutputStream {
                         return;
                     }
 
-                    $deferred->resolve($written + $previous);
+                    if ($deferred !== null) {
+                        $deferred->resolve($written + $previous);
+                    }
                 }
             } catch (\Throwable $exception) {
                 $resource = null;
                 $writable = false;
 
-                $deferred->fail($exception);
+                if ($deferred !== null) {
+                    $deferred->fail($exception);
+                }
+
                 while (!$writes->isEmpty()) {
                     list(, , $deferred) = $writes->shift();
-                    $deferred->fail($exception);
+
+                    if ($deferred !== null) {
+                        $deferred->fail($exception);
+                    }
                 }
 
                 Loop::cancel($watcher);
@@ -198,6 +210,16 @@ final class ResourceOutputStream implements OutputStream {
         }
 
         $deferred = new Deferred;
+
+        if ($length - $written > self::LARGE_CHUNK_SIZE) {
+            $chunks = \str_split($data, self::LARGE_CHUNK_SIZE);
+            $data = \array_pop($chunks);
+            foreach ($chunks as $chunk) {
+                $this->writes->push([$chunk, $written, null]);
+                $written += self::LARGE_CHUNK_SIZE;
+            }
+        }
+
         $this->writes->push([$data, $written, $deferred]);
         Loop::enable($this->watcher);
         $promise = $deferred->promise();
@@ -241,6 +263,10 @@ final class ResourceOutputStream implements OutputStream {
             do {
                 /** @var \Amp\Deferred $deferred */
                 list(, , $deferred) = $this->writes->shift();
+                if ($deferred === null) {
+                    continue;
+                }
+
                 $deferred->fail($exception);
             } while (!$this->writes->isEmpty());
         }
