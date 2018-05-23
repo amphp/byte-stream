@@ -14,6 +14,7 @@ use Amp\Success;
 final class ResourceOutputStream implements OutputStream
 {
     const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
+    const LARGE_CHUNK_SIZE = 128 * 1024;
 
     /** @var resource */
     private $resource;
@@ -203,6 +204,16 @@ final class ResourceOutputStream implements OutputStream
         }
 
         $deferred = new Deferred;
+
+        if ($length - $written > self::LARGE_CHUNK_SIZE) {
+            $chunks = \str_split($data, self::LARGE_CHUNK_SIZE);
+            $data = \array_pop($chunks);
+            foreach ($chunks as $chunk) {
+                $this->writes->push([$chunk, $written, new Deferred]);
+                $written += self::LARGE_CHUNK_SIZE;
+            }
+        }
+
         $this->writes->push([$data, $written, $deferred]);
         Loop::enable($this->watcher);
         $promise = $deferred->promise();
