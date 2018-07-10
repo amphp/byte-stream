@@ -4,12 +4,13 @@ namespace Amp\ByteStream;
 
 use Amp\Deferred;
 use Amp\Loop;
-use function Amp\GreenThread\await;
+use function Amp\Promise\await;
 
 /**
  * Input stream abstraction for PHP's stream resources.
  */
-final class ResourceInputStream implements InputStream {
+final class ResourceInputStream implements InputStream
+{
     private const DEFAULT_CHUNK_SIZE = 8192;
 
     /** @var resource */
@@ -26,9 +27,10 @@ final class ResourceInputStream implements InputStream {
 
     /**
      * @param resource $stream Stream resource.
-     * @param int $chunkSize Chunk size per read operation.
+     * @param int      $chunkSize Chunk size per read operation.
      */
-    public function __construct($stream, int $chunkSize = self::DEFAULT_CHUNK_SIZE) {
+    public function __construct($stream, int $chunkSize = self::DEFAULT_CHUNK_SIZE)
+    {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
         }
@@ -48,7 +50,13 @@ final class ResourceInputStream implements InputStream {
         $deferred = &$this->deferred;
         $readable = &$this->readable;
 
-        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (&$deferred, &$readable, $chunkSize, $useFread) {
+        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (
+            &$deferred,
+            &
+            $readable,
+            $chunkSize,
+            $useFread
+        ) {
             if ($useFread) {
                 $data = @\fread($stream, $chunkSize);
             } else {
@@ -79,7 +87,8 @@ final class ResourceInputStream implements InputStream {
     }
 
     /** @inheritdoc */
-    public function read(): ?string {
+    public function read(): ?string
+    {
         if ($this->deferred !== null) {
             throw new PendingReadError;
         }
@@ -99,7 +108,8 @@ final class ResourceInputStream implements InputStream {
      *
      * @return void
      */
-    public function close() {
+    public function close()
+    {
         if ($this->resource) {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
@@ -118,7 +128,8 @@ final class ResourceInputStream implements InputStream {
     /**
      * Nulls reference to resource, marks stream unreadable, and succeeds any pending read with null.
      */
-    private function free() {
+    private function free()
+    {
         $this->readable = false;
 
         if ($this->deferred !== null) {
@@ -133,7 +144,8 @@ final class ResourceInputStream implements InputStream {
     /**
      * @return resource|null The stream resource or null if the stream has closed.
      */
-    public function getResource() {
+    public function getResource()
+    {
         return $this->resource;
     }
 
@@ -142,7 +154,8 @@ final class ResourceInputStream implements InputStream {
      *
      * @see Loop::reference()
      */
-    public function reference() {
+    public function reference()
+    {
         if (!$this->resource) {
             throw new \Error("Resource has already been freed");
         }
@@ -155,7 +168,8 @@ final class ResourceInputStream implements InputStream {
      *
      * @see Loop::unreference()
      */
-    public function unreference() {
+    public function unreference()
+    {
         if (!$this->resource) {
             throw new \Error("Resource has already been freed");
         }
@@ -163,7 +177,8 @@ final class ResourceInputStream implements InputStream {
         Loop::unreference($this->watcher);
     }
 
-    public function __destruct() {
+    public function __destruct()
+    {
         if ($this->resource !== null) {
             $this->free();
         }

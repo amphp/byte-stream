@@ -6,7 +6,7 @@
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Loop;
-use function Amp\GreenThread\async;
+use Concurrent\Task;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -15,16 +15,16 @@ Loop::set(new Loop\NativeDriver());
 $args = getopt('i:o:t:');
 $if = $args['i'] ?? '/dev/zero';
 $of = $args['o'] ?? '/dev/null';
-$t  = $args['t'] ?? 30;
+$t = $args['t'] ?? 30;
 
 // passing file descriptors requires mapping paths (https://bugs.php.net/bug.php?id=53465)
 $if = preg_replace('(^/dev/fd/)', 'php://fd/', $if);
 $of = preg_replace('(^/dev/fd/)', 'php://fd/', $of);
 
-async(function () use ($if, $of, $t) {
+Task::await(Task::async(function () use ($if, $of, $t) {
     $stderr = new ResourceOutputStream(STDERR);
-    $in = new ResourceInputStream(fopen($if, 'r'), 65536 /* Default size used by React to allow comparisons */);
-    $out = new ResourceOutputStream(fopen($of, 'w'));
+    $in = new ResourceInputStream(fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
+    $out = new ResourceOutputStream(fopen($of, 'wb'));
 
     if (extension_loaded('xdebug')) {
         $stderr->write('NOTICE: The "xdebug" extension is loaded, this has a major impact on performance.' . PHP_EOL);
@@ -38,7 +38,7 @@ async(function () use ($if, $of, $t) {
         $stderr->write("NOTICE: Assertions are enabled, this has a major impact on performance." . PHP_EOL);
     }
 
-    $stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...'. PHP_EOL);
+    $stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...' . PHP_EOL);
 
     Loop::delay($t * 1000, [$in, "close"]);
 
@@ -54,6 +54,4 @@ async(function () use ($if, $of, $t) {
 
     $stderr->write('read ' . $bytes . ' byte(s) in ' . round($t, 3) . ' second(s) => ' . round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
     $stderr->write('peak memory usage of ' . round(memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);
-});
-
-Loop::run();
+}));

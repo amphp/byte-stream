@@ -19,7 +19,8 @@ namespace Amp\ByteStream;
  * }
  * ```
  */
-interface InputStream {
+interface InputStream
+{
     /**
      * Reads data from the stream.
      *

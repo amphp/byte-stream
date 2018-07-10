@@ -2,12 +2,11 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-
 /**
  * An `OutputStream` allows writing data in chunks. Writers can wait on the returned promises to feel the backpressure.
  */
-interface OutputStream {
+interface OutputStream
+{
     /**
      * Writes data to the stream.
      *

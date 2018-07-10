@@ -2,12 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Coroutine;
-use Amp\Deferred;
-use Amp\Failure;
-use Amp\Promise;
-use Amp\Success;
-
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
  * be buffered and accessed in its entirety by waiting for the promise to resolve.
@@ -28,7 +22,8 @@ use Amp\Success;
  *     // Immediately use $chunk, reducing memory consumption since the entire message is never buffered.
  * }
  */
-class Message implements InputStream {
+class Message implements InputStream
+{
     /** @var InputStream */
     private $source;
 
@@ -44,12 +39,14 @@ class Message implements InputStream {
     /**
      * @param InputStream $source An iterator that only emits strings.
      */
-    public function __construct(InputStream $source) {
+    public function __construct(InputStream $source)
+    {
         $this->source = $source;
     }
 
     /** @inheritdoc */
-    final public function read(): ?string {
+    final public function read(): ?string
+    {
         if ($this->pendingRead) {
             throw new PendingReadError;
         }
@@ -62,7 +59,8 @@ class Message implements InputStream {
     }
 
     /** @inheritdoc */
-    final public function buffer() {
+    final public function buffer()
+    {
         $this->buffering = true;
 
         $buffer = "";
@@ -82,7 +80,8 @@ class Message implements InputStream {
      *
      * @return InputStream
      */
-    final public function getInputStream(): InputStream {
+    final public function getInputStream(): InputStream
+    {
         return $this->source;
     }
 }

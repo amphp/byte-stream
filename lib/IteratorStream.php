@@ -2,21 +2,23 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
 use Amp\Iterator;
-use function Amp\GreenThread\await;
+use function Amp\Promise\await;
 
-final class IteratorStream implements InputStream {
+final class IteratorStream implements InputStream
+{
     private $iterator;
     private $exception;
     private $pending = false;
 
-    public function __construct(Iterator $iterator) {
+    public function __construct(Iterator $iterator)
+    {
         $this->iterator = $iterator;
     }
 
     /** @inheritdoc */
-    public function read(): ?string {
+    public function read(): ?string
+    {
         if ($this->exception) {
             throw $this->exception;
         }

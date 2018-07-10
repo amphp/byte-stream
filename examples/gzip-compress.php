@@ -3,20 +3,17 @@
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\ZlibOutputStream;
-use Amp\Loop;
-use function Amp\GreenThread\async;
+use Concurrent\Task;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-async(function () {
+Task::await(Task::async(function () {
     $stdin = new ResourceInputStream(STDIN);
     $stdout = new ResourceOutputStream(STDOUT);
 
-    $gzout = new ZlibOutputStream($stdout, ZLIB_ENCODING_GZIP);
+    $gzOut = new ZlibOutputStream($stdout, ZLIB_ENCODING_GZIP);
 
     while (($chunk = $stdin->read()) !== null) {
-        $gzout->write($chunk);
+        $gzOut->write($chunk);
     }
-});
-
-Loop::run();
+}));

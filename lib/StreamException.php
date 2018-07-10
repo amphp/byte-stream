@@ -2,5 +2,6 @@
 
 namespace Amp\ByteStream;
 
-class StreamException extends \Exception {
+class StreamException extends \Exception
+{
 }

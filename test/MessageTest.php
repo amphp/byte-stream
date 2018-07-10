@@ -10,13 +10,12 @@ use Amp\Emitter;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
-use function Amp\GreenThread\async;
-use function Amp\GreenThread\await;
-use function Amp\Promise\wait;
+use Concurrent\Task;
 
 class MessageTest extends TestCase {
-    public function testBufferingAll() {
-        wait(async(function () {
+    public function testBufferingAll(): void
+    {
+        Task::await(Task::async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -32,8 +31,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testFullStreamConsumption() {
-        wait(async(function () use (&$invoked) {
+    public function testFullStreamConsumption(): void
+    {
+        Task::await(Task::async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -57,8 +57,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testFastResolvingStream() {
-        wait(async(function () {
+    public function testFastResolvingStream(): void
+    {
+        Task::await(Task::async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -80,8 +81,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testFastResolvingStreamBufferingOnly() {
-        wait(async(function () {
+    public function testFastResolvingStreamBufferingOnly(): void
+    {
+        Task::await(Task::async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -97,8 +99,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testPartialStreamConsumption() {
-        wait(async(function () {
+    public function testPartialStreamConsumption(): void
+    {
+        Task::await(Task::async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -120,8 +123,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testFailingStream() {
-        wait(async(function () {
+    public function testFailingStream(): void
+    {
+        Task::await(Task::async(function () {
             $exception = new TestException;
             $value = "abc";
 
@@ -146,20 +150,21 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testFailingStreamWithPendingRead() {
-        wait(async(function () {
+    public function testFailingStreamWithPendingRead(): void
+    {
+        Task::await(Task::async(function () {
             $exception = new TestException;
 
             $emitter = new Emitter;
             $stream = new Message(new IteratorStream($emitter->iterate()));
 
-            $readPromise = async([$stream, 'read']);
+            $readPromise = Task::async([$stream, 'read']);
             $emitter->fail($exception);
 
             $callable = $this->createCallback(1);
 
             try {
-                await($readPromise);
+                Task::await($readPromise);
 
                 $this->fail("No exception has been thrown");
             } catch (TestException $reason) {
@@ -169,8 +174,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testEmptyStream() {
-        wait(async(function () {
+    public function testEmptyStream(): void
+    {
+        Task::await(Task::async(function () {
             $emitter = new Emitter;
             $emitter->complete();
             $stream = new Message(new IteratorStream($emitter->iterate()));
@@ -179,8 +185,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testEmptyStringStream() {
-        wait(async(function () {
+    public function testEmptyStringStream(): void
+    {
+        Task::await(Task::async(function () {
             $value = "";
 
             $emitter = new Emitter;
@@ -194,8 +201,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testReadAfterCompletion() {
-        wait(async(function () {
+    public function testReadAfterCompletion(): void
+    {
+        Task::await(Task::async(function () {
             $value = "abc";
 
             $emitter = new Emitter;
@@ -209,8 +217,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testGetInputStream() {
-        wait(async(function () {
+    public function testGetInputStream(): void
+    {
+        Task::await(Task::async(function () {
             $inputStream = new InMemoryStream("");
             $message = new Message($inputStream);
 
@@ -219,8 +228,9 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testPendingRead() {
-        wait(async(function () {
+    public function testPendingRead(): void
+    {
+        Task::await(Task::async(function () {
             $emitter = new Emitter;
             $stream = new Message(new IteratorStream($emitter->iterate()));
 
@@ -232,14 +242,22 @@ class MessageTest extends TestCase {
         }));
     }
 
-    public function testPendingReadError() {
-        wait(async(function () {
-            $emitter = new Emitter;
-            $stream = new Message(new IteratorStream($emitter->iterate()));
-            async([$stream, 'read']);
+    public function testPendingReadError(): void
+    {
+        $readOp = null;
 
-            $this->expectException(PendingReadError::class);
-            $stream->read();
-        }));
+        try {
+            Task::await(Task::async(function () use (&$readOp) {
+                $emitter = new Emitter;
+                $stream = new Message(new IteratorStream($emitter->iterate()));
+                $readOp = Task::async([$stream, 'read']);
+
+                $this->expectException(PendingReadError::class);
+                $stream->read();
+            }));
+        } catch (\Throwable $e) {
+            Task::await($readOp);
+            throw $e;
+        }
     }
 }

@@ -2,9 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-use function Amp\call;
-
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
     throw new \Error(
@@ -25,8 +22,11 @@ if (!\defined('STDERR')) {
  * @param \Amp\ByteStream\OutputStream $destination
  *
  * @return int
+ *
+ * @throws StreamException
  */
-function pipe(InputStream $source, OutputStream $destination): int {
+function pipe(InputStream $source, OutputStream $destination): int
+{
     $written = 0;
 
     while (null !== $chunk = $source->read()) {

@@ -7,12 +7,13 @@ use Amp\Failure;
 use Amp\Loop;
 use Amp\Promise;
 use Amp\Success;
-use function Amp\GreenThread\await;
+use function Amp\Promise\await;
 
 /**
  * Output stream abstraction for PHP's stream resources.
  */
-final class ResourceOutputStream implements OutputStream {
+final class ResourceOutputStream implements OutputStream
+{
     /** @var resource */
     private $resource;
 
@@ -32,7 +33,8 @@ final class ResourceOutputStream implements OutputStream {
      * @param resource $stream Stream resource.
      * @param int|null $chunkSize Chunk size per `fwrite()` operation.
      */
-    public function __construct($stream, int $chunkSize = null) {
+    public function __construct($stream, int $chunkSize = null)
+    {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
         }
@@ -53,7 +55,13 @@ final class ResourceOutputStream implements OutputStream {
         $writable = &$this->writable;
         $resource = &$this->resource;
 
-        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, $chunkSize, &$writable, &$resource) {
+        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use (
+            $writes,
+            $chunkSize,
+            &
+            $writable,
+            &$resource
+        ) {
             try {
                 while (!$writes->isEmpty()) {
                     /** @var \Amp\Deferred $deferred */
@@ -126,7 +134,8 @@ final class ResourceOutputStream implements OutputStream {
      *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function write(string $data): void {
+    public function write(string $data): void
+    {
         await($this->send($data));
     }
 
@@ -139,11 +148,13 @@ final class ResourceOutputStream implements OutputStream {
      *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function end(string $finalData = ""): void {
+    public function end(string $finalData = ""): void
+    {
         await($this->send($finalData, true));
     }
 
-    private function send(string $data, bool $end = false): Promise {
+    private function send(string $data, bool $end = false): Promise
+    {
         if (!$this->writable) {
             return new Failure(new ClosedException("The stream is not writable"));
         }
@@ -200,7 +211,8 @@ final class ResourceOutputStream implements OutputStream {
      *
      * @return void
      */
-    public function close() {
+    public function close()
+    {
         if ($this->resource) {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
@@ -218,7 +230,8 @@ final class ResourceOutputStream implements OutputStream {
     /**
      * Nulls reference to resource, marks stream unwritable, and fails any pending write.
      */
-    private function free() {
+    private function free()
+    {
         $this->resource = null;
         $this->writable = false;
 
@@ -237,11 +250,13 @@ final class ResourceOutputStream implements OutputStream {
     /**
      * @return resource|null Stream resource or null if end() has been called or the stream closed.
      */
-    public function getResource() {
+    public function getResource()
+    {
         return $this->resource;
     }
 
-    public function __destruct() {
+    public function __destruct()
+    {
         if ($this->resource !== null) {
             $this->free();
         }

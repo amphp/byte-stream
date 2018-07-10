@@ -5,15 +5,15 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\StreamException;
 use Amp\Emitter;
-use function Amp\GreenThread\async;
-use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
-use function Amp\Promise\wait;
+use Concurrent\Task;
 
-class IteratorStreamTest extends TestCase {
-    public function testReadIterator() {
-        wait(async(function () {
+class IteratorStreamTest extends TestCase
+{
+    public function testReadIterator(): void
+    {
+        Task::await(Task::async(function () {
             $values = ["abc", "def", "ghi"];
 
             $emitter = new Emitter;
@@ -35,8 +35,9 @@ class IteratorStreamTest extends TestCase {
         }));
     }
 
-    public function testFailingIterator() {
-        wait(async(function () {
+    public function testFailingIterator(): void
+    {
+        Task::await(Task::async(function () {
             $exception = new TestException;
             $value = "abc";
 
@@ -61,22 +62,24 @@ class IteratorStreamTest extends TestCase {
         }));
     }
 
-    public function testThrowsOnNonStringIteration() {
+    public function testThrowsOnNonStringIteration(): void
+    {
         $this->expectException(StreamException::class);
-        wait(async(function () {
+        Task::await(Task::async(function () {
             $value = 42;
 
             $emitter = new Emitter;
             $stream = new IteratorStream($emitter->iterate());
-            async([$emitter, 'emit'], $value);
+            Task::async([$emitter, 'emit'], [$value]);
 
             $stream->read();
         }));
     }
 
-    public function testFailsAfterException() {
+    public function testFailsAfterException(): void
+    {
         $this->expectException(StreamException::class);
-        wait(async(function () {
+        Task::await(Task::async(function () {
             $emitter = new Emitter;
             $stream = new IteratorStream($emitter->iterate());
             $emitter->emit(42);
