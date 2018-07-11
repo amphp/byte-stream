@@ -27,15 +27,6 @@ class Message implements InputStream
     /** @var InputStream */
     private $source;
 
-    /** @var \Amp\Deferred|null */
-    private $pendingRead;
-
-    /** @var bool True if onResolve() has been called. */
-    private $buffering = false;
-
-    /** @var \Throwable Used to fail future reads on failure. */
-    private $error;
-
     /**
      * @param InputStream $source An iterator that only emits strings.
      */
@@ -47,22 +38,12 @@ class Message implements InputStream
     /** @inheritdoc */
     final public function read(): ?string
     {
-        if ($this->pendingRead) {
-            throw new PendingReadError;
-        }
-
-        if ($this->error) {
-            throw $this->error;
-        }
-
         return $this->source->read();
     }
 
     /** @inheritdoc */
-    final public function buffer()
+    final public function buffer(): string
     {
-        $this->buffering = true;
-
         $buffer = "";
 
         while (null !== $chunk = $this->source->read()) {
