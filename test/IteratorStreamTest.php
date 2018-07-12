@@ -13,82 +13,76 @@ class IteratorStreamTest extends TestCase
 {
     public function testReadIterator(): void
     {
-        Task::await(Task::async(function () {
-            $values = ["abc", "def", "ghi"];
+        $values = ["abc", "def", "ghi"];
 
-            $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+        $emitter = new Emitter;
+        $stream = new IteratorStream($emitter->iterate());
 
-            foreach ($values as $value) {
-                $emitter->emit($value);
-            }
+        foreach ($values as $value) {
+            $emitter->emit($value);
+        }
 
-            $emitter->complete();
+        $emitter->complete();
 
-            $buffer = "";
-            while (($chunk = $stream->read()) !== null) {
-                $buffer .= $chunk;
-            }
+        $buffer = "";
+        while (($chunk = $stream->read()) !== null) {
+            $buffer .= $chunk;
+        }
 
-            $this->assertSame(\implode($values), $buffer);
-            $this->assertNull($stream->read());
-        }));
+        $this->assertSame(\implode($values), $buffer);
+        $this->assertNull($stream->read());
     }
 
     public function testFailingIterator(): void
     {
-        Task::await(Task::async(function () {
-            $exception = new TestException;
-            $value = "abc";
+        $exception = new TestException;
+        $value = "abc";
 
-            $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
+        $emitter = new Emitter;
+        $stream = new IteratorStream($emitter->iterate());
 
-            $emitter->emit($value);
-            $emitter->fail($exception);
+        $emitter->emit($value);
+        $emitter->fail($exception);
 
-            $callable = $this->createCallback(1);
+        $callable = $this->createCallback(1);
 
-            try {
-                while (($chunk = $stream->read()) !== null) {
-                    $this->assertSame($value, $chunk);
-                }
-
-                $this->fail("No exception has been thrown");
-            } catch (TestException $reason) {
-                $this->assertSame($exception, $reason);
-                $callable(); // <-- ensure this point is reached
+        try {
+            while (($chunk = $stream->read()) !== null) {
+                $this->assertSame($value, $chunk);
             }
-        }));
+
+            $this->fail("No exception has been thrown");
+        } catch (TestException $reason) {
+            $this->assertSame($exception, $reason);
+            $callable(); // <-- ensure this point is reached
+        }
     }
 
     public function testThrowsOnNonStringIteration(): void
     {
         $this->expectException(StreamException::class);
-        Task::await(Task::async(function () {
-            $value = 42;
 
-            $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
-            Task::async([$emitter, 'emit'], [$value]);
+        $value = 42;
 
-            $stream->read();
-        }));
+        $emitter = new Emitter;
+        $stream = new IteratorStream($emitter->iterate());
+        Task::async([$emitter, 'emit'], $value);
+
+        $stream->read();
     }
 
     public function testFailsAfterException(): void
     {
         $this->expectException(StreamException::class);
-        Task::await(Task::async(function () {
-            $emitter = new Emitter;
-            $stream = new IteratorStream($emitter->iterate());
-            $emitter->emit(42);
 
-            try {
-                $stream->read();
-            } catch (StreamException $e) {
-                $stream->read();
-            }
-        }));
+        $emitter = new Emitter;
+        $stream = new IteratorStream($emitter->iterate());
+        $emitter->emit(42);
+
+        try {
+            $stream->read();
+        } catch (StreamException $e) {
+            $stream->read();
+        }
     }
 }

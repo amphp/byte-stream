@@ -6,7 +6,6 @@
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\Loop;
-use Concurrent\Task;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -21,37 +20,35 @@ $t = $args['t'] ?? 30;
 $if = preg_replace('(^/dev/fd/)', 'php://fd/', $if);
 $of = preg_replace('(^/dev/fd/)', 'php://fd/', $of);
 
-Task::await(Task::async(function () use ($if, $of, $t) {
-    $stderr = new ResourceOutputStream(STDERR);
-    $in = new ResourceInputStream(fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
-    $out = new ResourceOutputStream(fopen($of, 'wb'));
+$stderr = new ResourceOutputStream(STDERR);
+$in = new ResourceInputStream(fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
+$out = new ResourceOutputStream(fopen($of, 'wb'));
 
-    if (extension_loaded('xdebug')) {
-        $stderr->write('NOTICE: The "xdebug" extension is loaded, this has a major impact on performance.' . PHP_EOL);
-    }
+if (extension_loaded('xdebug')) {
+    $stderr->write('NOTICE: The "xdebug" extension is loaded, this has a major impact on performance.' . PHP_EOL);
+}
 
-    try {
-        if (!@\assert(false)) {
-            $stderr->write("NOTICE: Assertions are enabled, this has a major impact on performance." . PHP_EOL);
-        }
-    } catch (AssertionError $exception) {
+try {
+    if (!@\assert(false)) {
         $stderr->write("NOTICE: Assertions are enabled, this has a major impact on performance." . PHP_EOL);
     }
+} catch (AssertionError $exception) {
+    $stderr->write("NOTICE: Assertions are enabled, this has a major impact on performance." . PHP_EOL);
+}
 
-    $stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...' . PHP_EOL);
+$stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...' . PHP_EOL);
 
-    Loop::delay($t * 1000, [$in, "close"]);
+Loop::delay($t * 1000, [$in, "close"]);
 
-    $start = microtime(true);
+$start = microtime(true);
 
-    while (($chunk = $in->read()) !== null) {
-        $out->write($chunk);
-    }
+while (($chunk = $in->read()) !== null) {
+    $out->write($chunk);
+}
 
-    $t = microtime(true) - $start;
+$t = microtime(true) - $start;
 
-    $bytes = ftell($out->getResource());
+$bytes = ftell($out->getResource());
 
-    $stderr->write('read ' . $bytes . ' byte(s) in ' . round($t, 3) . ' second(s) => ' . round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
-    $stderr->write('peak memory usage of ' . round(memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);
-}));
+$stderr->write('read ' . $bytes . ' byte(s) in ' . round($t, 3) . ' second(s) => ' . round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
+$stderr->write('peak memory usage of ' . round(memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);

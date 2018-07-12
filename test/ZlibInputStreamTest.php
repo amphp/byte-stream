@@ -8,34 +8,31 @@ use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\PHPUnit\TestCase;
 use Amp\Producer;
-use Concurrent\Task;
 
 class ZlibInputStreamTest extends TestCase
 {
     public function testRead(): void
     {
-        Task::await(Task::async(function () {
-            $file1 = __DIR__ . "/fixtures/foobar.txt";
-            $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
+        $file1 = __DIR__ . "/fixtures/foobar.txt";
+        $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
 
-            $stream = new IteratorStream(new Producer(function (callable $emit) use ($file2) {
-                $content = \file_get_contents($file2);
+        $stream = new IteratorStream(new Producer(function (callable $emit) use ($file2) {
+            $content = \file_get_contents($file2);
 
-                while ($content !== "") {
-                    yield $emit($content[0]);
-                    $content = \substr($content, 1);
-                }
-            }));
-
-            $gzStream = new ZlibInputStream($stream, \ZLIB_ENCODING_GZIP);
-
-            $buffer = "";
-            while (($chunk = $gzStream->read()) !== null) {
-                $buffer .= $chunk;
+            while ($content !== "") {
+                yield $emit($content[0]);
+                $content = \substr($content, 1);
             }
-
-            $this->assertStringEqualsFile($file1, $buffer);
         }));
+
+        $gzStream = new ZlibInputStream($stream, \ZLIB_ENCODING_GZIP);
+
+        $buffer = "";
+        while (($chunk = $gzStream->read()) !== null) {
+            $buffer .= $chunk;
+        }
+
+        $this->assertStringEqualsFile($file1, $buffer);
     }
 
     public function testGetEncoding(): void
@@ -70,9 +67,7 @@ class ZlibInputStreamTest extends TestCase
     {
         $this->expectException(StreamException::class);
 
-        Task::await(Task::async(function () {
-            $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
-            $gzStream->read();
-        }));
+        $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
+        $gzStream->read();
     }
 }

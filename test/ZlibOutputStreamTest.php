@@ -11,58 +11,51 @@ use Amp\ByteStream\ZlibInputStream;
 use Amp\ByteStream\ZlibOutputStream;
 use Amp\Iterator;
 use Amp\PHPUnit\TestCase;
-use Concurrent\Task;
 use function Amp\Promise\await;
 
 class ZlibOutputStreamTest extends TestCase
 {
     public function testWrite(): void
     {
-        Task::await(Task::async(function () {
-            $file1 = __DIR__ . "/fixtures/foobar.txt";
+        $file1 = __DIR__ . "/fixtures/foobar.txt";
 
-            $bufferStream = new OutputBuffer;
-            $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
+        $bufferStream = new OutputBuffer;
+        $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
-            $input = \file_get_contents($file1);
-            $inputStream = new IteratorStream(Iterator\fromIterable(str_split($input, 1)));
-            while (($chunk = $inputStream->read()) !== null) {
-                $outputStream->write($chunk);
-            }
+        $input = \file_get_contents($file1);
+        $inputStream = new IteratorStream(Iterator\fromIterable(str_split($input, 1)));
+        while (($chunk = $inputStream->read()) !== null) {
+            $outputStream->write($chunk);
+        }
 
-            $outputStream->end();
+        $outputStream->end();
 
-            $inputStream = new ZlibInputStream(new InMemoryStream(await($bufferStream)), \ZLIB_ENCODING_GZIP);
+        $inputStream = new ZlibInputStream(new InMemoryStream(await($bufferStream)), \ZLIB_ENCODING_GZIP);
 
-            $buffer = "";
-            while (($chunk = $inputStream->read()) !== null) {
-                $buffer .= $chunk;
-            }
+        $buffer = "";
+        while (($chunk = $inputStream->read()) !== null) {
+            $buffer .= $chunk;
+        }
 
-            $this->assertStringEqualsFile($file1, $buffer);
-        }));
+        $this->assertStringEqualsFile($file1, $buffer);
     }
 
     public function testThrowsOnWritingToClosedContext(): void
     {
         $this->expectException(ClosedException::class);
 
-        Task::await(Task::async(function () {
-            $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
-            $gzStream->end("foo");
-            $gzStream->write("bar");
-        }));
+        $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream->end("foo");
+        $gzStream->write("bar");
     }
 
     public function testThrowsOnEndingToClosedContext(): void
     {
         $this->expectException(ClosedException::class);
 
-        Task::await(Task::async(function () {
-            $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
-            $gzStream->end("foo");
-            $gzStream->end("bar");
-        }));
+        $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream->end("foo");
+        $gzStream->end("bar");
     }
 
     public function testGetEncoding(): void
