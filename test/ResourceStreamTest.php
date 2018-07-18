@@ -70,12 +70,10 @@ class ResourceStreamTest extends TestCase
 
     public function testThrowsOnExternallyShutdownStreamWithLargePayload(): void
     {
-        $this->markTestSkipped("Hangs");
-
         $this->expectException(StreamException::class);
 
         try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
-            Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {
+            $signalWatcher = Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {
             });
         } catch (Loop\UnsupportedFeatureException $e) {
         }
@@ -88,18 +86,23 @@ class ResourceStreamTest extends TestCase
         $b->read();
         $b->close();
 
-        Task::await($writeOp);
+        try {
+            Task::await($writeOp);
+        } finally {
+            if (isset($signalWatcher)) {
+                Loop::cancel($signalWatcher);
+            }
+        }
     }
 
     public function testThrowsOnExternallyShutdownStreamWithSmallPayloads(): void
     {
-        $this->markTestSkipped("Hangs");
-
         $this->expectException(StreamException::class);
 
         try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
-            Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {
+            $signalWatcher = Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {
             });
+            Loop::unreference($signalWatcher);
         } catch (Loop\UnsupportedFeatureException $e) {
         }
 
@@ -114,7 +117,13 @@ class ResourceStreamTest extends TestCase
         $b->read();
         $b->close();
 
-        Task::await($lastWriteOp);
+        try {
+            Task::await($lastWriteOp);
+        } finally {
+            if (isset($signalWatcher)) {
+                Loop::cancel($signalWatcher);
+            }
+        }
     }
 
     public function testThrowsOnCloseBeforeWritingComplete(): void
