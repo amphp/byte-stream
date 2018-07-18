@@ -12,6 +12,7 @@ interface OutputStream
      *
      * @param string $data Bytes to write.
      *
+     * @throws StreamException If writing to the stream unexpectedly fails.
      * @throws ClosedException If the stream has already been closed.
      */
     public function write(string $data): void;
@@ -23,6 +24,7 @@ interface OutputStream
      *
      * @param string $finalData Bytes to write.
      *
+     * @throws StreamException If writing to the stream unexpectedly fails.
      * @throws ClosedException If the stream has already been closed.
      */
     public function end(string $finalData = ""): void;

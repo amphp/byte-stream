@@ -10,11 +10,11 @@ if (\strlen('…') !== 3) {
 } // @codeCoverageIgnoreEnd
 
 if (!\defined('STDOUT')) {
-    \define('STDOUT', \fopen('php://stdout', 'w'));
+    \define('STDOUT', \fopen('php://stdout', 'wb'));
 }
 
 if (!\defined('STDERR')) {
-    \define('STDERR', \fopen('php://stderr', 'w'));
+    \define('STDERR', \fopen('php://stderr', 'wb'));
 }
 
 /**

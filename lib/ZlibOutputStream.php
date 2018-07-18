@@ -51,7 +51,11 @@ final class ZlibOutputStream implements OutputStream
         } catch (\Throwable $e) {
             $this->close();
 
-            throw $e;
+            if ($e instanceof StreamException) {
+                throw $e;
+            }
+
+            throw new StreamException("Writing the the stream failed unexpectedly", 0, $e);
         }
     }
 
@@ -71,7 +75,11 @@ final class ZlibOutputStream implements OutputStream
         try {
             $this->destination->end($finalData);
         } catch (\Throwable $e) {
-            throw $e;
+            if ($e instanceof StreamException) {
+                throw $e;
+            }
+
+            throw new StreamException("Writing the the stream failed unexpectedly", 0, $e);
         } finally {
             $this->close();
         }

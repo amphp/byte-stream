@@ -41,7 +41,13 @@ class Message implements InputStream
         return $this->source->read();
     }
 
-    /** @inheritdoc */
+    /**
+     * Buffers read() operations until the stream closes.
+     *
+     * @return string Buffered stream contents.
+     *
+     * @throws StreamException If reading unexpectedly fails.
+     */
     final public function buffer(): string
     {
         $buffer = "";

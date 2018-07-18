@@ -6,8 +6,9 @@ use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
+use Amp\Emitter;
 use Amp\PHPUnit\TestCase;
-use Amp\Producer;
+use Concurrent\Task;
 
 class ZlibInputStreamTest extends TestCase
 {
@@ -16,14 +17,19 @@ class ZlibInputStreamTest extends TestCase
         $file1 = __DIR__ . "/fixtures/foobar.txt";
         $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
 
-        $stream = new IteratorStream(new Producer(function (callable $emit) use ($file2) {
+        $emitter = new Emitter;
+        Task::async(function () use ($emitter, $file2) {
             $content = \file_get_contents($file2);
 
             while ($content !== "") {
-                yield $emit($content[0]);
+                $emitter->emit($content[0]);
                 $content = \substr($content, 1);
             }
-        }));
+
+            $emitter->complete();
+        });
+
+        $stream = new IteratorStream($emitter->extractIterator());
 
         $gzStream = new ZlibInputStream($stream, \ZLIB_ENCODING_GZIP);
 

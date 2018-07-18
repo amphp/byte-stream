@@ -70,7 +70,7 @@ final class ZlibInputStream implements InputStream
     }
 
     /** @internal */
-    private function close()
+    private function close(): void
     {
         $this->resource = null;
         $this->source = null;

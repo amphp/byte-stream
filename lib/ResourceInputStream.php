@@ -2,9 +2,9 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
 use Amp\Loop;
-use function Amp\Promise\await;
+use Concurrent\Deferred;
+use Concurrent\Task;
 
 /**
  * Input stream abstraction for PHP's stream resources.
@@ -19,7 +19,7 @@ final class ResourceInputStream implements InputStream
     /** @var string */
     private $watcher;
 
-    /** @var \Amp\Deferred|null */
+    /** @var Deferred|null */
     private $deferred;
 
     /** @var bool */
@@ -36,7 +36,7 @@ final class ResourceInputStream implements InputStream
         }
 
         $meta = \stream_get_meta_data($stream);
-        $useFread = $meta["stream_type"] === "udp_socket" || $meta["stream_type"] === "STDIO";
+        $useRead = $meta["stream_type"] === "udp_socket" || $meta["stream_type"] === "STDIO";
 
         if (\strpos($meta["mode"], "r") === false && \strpos($meta["mode"], "+") === false) {
             throw new \Error("Expected a readable stream");
@@ -55,9 +55,9 @@ final class ResourceInputStream implements InputStream
             &
             $readable,
             $chunkSize,
-            $useFread
+            $useRead
         ) {
-            if ($useFread) {
+            if ($useRead) {
                 $data = @\fread($stream, $chunkSize);
             } else {
                 $data = @\stream_get_contents($stream, $chunkSize);
@@ -100,7 +100,7 @@ final class ResourceInputStream implements InputStream
         $this->deferred = new Deferred;
         Loop::enable($this->watcher);
 
-        return await($this->deferred->promise());
+        return Task::await($this->deferred->awaitable());
     }
 
     /**
@@ -108,7 +108,7 @@ final class ResourceInputStream implements InputStream
      *
      * @return void
      */
-    public function close()
+    public function close(): void
     {
         if ($this->resource) {
             // Error suppression, as resource might already be closed
@@ -128,7 +128,7 @@ final class ResourceInputStream implements InputStream
     /**
      * Nulls reference to resource, marks stream unreadable, and succeeds any pending read with null.
      */
-    private function free()
+    private function free(): void
     {
         $this->readable = false;
 
@@ -154,7 +154,7 @@ final class ResourceInputStream implements InputStream
      *
      * @see Loop::reference()
      */
-    public function reference()
+    public function reference(): void
     {
         if (!$this->resource) {
             throw new \Error("Resource has already been freed");
@@ -168,7 +168,7 @@ final class ResourceInputStream implements InputStream
      *
      * @see Loop::unreference()
      */
-    public function unreference()
+    public function unreference(): void
     {
         if (!$this->resource) {
             throw new \Error("Resource has already been freed");

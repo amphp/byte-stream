@@ -2,12 +2,9 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
-use Amp\Failure;
 use Amp\Loop;
-use Amp\Promise;
-use Amp\Success;
-use function Amp\Promise\await;
+use Concurrent\Deferred;
+use Concurrent\Task;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -64,8 +61,8 @@ final class ResourceOutputStream implements OutputStream
         ) {
             try {
                 while (!$writes->isEmpty()) {
-                    /** @var \Amp\Deferred $deferred */
-                    list($data, $previous, $deferred) = $writes->shift();
+                    /** @var Deferred $deferred */
+                    [$data, $previous, $deferred] = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
@@ -99,7 +96,7 @@ final class ResourceOutputStream implements OutputStream
                         $exception = new StreamException($message);
                         $deferred->fail($exception);
                         while (!$writes->isEmpty()) {
-                            list(, , $deferred) = $writes->shift();
+                            [, , $deferred] = $writes->shift();
                             $deferred->fail($exception);
                         }
 
@@ -130,13 +127,13 @@ final class ResourceOutputStream implements OutputStream
      *
      * @param string $data Bytes to write.
      *
-     * @return Promise Succeeds once the data has been successfully written to the stream.
+     * @return void
      *
      * @throws ClosedException If the stream has already been closed.
      */
     public function write(string $data): void
     {
-        await($this->send($data));
+        $this->send($data);
     }
 
     /**
@@ -144,19 +141,25 @@ final class ResourceOutputStream implements OutputStream
      *
      * @param string $finalData Bytes to write.
      *
-     * @return Promise Succeeds once the data has been successfully written to the stream.
+     * @return void
      *
      * @throws ClosedException If the stream has already been closed.
      */
     public function end(string $finalData = ""): void
     {
-        await($this->send($finalData, true));
+        $this->send($finalData, true);
     }
 
-    private function send(string $data, bool $end = false): Promise
+    /**
+     * @param string $data Data to write.
+     * @param bool   $end Whether to close the stream.
+     *
+     * @throws ClosedException
+     */
+    private function send(string $data, bool $end = false): void
     {
         if (!$this->writable) {
-            return new Failure(new ClosedException("The stream is not writable"));
+            throw new ClosedException("The stream is not writable");
         }
 
         $length = \strlen($data);
@@ -171,7 +174,7 @@ final class ResourceOutputStream implements OutputStream
                 if ($end) {
                     $this->close();
                 }
-                return new Success(0);
+                return;
             }
 
             // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
@@ -188,7 +191,7 @@ final class ResourceOutputStream implements OutputStream
                 if ($end) {
                     $this->close();
                 }
-                return new Success($written);
+                return;
             }
 
             $data = \substr($data, $written);
@@ -197,13 +200,16 @@ final class ResourceOutputStream implements OutputStream
         $deferred = new Deferred;
         $this->writes->push([$data, $written, $deferred]);
         Loop::enable($this->watcher);
-        $promise = $deferred->promise();
+        $awaitable = $deferred->awaitable();
 
         if ($end) {
-            $promise->onResolve([$this, "close"]);
+            Deferred::combine([$awaitable], function (Deferred $deferred) {
+                $deferred->resolve(); // dummy resolve
+                $this->close();
+            });
         }
 
-        return $promise;
+        Task::await($awaitable);
     }
 
     /**
@@ -211,7 +217,7 @@ final class ResourceOutputStream implements OutputStream
      *
      * @return void
      */
-    public function close()
+    public function close(): void
     {
         if ($this->resource) {
             // Error suppression, as resource might already be closed
@@ -228,9 +234,9 @@ final class ResourceOutputStream implements OutputStream
     }
 
     /**
-     * Nulls reference to resource, marks stream unwritable, and fails any pending write.
+     * Nulls reference to resource, marks stream non-writable, and fails any pending write.
      */
-    private function free()
+    private function free(): void
     {
         $this->resource = null;
         $this->writable = false;
@@ -238,8 +244,8 @@ final class ResourceOutputStream implements OutputStream
         if (!$this->writes->isEmpty()) {
             $exception = new ClosedException("The socket was closed before writing completed");
             do {
-                /** @var \Amp\Deferred $deferred */
-                list(, , $deferred) = $this->writes->shift();
+                /** @var Deferred $deferred */
+                [, , $deferred] = $this->writes->shift();
                 $deferred->fail($exception);
             } while (!$this->writes->isEmpty());
         }

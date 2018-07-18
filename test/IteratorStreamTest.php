@@ -5,6 +5,7 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\StreamException;
 use Amp\Emitter;
+use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
 use Concurrent\Task;
@@ -16,13 +17,17 @@ class IteratorStreamTest extends TestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new IteratorStream($emitter->iterate());
+        $stream = new IteratorStream($emitter->extractIterator());
 
         foreach ($values as $value) {
-            $emitter->emit($value);
+            Task::async(function () use ($emitter, $value) {
+                $emitter->emit($value);
+            });
         }
 
-        $emitter->complete();
+        Task::async(function () use ($emitter) {
+            $emitter->complete();
+        });
 
         $buffer = "";
         while (($chunk = $stream->read()) !== null) {
@@ -39,21 +44,26 @@ class IteratorStreamTest extends TestCase
         $value = "abc";
 
         $emitter = new Emitter;
-        $stream = new IteratorStream($emitter->iterate());
+        $stream = new IteratorStream($emitter->extractIterator());
 
-        $emitter->emit($value);
-        $emitter->fail($exception);
+        Task::async(function () use ($emitter, $value) {
+            $emitter->emit($value);
+        });
+
+        Task::async(function () use ($emitter, $exception) {
+            $emitter->fail($exception);
+        });
 
         $callable = $this->createCallback(1);
 
         try {
-            while (($chunk = $stream->read()) !== null) {
+            while (null !== $chunk = $stream->read()) {
                 $this->assertSame($value, $chunk);
             }
 
             $this->fail("No exception has been thrown");
-        } catch (TestException $reason) {
-            $this->assertSame($exception, $reason);
+        } catch (StreamException $reason) {
+            $this->assertSame($exception, $reason->getPrevious());
             $callable(); // <-- ensure this point is reached
         }
     }
@@ -65,7 +75,7 @@ class IteratorStreamTest extends TestCase
         $value = 42;
 
         $emitter = new Emitter;
-        $stream = new IteratorStream($emitter->iterate());
+        $stream = new IteratorStream($emitter->extractIterator());
         Task::async([$emitter, 'emit'], $value);
 
         $stream->read();
@@ -76,8 +86,10 @@ class IteratorStreamTest extends TestCase
         $this->expectException(StreamException::class);
 
         $emitter = new Emitter;
-        $stream = new IteratorStream($emitter->iterate());
-        $emitter->emit(42);
+        $stream = new IteratorStream($emitter->extractIterator());
+        Task::async(function () use ($emitter) {
+            $emitter->emit(42);
+        });
 
         try {
             $stream->read();

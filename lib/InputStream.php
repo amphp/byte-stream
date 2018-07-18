@@ -26,7 +26,8 @@ interface InputStream
      *
      * @return string Available data or `null` if the stream has closed.
      *
-     * @throws PendingReadError Thrown if another read operation is still pending.
+     * @throws PendingReadError If another read operation is still pending.
+     * @throws StreamException If reading unexpectedly fails.
      */
     public function read(): ?string;
 }

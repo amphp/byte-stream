@@ -2,16 +2,14 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Iterator;
-use function Amp\Promise\await;
-
 final class IteratorStream implements InputStream
 {
     private $iterator;
     private $exception;
     private $pending = false;
+    private $firstRead = true;
 
-    public function __construct(Iterator $iterator)
+    public function __construct(\Iterator $iterator)
     {
         $this->iterator = $iterator;
     }
@@ -19,22 +17,27 @@ final class IteratorStream implements InputStream
     /** @inheritdoc */
     public function read(): ?string
     {
-        if ($this->exception) {
-            throw $this->exception;
-        }
-
         if ($this->pending) {
             throw new PendingReadError;
         }
 
         $this->pending = true;
 
+        if ($this->exception) {
+            throw $this->exception;
+        }
+
         try {
-            if (!await($this->iterator->advance())) {
+            if (!$this->firstRead) {
+                $this->iterator->next();
+            }
+
+            if (!$this->iterator->valid()) {
                 return null;
             }
 
-            $chunk = $this->iterator->getCurrent();
+            $this->firstRead = false;
+            $chunk = $this->iterator->current();
 
             if (!\is_string($chunk)) {
                 throw new StreamException(\sprintf(
@@ -45,7 +48,12 @@ final class IteratorStream implements InputStream
 
             return $chunk;
         } catch (\Throwable $e) {
+            if (!$e instanceof StreamException) {
+                $e = new StreamException("Unexpected exception during read()", 0, $e);
+            }
+
             $this->exception = $e;
+
             throw $e;
         } finally {
             $this->pending = false;

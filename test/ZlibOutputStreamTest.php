@@ -9,9 +9,7 @@ use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\ByteStream\ZlibOutputStream;
-use Amp\Iterator;
 use Amp\PHPUnit\TestCase;
-use function Amp\Promise\await;
 
 class ZlibOutputStreamTest extends TestCase
 {
@@ -23,14 +21,14 @@ class ZlibOutputStreamTest extends TestCase
         $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
         $input = \file_get_contents($file1);
-        $inputStream = new IteratorStream(Iterator\fromIterable(str_split($input, 1)));
+        $inputStream = new IteratorStream(new \ArrayIterator(str_split($input, 1)));
         while (($chunk = $inputStream->read()) !== null) {
             $outputStream->write($chunk);
         }
 
         $outputStream->end();
 
-        $inputStream = new ZlibInputStream(new InMemoryStream(await($bufferStream)), \ZLIB_ENCODING_GZIP);
+        $inputStream = new ZlibInputStream(new InMemoryStream($bufferStream->get()), \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $inputStream->read()) !== null) {

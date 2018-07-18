@@ -2,12 +2,12 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
-use Amp\Promise;
+use Concurrent\Deferred;
+use Concurrent\Task;
 
-class OutputBuffer implements OutputStream, Promise
+class OutputBuffer implements OutputStream
 {
-    /** @var \Amp\Deferred|null */
+    /** @var Deferred */
     private $deferred;
 
     /** @var string */
@@ -42,8 +42,8 @@ class OutputBuffer implements OutputStream, Promise
         $this->contents = '';
     }
 
-    public function onResolve(callable $onResolved)
+    public function get()
     {
-        $this->deferred->promise()->onResolve($onResolved);
+        return Task::await($this->deferred->awaitable());
     }
 }

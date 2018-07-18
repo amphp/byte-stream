@@ -6,6 +6,7 @@ use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\Message;
 use Amp\ByteStream\PendingReadError;
+use Amp\ByteStream\StreamException;
 use Amp\Emitter;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
@@ -19,13 +20,15 @@ class MessageTest extends TestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        foreach ($values as $value) {
-            $emitter->emit($value);
-        }
+        Task::async(function () use ($emitter, $values) {
+            foreach ($values as $value) {
+                $emitter->emit($value);
+            }
 
-        $emitter->complete();
+            $emitter->complete();
+        });
 
         $this->assertSame(\implode($values), $stream->buffer());
     }
@@ -35,14 +38,16 @@ class MessageTest extends TestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        foreach ($values as $value) {
-            $emitter->emit($value);
-        }
+        Task::async(function () use ($emitter, $values) {
+            foreach ($values as $value) {
+                $emitter->emit($value);
+            }
 
-        Loop::delay(5, function () use ($emitter) {
-            $emitter->complete();
+            Loop::delay(5, function () use ($emitter) {
+                $emitter->complete();
+            });
         });
 
         $buffer = "";
@@ -59,13 +64,15 @@ class MessageTest extends TestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        foreach ($values as $value) {
-            $emitter->emit($value);
-        }
+        Task::async(function () use ($emitter, $values) {
+            foreach ($values as $value) {
+                $emitter->emit($value);
+            }
 
-        $emitter->complete();
+            $emitter->complete();
+        });
 
         $emitted = [];
         while (($chunk = $stream->read()) !== null) {
@@ -81,13 +88,15 @@ class MessageTest extends TestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        foreach ($values as $value) {
-            $emitter->emit($value);
-        }
+        Task::async(function () use ($emitter, $values) {
+            foreach ($values as $value) {
+                $emitter->emit($value);
+            }
 
-        $emitter->complete();
+            $emitter->complete();
+        });
 
         $this->assertSame(\implode($values), $stream->buffer());
     }
@@ -97,19 +106,19 @@ class MessageTest extends TestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        $emitter->emit($values[0]);
+        Task::async([$emitter, 'emit'], $values[0]);
 
         $chunk = $stream->read();
 
         $this->assertSame(\array_shift($values), $chunk);
 
         foreach ($values as $value) {
-            $emitter->emit($value);
+            Task::async([$emitter, 'emit'], $value);
         }
 
-        $emitter->complete();
+        Task::async([$emitter, 'complete']);
 
         $this->assertSame(\implode($values), $stream->buffer());
     }
@@ -120,10 +129,10 @@ class MessageTest extends TestCase
         $value = "abc";
 
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        $emitter->emit($value);
-        $emitter->fail($exception);
+        Task::async([$emitter, 'emit'], $value);
+        Task::async([$emitter, 'fail'], $exception);
 
         $callable = $this->createCallback(1);
 
@@ -133,8 +142,8 @@ class MessageTest extends TestCase
             }
 
             $this->fail("No exception has been thrown");
-        } catch (TestException $reason) {
-            $this->assertSame($exception, $reason);
+        } catch (StreamException $reason) {
+            $this->assertSame($exception, $reason->getPrevious());
             $callable(); // <-- ensure this point is reached
         }
     }
@@ -144,19 +153,19 @@ class MessageTest extends TestCase
         $exception = new TestException;
 
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        $readPromise = Task::async([$stream, 'read']);
+        $readOp = Task::async([$stream, 'read']);
         $emitter->fail($exception);
 
         $callable = $this->createCallback(1);
 
         try {
-            Task::await($readPromise);
+            Task::await($readOp);
 
             $this->fail("No exception has been thrown");
-        } catch (TestException $reason) {
-            $this->assertSame($exception, $reason);
+        } catch (StreamException $reason) {
+            $this->assertSame($exception, $reason->getPrevious());
             $callable(); // <-- ensure this point is reached
         }
     }
@@ -165,21 +174,20 @@ class MessageTest extends TestCase
     {
         $emitter = new Emitter;
         $emitter->complete();
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
         $this->assertNull($stream->read());
     }
 
     public function testEmptyStringStream(): void
     {
-        $value = "";
-
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        $emitter->emit($value);
-
-        $emitter->complete();
+        Task::async(function () use ($emitter) {
+            $emitter->emit("");
+            $emitter->complete();
+        });
 
         $this->assertSame("", $stream->buffer());
     }
@@ -189,10 +197,12 @@ class MessageTest extends TestCase
         $value = "abc";
 
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
-        $emitter->emit($value);
-        $emitter->complete();
+        Task::async(function () use ($emitter, $value) {
+            $emitter->emit($value);
+            $emitter->complete();
+        });
 
         $this->assertSame($value, $stream->read());
         $this->assertNull($stream->read());
@@ -210,10 +220,12 @@ class MessageTest extends TestCase
     public function testPendingRead(): void
     {
         $emitter = new Emitter;
-        $stream = new Message(new IteratorStream($emitter->iterate()));
+        $stream = new Message(new IteratorStream($emitter->extractIterator()));
 
         Loop::delay(0, function () use ($emitter) {
-            $emitter->emit("test");
+            Task::async(function () use ($emitter) {
+                $emitter->emit("test");
+            });
         });
 
         $this->assertSame("test", $stream->read());
@@ -223,7 +235,7 @@ class MessageTest extends TestCase
     {
         try {
             $emitter = new Emitter;
-            $stream = new Message(new IteratorStream($emitter->iterate()));
+            $stream = new Message(new IteratorStream($emitter->extractIterator()));
             $readOp = Task::async([$stream, 'read']);
 
             $this->expectException(PendingReadError::class);
