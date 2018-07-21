@@ -18,8 +18,8 @@ if (!\defined('STDERR')) {
 }
 
 /**
- * @param \Amp\ByteStream\InputStream  $source
- * @param \Amp\ByteStream\OutputStream $destination
+ * @param InputStream  $source
+ * @param OutputStream $destination
  *
  * @return int
  *
@@ -35,4 +35,22 @@ function pipe(InputStream $source, OutputStream $destination): int
     }
 
     return $written;
+}
+
+/**
+ * @param InputStream $source
+ *
+ * @return string
+ *
+ * @throws StreamException
+ */
+function buffer(InputStream $source): string
+{
+    $buffer = "";
+
+    while (null !== $chunk = $source->read()) {
+        $buffer .= $chunk;
+    }
+
+    return $buffer;
 }
