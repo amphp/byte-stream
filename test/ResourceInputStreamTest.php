@@ -5,7 +5,8 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\ResourceInputStream;
 use PHPUnit\Framework\TestCase;
 
-class ResourceInputStreamTest extends TestCase {
+class ResourceInputStreamTest extends TestCase
+{
     public function testGetResource(): void
     {
         $stream = new ResourceInputStream(\STDIN);

@@ -30,9 +30,9 @@
         "amphp/amp": "dev-ext-async"
     },
     "require-dev": {
+        "amphp/php-cs-fixer-config": "dev-master",
         "amphp/phpunit-util": "dev-ext-async",
-        "phpunit/phpunit": "^6",
-        "friendsofphp/php-cs-fixer": "^2.3"
+        "phpunit/phpunit": "^6"
     },
     "autoload": {
         "psr-4": {
@@ -51,6 +51,14 @@
         "platform": {
             "php": "7.2.0"
         }
+    },
+    "scripts": {
+        "check": [
+            "@cs",
+            "@test"
+        ],
+        "cs": "php-cs-fixer fix -v --diff --dry-run",
+        "cs-fix": "php-cs-fixer fix -v --diff"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

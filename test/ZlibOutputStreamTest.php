@@ -21,7 +21,7 @@ class ZlibOutputStreamTest extends TestCase
         $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
         $input = \file_get_contents($file1);
-        $inputStream = new IteratorStream(new \ArrayIterator(str_split($input, 1)));
+        $inputStream = new IteratorStream(new \ArrayIterator(\str_split($input, 1)));
         while (($chunk = $inputStream->read()) !== null) {
             $outputStream->write($chunk);
         }

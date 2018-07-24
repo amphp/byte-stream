@@ -11,20 +11,20 @@ require __DIR__ . '/../vendor/autoload.php';
 
 Loop::set(new Loop\NativeDriver());
 
-$args = getopt('i:o:t:');
+$args = \getopt('i:o:t:');
 $if = $args['i'] ?? '/dev/zero';
 $of = $args['o'] ?? '/dev/null';
 $t = $args['t'] ?? 30;
 
 // passing file descriptors requires mapping paths (https://bugs.php.net/bug.php?id=53465)
-$if = preg_replace('(^/dev/fd/)', 'php://fd/', $if);
-$of = preg_replace('(^/dev/fd/)', 'php://fd/', $of);
+$if = \preg_replace('(^/dev/fd/)', 'php://fd/', $if);
+$of = \preg_replace('(^/dev/fd/)', 'php://fd/', $of);
 
 $stderr = new ResourceOutputStream(STDERR);
-$in = new ResourceInputStream(fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
-$out = new ResourceOutputStream(fopen($of, 'wb'));
+$in = new ResourceInputStream(\fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
+$out = new ResourceOutputStream(\fopen($of, 'wb'));
 
-if (extension_loaded('xdebug')) {
+if (\extension_loaded('xdebug')) {
     $stderr->write('NOTICE: The "xdebug" extension is loaded, this has a major impact on performance.' . PHP_EOL);
 }
 
@@ -40,15 +40,15 @@ $stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' secon
 
 Loop::delay($t * 1000, [$in, "close"]);
 
-$start = microtime(true);
+$start = \microtime(true);
 
 while (($chunk = $in->read()) !== null) {
     $out->write($chunk);
 }
 
-$t = microtime(true) - $start;
+$t = \microtime(true) - $start;
 
-$bytes = ftell($out->getResource());
+$bytes = \ftell($out->getResource());
 
-$stderr->write('read ' . $bytes . ' byte(s) in ' . round($t, 3) . ' second(s) => ' . round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
-$stderr->write('peak memory usage of ' . round(memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);
+$stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . \round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
+$stderr->write('peak memory usage of ' . \round(\memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);
