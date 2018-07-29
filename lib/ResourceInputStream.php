@@ -11,7 +11,7 @@ use Concurrent\Task;
  */
 final class ResourceInputStream implements InputStream
 {
-    private const DEFAULT_CHUNK_SIZE = 8192;
+    public const DEFAULT_CHUNK_SIZE = 8192;
 
     /** @var resource */
     private $resource;
