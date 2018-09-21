@@ -43,7 +43,6 @@ function pipe(InputStream $source, OutputStream $destination): Promise {
 
 /**
  * @param \Amp\ByteStream\InputStream  $source
- * @param \Amp\ByteStream\OutputStream $destination
  *
  * @return \Amp\Promise
  */
