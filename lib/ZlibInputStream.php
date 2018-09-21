@@ -8,7 +8,8 @@ use function Amp\call;
 /**
  * Allows decompression of input streams using Zlib.
  */
-final class ZlibInputStream implements InputStream {
+final class ZlibInputStream implements InputStream
+{
     private $source;
     private $encoding;
     private $options;
@@ -24,7 +25,8 @@ final class ZlibInputStream implements InputStream {
      *
      * @see http://php.net/manual/en/function.inflate-init.php
      */
-    public function __construct(InputStream $source, int $encoding, array $options = []) {
+    public function __construct(InputStream $source, int $encoding, array $options = [])
+    {
         $this->source = $source;
         $this->encoding = $encoding;
         $this->options = $options;
@@ -36,7 +38,8 @@ final class ZlibInputStream implements InputStream {
     }
 
     /** @inheritdoc */
-    public function read(): Promise {
+    public function read(): Promise
+    {
         return call(function () {
             if ($this->resource === null) {
                 return null;
@@ -72,7 +75,8 @@ final class ZlibInputStream implements InputStream {
     }
 
     /** @internal */
-    private function close() {
+    private function close()
+    {
         $this->resource = null;
         $this->source = null;
     }
@@ -82,7 +86,8 @@ final class ZlibInputStream implements InputStream {
      *
      * @return int Encoding specified on construction time.
      */
-    public function getEncoding(): int {
+    public function getEncoding(): int
+    {
         return $this->encoding;
     }
     /**
@@ -90,7 +95,8 @@ final class ZlibInputStream implements InputStream {
      *
      * @return array Options array passed on construction time.
      */
-    public function getOptions(): array {
+    public function getOptions(): array
+    {
         return $this->options;
     }
 }

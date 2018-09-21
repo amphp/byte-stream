@@ -26,7 +26,8 @@ if (!\defined('STDERR')) {
  *
  * @return \Amp\Promise
  */
-function pipe(InputStream $source, OutputStream $destination): Promise {
+function pipe(InputStream $source, OutputStream $destination): Promise
+{
     return call(function () use ($source, $destination): \Generator {
         $written = 0;
 
@@ -46,7 +47,8 @@ function pipe(InputStream $source, OutputStream $destination): Promise {
  *
  * @return \Amp\Promise
  */
-function buffer(InputStream $source): Promise {
+function buffer(InputStream $source): Promise
+{
     return call(function () use ($source): \Generator {
         $buffer = "";
 

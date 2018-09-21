@@ -23,7 +23,8 @@ use Amp\Promise;
  * }
  * ```
  */
-interface InputStream {
+interface InputStream
+{
     /**
      * Reads data from the stream.
      *

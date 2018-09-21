@@ -6,7 +6,8 @@ use Amp\Deferred;
 use Amp\Promise;
 use Amp\Success;
 
-class OutputBuffer implements OutputStream, Promise {
+class OutputBuffer implements OutputStream, Promise
+{
     /** @var \Amp\Deferred|null */
     private $deferred;
 
@@ -15,11 +16,13 @@ class OutputBuffer implements OutputStream, Promise {
 
     private $closed = false;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->deferred = new Deferred;
     }
 
-    public function write(string $data): Promise {
+    public function write(string $data): Promise
+    {
         if ($this->closed) {
             throw new ClosedException("The stream has already been closed.");
         }
@@ -29,7 +32,8 @@ class OutputBuffer implements OutputStream, Promise {
         return new Success(\strlen($data));
     }
 
-    public function end(string $finalData = ""): Promise {
+    public function end(string $finalData = ""): Promise
+    {
         if ($this->closed) {
             throw new ClosedException("The stream has already been closed.");
         }
@@ -43,7 +47,8 @@ class OutputBuffer implements OutputStream, Promise {
         return new Success(\strlen($finalData));
     }
 
-    public function onResolve(callable $onResolved) {
+    public function onResolve(callable $onResolved)
+    {
         $this->deferred->promise()->onResolve($onResolved);
     }
 }

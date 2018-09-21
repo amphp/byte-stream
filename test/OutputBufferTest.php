@@ -7,8 +7,10 @@ use Amp\ByteStream\OutputBuffer;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 
-class OutputBufferTest extends TestCase {
-    public function testWrite() {
+class OutputBufferTest extends TestCase
+{
+    public function testWrite()
+    {
         Loop::run(function () {
             $output = new OutputBuffer();
             $output->write('foo');
@@ -18,7 +20,8 @@ class OutputBufferTest extends TestCase {
         });
     }
 
-    public function testEnd() {
+    public function testEnd()
+    {
         Loop::run(function () {
             $output = new OutputBuffer();
             $output->write('foo');
@@ -28,7 +31,8 @@ class OutputBufferTest extends TestCase {
         });
     }
 
-    public function testThrowsOnWritingToClosedBuffer() {
+    public function testThrowsOnWritingToClosedBuffer()
+    {
         $this->expectException(ClosedException::class);
 
         Loop::run(function () {
@@ -38,7 +42,8 @@ class OutputBufferTest extends TestCase {
         });
     }
 
-    public function testThrowsOnEndingToClosedBuffer() {
+    public function testThrowsOnEndingToClosedBuffer()
+    {
         $this->expectException(ClosedException::class);
 
         Loop::run(function () {

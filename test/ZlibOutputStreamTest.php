@@ -12,8 +12,10 @@ use Amp\ByteStream\ZlibOutputStream;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 
-class ZlibOutputStreamTest extends TestCase {
-    public function testWrite() {
+class ZlibOutputStreamTest extends TestCase
+{
+    public function testWrite()
+    {
         Loop::run(function () {
             $file1 = __DIR__ . "/fixtures/foobar.txt";
             $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
@@ -21,7 +23,7 @@ class ZlibOutputStreamTest extends TestCase {
             $bufferStream = new OutputBuffer();
             $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
-            $fileStream = new ResourceInputStream(fopen($file1, "r"));
+            $fileStream = new ResourceInputStream(\fopen($file1, "r"));
             while (($chunk = yield $fileStream->read()) !== null) {
                 yield $outputStream->write($chunk);
             }
@@ -39,7 +41,8 @@ class ZlibOutputStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnWritingToClosedContext() {
+    public function testThrowsOnWritingToClosedContext()
+    {
         $this->expectException(ClosedException::class);
 
         Loop::run(function () {
@@ -49,7 +52,8 @@ class ZlibOutputStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnEndingToClosedContext() {
+    public function testThrowsOnEndingToClosedContext()
+    {
         $this->expectException(ClosedException::class);
 
         Loop::run(function () {
@@ -59,19 +63,22 @@ class ZlibOutputStreamTest extends TestCase {
         });
     }
 
-    public function testGetEncoding() {
+    public function testGetEncoding()
+    {
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
 
         $this->assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
 
-    public function testInvalidEncoding() {
+    public function testInvalidEncoding()
+    {
         $this->expectException(StreamException::class);
 
         new ZlibOutputStream(new OutputBuffer(), 1337);
     }
 
-    public function testGetOptions() {
+    public function testGetOptions()
+    {
         $options = [
             "level" => -1,
             "memory" => 8,
@@ -84,7 +91,8 @@ class ZlibOutputStreamTest extends TestCase {
         $this->assertSame($options, $gzStream->getOptions());
     }
 
-    public function testInvalidOptions() {
+    public function testInvalidOptions()
+    {
         $this->expectException(StreamException::class);
 
         new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
