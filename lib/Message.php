@@ -30,7 +30,8 @@ use Amp\Success;
  *
  * @deprecated Use Amp\ByteStream\Payload instead.
  */
-class Message implements InputStream, Promise {
+class Message implements InputStream, Promise
+{
     /** @var InputStream */
     private $source;
 
@@ -58,11 +59,13 @@ class Message implements InputStream, Promise {
     /**
      * @param InputStream $source An iterator that only emits strings.
      */
-    public function __construct(InputStream $source) {
+    public function __construct(InputStream $source)
+    {
         $this->source = $source;
     }
 
-    private function consume(): \Generator {
+    private function consume(): \Generator
+    {
         while (($chunk = yield $this->source->read()) !== null) {
             $buffer = $this->buffer .= $chunk;
 
@@ -94,7 +97,8 @@ class Message implements InputStream, Promise {
     }
 
     /** @inheritdoc */
-    final public function read(): Promise {
+    final public function read(): Promise
+    {
         if ($this->pendingRead) {
             throw new PendingReadError;
         }
@@ -140,7 +144,8 @@ class Message implements InputStream, Promise {
     }
 
     /** @inheritdoc */
-    final public function onResolve(callable $onResolved) {
+    final public function onResolve(callable $onResolved)
+    {
         $this->buffering = true;
 
         if ($this->coroutine === null) {
@@ -164,7 +169,8 @@ class Message implements InputStream, Promise {
      *
      * @return InputStream
      */
-    final public function getInputStream(): InputStream {
+    final public function getInputStream(): InputStream
+    {
         return $this->source;
     }
 }

@@ -9,8 +9,10 @@ use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
 
-class IteratorStreamTest extends TestCase {
-    public function testReadIterator() {
+class IteratorStreamTest extends TestCase
+{
+    public function testReadIterator()
+    {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
 
@@ -33,7 +35,8 @@ class IteratorStreamTest extends TestCase {
         });
     }
 
-    public function testFailingIterator() {
+    public function testFailingIterator()
+    {
         Loop::run(function () {
             $exception = new TestException;
             $value = "abc";
@@ -59,7 +62,8 @@ class IteratorStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnNonStringIteration() {
+    public function testThrowsOnNonStringIteration()
+    {
         $this->expectException(StreamException::class);
         Loop::run(function () {
             $value = 42;
@@ -73,7 +77,8 @@ class IteratorStreamTest extends TestCase {
         });
     }
 
-    public function testFailsAfterException() {
+    public function testFailsAfterException()
+    {
         $this->expectException(StreamException::class);
         Loop::run(function () {
             $value = 42;

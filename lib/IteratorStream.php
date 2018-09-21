@@ -7,17 +7,20 @@ use Amp\Failure;
 use Amp\Iterator;
 use Amp\Promise;
 
-final class IteratorStream implements InputStream {
+final class IteratorStream implements InputStream
+{
     private $iterator;
     private $exception;
     private $pending = false;
 
-    public function __construct(Iterator $iterator) {
+    public function __construct(Iterator $iterator)
+    {
         $this->iterator = $iterator;
     }
 
     /** @inheritdoc */
-    public function read(): Promise {
+    public function read(): Promise
+    {
         if ($this->exception) {
             return new Failure($this->exception);
         }

@@ -11,10 +11,12 @@ use Amp\Loop;
 use Amp\Success;
 use PHPUnit\Framework\TestCase;
 
-class ResourceStreamTest extends TestCase {
+class ResourceStreamTest extends TestCase
+{
     const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
 
-    public function getStreamPair($outputChunkSize = null, $inputChunkSize = ResourceInputStream::DEFAULT_CHUNK_SIZE) {
+    public function getStreamPair($outputChunkSize = null, $inputChunkSize = ResourceInputStream::DEFAULT_CHUNK_SIZE)
+    {
         $domain = \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX;
         list($left, $right) = @\stream_socket_pair($domain, \STREAM_SOCK_STREAM, \STREAM_IPPROTO_IP);
 
@@ -24,7 +26,8 @@ class ResourceStreamTest extends TestCase {
         return [$a, $b];
     }
 
-    public function testLargePayloads() {
+    public function testLargePayloads()
+    {
         Loop::run(function () {
             list($a, $b) = $this->getStreamPair();
 
@@ -41,7 +44,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testManySmallPayloads() {
+    public function testManySmallPayloads()
+    {
         Loop::run(function () {
             list($a, $b) = $this->getStreamPair();
 
@@ -61,12 +65,13 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnExternallyShutdownStreamWithLargePayload() {
+    public function testThrowsOnExternallyShutdownStreamWithLargePayload()
+    {
         $this->expectException(StreamException::class);
 
         Loop::run(function () {
             try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
-                Loop::onSignal(defined("SIGPIPE") ? SIGPIPE : 13, function () {});
+                Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {});
             } catch (Loop\UnsupportedFeatureException $e) {
             }
 
@@ -83,12 +88,13 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnExternallyShutdownStreamWithSmallPayloads() {
+    public function testThrowsOnExternallyShutdownStreamWithSmallPayloads()
+    {
         $this->expectException(StreamException::class);
 
         Loop::run(function () {
             try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
-                Loop::onSignal(defined("SIGPIPE") ? SIGPIPE : 13, function () {});
+                Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {});
             } catch (Loop\UnsupportedFeatureException $e) {
             }
 
@@ -107,7 +113,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnCloseBeforeWritingComplete() {
+    public function testThrowsOnCloseBeforeWritingComplete()
+    {
         $this->expectException(ClosedException::class);
 
         Loop::run(function () {
@@ -123,7 +130,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnStreamNotWritable() {
+    public function testThrowsOnStreamNotWritable()
+    {
         $this->expectException(StreamException::class);
 
         Loop::run(function () {
@@ -139,7 +147,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnReferencingClosedStream() {
+    public function testThrowsOnReferencingClosedStream()
+    {
         $this->expectException(\Error::class);
 
         Loop::run(function () {
@@ -151,7 +160,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnUnreferencingClosedStream() {
+    public function testThrowsOnUnreferencingClosedStream()
+    {
         $this->expectException(\Error::class);
 
         Loop::run(function () {
@@ -163,7 +173,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testThrowsOnPendingRead() {
+    public function testThrowsOnPendingRead()
+    {
         $this->expectException(PendingReadError::class);
 
         Loop::run(function () {
@@ -174,7 +185,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testResolveSuccessOnClosedStream() {
+    public function testResolveSuccessOnClosedStream()
+    {
         Loop::run(function () {
             list($a, $b) = $this->getStreamPair();
 
@@ -184,7 +196,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testChunkedPayload() {
+    public function testChunkedPayload()
+    {
         Loop::run(function () {
             list($a, $b) = $this->getStreamPair(4096);
 
@@ -201,7 +214,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testEmptyPayload() {
+    public function testEmptyPayload()
+    {
         Loop::run(function () {
             list($a, $b) = $this->getStreamPair(4096);
 
@@ -218,7 +232,8 @@ class ResourceStreamTest extends TestCase {
         });
     }
 
-    public function testCloseStreamAfterEndPayload() {
+    public function testCloseStreamAfterEndPayload()
+    {
         Loop::run(function () {
             list($a, $b) = $this->getStreamPair();
 

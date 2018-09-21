@@ -10,8 +10,10 @@ use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\Producer;
 
-class ZlibInputStreamTest extends TestCase {
-    public function testRead() {
+class ZlibInputStreamTest extends TestCase
+{
+    public function testRead()
+    {
         Loop::run(function () {
             $file1 = __DIR__ . "/fixtures/foobar.txt";
             $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
@@ -37,19 +39,22 @@ class ZlibInputStreamTest extends TestCase {
         });
     }
 
-    public function testGetEncoding() {
+    public function testGetEncoding()
+    {
         $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
 
         $this->assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
 
-    public function testInvalidEncoding() {
+    public function testInvalidEncoding()
+    {
         $this->expectException(StreamException::class);
 
         new ZlibInputStream(new InMemoryStream(""), 1337);
     }
 
-    public function testGetOptions() {
+    public function testGetOptions()
+    {
         $options = [
             "level" => -1,
             "memory" => 8,
@@ -62,7 +67,8 @@ class ZlibInputStreamTest extends TestCase {
         $this->assertSame($options, $gzStream->getOptions());
     }
 
-    public function testInvalidStream() {
+    public function testInvalidStream()
+    {
         $this->expectException(StreamException::class);
 
         Loop::run(function () {

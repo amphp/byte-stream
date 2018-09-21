@@ -11,7 +11,8 @@ use function Amp\call;
  * be buffered and accessed in its entirety by calling buffer(). Once buffering is requested through buffer(), the
  * stream cannot be read in chunks. On destruct any remaining data is read from the InputStream given to this class.
  */
-class Payload implements InputStream {
+class Payload implements InputStream
+{
     /** @var InputStream */
     private $stream;
 
@@ -24,17 +25,20 @@ class Payload implements InputStream {
     /**
      * @param \Amp\ByteStream\InputStream $stream
      */
-    public function __construct(InputStream $stream) {
+    public function __construct(InputStream $stream)
+    {
         $this->stream = $stream;
     }
 
-    public function __destruct() {
+    public function __destruct()
+    {
         if (!$this->promise) {
             Promise\rethrow(new Coroutine($this->consume()));
         }
     }
 
-    private function consume(): \Generator {
+    private function consume(): \Generator
+    {
         try {
             if ($this->lastRead && null === yield $this->lastRead) {
                 return;
@@ -53,7 +57,8 @@ class Payload implements InputStream {
      *
      * @throws \Error If a buffered message was requested by calling buffer().
      */
-    final public function read(): Promise {
+    final public function read(): Promise
+    {
         if ($this->promise) {
             throw new \Error("Cannot stream message data once a buffered message has been requested");
         }
@@ -66,7 +71,8 @@ class Payload implements InputStream {
      *
      * @return Promise<string> Resolves with the entire message contents.
      */
-    final public function buffer(): Promise {
+    final public function buffer(): Promise
+    {
         if ($this->promise) {
             return $this->promise;
         }

@@ -7,7 +7,8 @@ use Amp\Promise;
 /**
  * Allows compression of output streams using Zlib.
  */
-final class ZlibOutputStream implements OutputStream {
+final class ZlibOutputStream implements OutputStream
+{
     private $destination;
     private $encoding;
     private $options;
@@ -22,7 +23,8 @@ final class ZlibOutputStream implements OutputStream {
      *
      * @see http://php.net/manual/en/function.deflate-init.php
      */
-    public function __construct(OutputStream $destination, int $encoding, array $options = []) {
+    public function __construct(OutputStream $destination, int $encoding, array $options = [])
+    {
         $this->destination = $destination;
         $this->encoding = $encoding;
         $this->options = $options;
@@ -34,7 +36,8 @@ final class ZlibOutputStream implements OutputStream {
     }
 
     /** @inheritdoc */
-    public function write(string $data): Promise {
+    public function write(string $data): Promise
+    {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
         }
@@ -56,7 +59,8 @@ final class ZlibOutputStream implements OutputStream {
     }
 
     /** @inheritdoc */
-    public function end(string $finalData = ""): Promise {
+    public function end(string $finalData = ""): Promise
+    {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
         }
@@ -76,7 +80,8 @@ final class ZlibOutputStream implements OutputStream {
     }
 
     /** @internal */
-    private function close() {
+    private function close()
+    {
         $this->resource = null;
         $this->destination = null;
     }
@@ -86,7 +91,8 @@ final class ZlibOutputStream implements OutputStream {
      *
      * @return int Encoding specified on construction time.
      */
-    public function getEncoding(): int {
+    public function getEncoding(): int
+    {
         return $this->encoding;
     }
 
@@ -95,7 +101,8 @@ final class ZlibOutputStream implements OutputStream {
      *
      * @return array Options array passed on construction time.
      */
-    public function getOptions(): array {
+    public function getOptions(): array
+    {
         return $this->options;
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\IteratorStream;

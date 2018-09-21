@@ -11,8 +11,10 @@ use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\PHPUnit\TestException;
 
-class PayloadTest extends TestCase {
-    public function testBufferingAll() {
+class PayloadTest extends TestCase
+{
+    public function testBufferingAll()
+    {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
 
@@ -29,7 +31,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testFullStreamConsumption() {
+    public function testFullStreamConsumption()
+    {
         Loop::run(function () use (&$invoked) {
             $values = ["abc", "def", "ghi"];
 
@@ -54,7 +57,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testFastResolvingStream() {
+    public function testFastResolvingStream()
+    {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
 
@@ -77,7 +81,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testFastResolvingStreamBufferingOnly() {
+    public function testFastResolvingStreamBufferingOnly()
+    {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
 
@@ -94,7 +99,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testPartialStreamConsumption() {
+    public function testPartialStreamConsumption()
+    {
         Loop::run(function () {
             $values = ["abc", "def", "ghi"];
 
@@ -117,7 +123,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testFailingStream() {
+    public function testFailingStream()
+    {
         Loop::run(function () {
             $exception = new TestException;
             $value = "abc";
@@ -143,7 +150,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testFailingStreamWithPendingRead() {
+    public function testFailingStreamWithPendingRead()
+    {
         Loop::run(function () {
             $exception = new TestException;
             $value = "abc";
@@ -167,7 +175,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testEmptyStream() {
+    public function testEmptyStream()
+    {
         Loop::run(function () {
             $emitter = new Emitter;
             $emitter->complete();
@@ -177,7 +186,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testEmptyStringStream() {
+    public function testEmptyStringStream()
+    {
         Loop::run(function () {
             $value = "";
 
@@ -192,7 +202,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testReadAfterCompletion() {
+    public function testReadAfterCompletion()
+    {
         Loop::run(function () {
             $value = "abc";
 
@@ -207,7 +218,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testPendingRead() {
+    public function testPendingRead()
+    {
         Loop::run(function () {
             $emitter = new Emitter;
             $stream = new Payload(new IteratorStream($emitter->iterate()));
@@ -220,7 +232,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testPendingReadError() {
+    public function testPendingReadError()
+    {
         Loop::run(function () {
             $emitter = new Emitter;
             $stream = new Payload(new IteratorStream($emitter->iterate()));
@@ -232,7 +245,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testReadAfterBuffer() {
+    public function testReadAfterBuffer()
+    {
         Loop::run(function () {
             $stream = new Payload(new InMemoryStream("test"));
             $stream->buffer();
@@ -244,7 +258,8 @@ class PayloadTest extends TestCase {
         });
     }
 
-    public function testFurtherCallsToBufferReturnSameData() {
+    public function testFurtherCallsToBufferReturnSameData()
+    {
         Loop::run(function () {
             $data = "test";
             $stream = new Payload(new InMemoryStream($data));
