@@ -3,10 +3,10 @@
 
 namespace Amp\ByteStream\Test;
 
-use function Amp\ByteStream\buffer;
 use Amp\ByteStream\IteratorStream;
 use Amp\Iterator;
 use Amp\PHPUnit\TestCase;
+use function Amp\ByteStream\buffer;
 use function Amp\Promise\wait;
 
 class BufferTest extends TestCase
