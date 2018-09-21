@@ -3,7 +3,7 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\ClosedException;
-use Amp\ByteStream\InMemoryStream;
+use Amp\ByteStream\StringBufferStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\StreamException;
@@ -28,7 +28,7 @@ class ZlibOutputStreamTest extends TestCase
 
         $outputStream->end();
 
-        $inputStream = new ZlibInputStream(new InMemoryStream($bufferStream->get()), \ZLIB_ENCODING_GZIP);
+        $inputStream = new ZlibInputStream(new StringBufferStream($bufferStream->get()), \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $inputStream->read()) !== null) {

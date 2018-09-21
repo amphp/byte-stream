@@ -1,6 +1,7 @@
 <?php
 
 namespace Amp\ByteStream;
+use Concurrent\Stream\ReadableStream;
 
 /**
  * Allows decompression of input streams using Zlib.
@@ -22,7 +23,7 @@ final class ZlibInputStream implements InputStream
      *
      * @see http://php.net/manual/en/function.inflate-init.php
      */
-    public function __construct(InputStream $source, int $encoding, array $options = [])
+    public function __construct(ReadableStream $source, int $encoding, array $options = [])
     {
         $this->source = $source;
         $this->encoding = $encoding;

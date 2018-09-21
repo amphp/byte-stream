@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\InMemoryStream;
+use Amp\ByteStream\StringBufferStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\Message;
 use Amp\ByteStream\PendingReadError;
@@ -210,7 +210,7 @@ class MessageTest extends TestCase
 
     public function testGetInputStream(): void
     {
-        $inputStream = new InMemoryStream("");
+        $inputStream = new StringBufferStream("");
         $message = new Message($inputStream);
 
         $this->assertSame($inputStream, $message->getInputStream());

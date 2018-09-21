@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\InMemoryStream;
+use Amp\ByteStream\StringBufferStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
@@ -43,7 +43,7 @@ class ZlibInputStreamTest extends TestCase
 
     public function testGetEncoding(): void
     {
-        $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
+        $gzStream = new ZlibInputStream(new StringBufferStream(""), \ZLIB_ENCODING_GZIP);
 
         $this->assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
@@ -52,7 +52,7 @@ class ZlibInputStreamTest extends TestCase
     {
         $this->expectException(StreamException::class);
 
-        new ZlibInputStream(new InMemoryStream(""), 1337);
+        new ZlibInputStream(new StringBufferStream(""), 1337);
     }
 
     public function testGetOptions(): void
@@ -64,7 +64,7 @@ class ZlibInputStreamTest extends TestCase
             "strategy" => \ZLIB_DEFAULT_STRATEGY,
         ];
 
-        $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP, $options);
+        $gzStream = new ZlibInputStream(new StringBufferStream(""), \ZLIB_ENCODING_GZIP, $options);
 
         $this->assertSame($options, $gzStream->getOptions());
     }
@@ -73,7 +73,7 @@ class ZlibInputStreamTest extends TestCase
     {
         $this->expectException(StreamException::class);
 
-        $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
+        $gzStream = new ZlibInputStream(new StringBufferStream("Invalid"), \ZLIB_ENCODING_GZIP);
         $gzStream->read();
     }
 }
