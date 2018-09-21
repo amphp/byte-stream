@@ -40,3 +40,22 @@ function pipe(InputStream $source, OutputStream $destination): Promise {
         return $written;
     });
 }
+
+/**
+ * @param \Amp\ByteStream\InputStream  $source
+ * @param \Amp\ByteStream\OutputStream $destination
+ *
+ * @return \Amp\Promise
+ */
+function buffer(InputStream $source): Promise {
+    return call(function () use ($source): \Generator {
+        $buffer = "";
+
+        while (($chunk = yield $source->read()) !== null) {
+            $buffer .= $chunk;
+            $chunk = null; // free memory
+        }
+
+        return $buffer;
+    });
+}
