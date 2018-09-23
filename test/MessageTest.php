@@ -255,4 +255,27 @@ class MessageTest extends TestCase
             $stream->read();
         });
     }
+
+    public function testFalsyValueInStreamWhenBuffering()
+    {
+        Loop::run(function () {
+            $emitter = new Emitter;
+            $emitter->emit("0");
+            $emitter->complete();
+            $message = new Message(new IteratorStream($emitter->iterate()));
+
+            $this->assertSame("0", yield $message);
+        });
+    }
+
+    public function testFalsyValueInStreamWhenStreaming()
+    {
+        Loop::run(function () {
+            $emitter = new Emitter;
+            $emitter->emit("0");
+            $message = new Message(new IteratorStream($emitter->iterate()));
+
+            $this->assertSame("0", yield $message->read());
+        });
+    }
 }
