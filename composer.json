@@ -31,7 +31,6 @@
     },
     "require-dev": {
         "amphp/php-cs-fixer-config": "dev-master",
-        "amphp/phpunit-util": "dev-ext-async",
         "phpunit/phpunit": "^6"
     },
     "autoload": {

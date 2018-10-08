@@ -2,61 +2,106 @@
 
 namespace Amp\ByteStream;
 
-final class IteratorStream implements InputStream
+use Concurrent\Deferred;
+use Concurrent\Stream\PendingReadException;
+use Concurrent\Stream\ReadableStream;
+use Concurrent\Stream\StreamClosedException;
+use Concurrent\Stream\StreamException;
+use Concurrent\Task;
+use function Concurrent\race;
+
+final class IteratorStream implements ReadableStream
 {
     private $iterator;
     private $exception;
     private $pending = false;
     private $firstRead = true;
+    private $buffer = '';
+    private $failure;
 
     public function __construct(\Iterator $iterator)
     {
         $this->iterator = $iterator;
+        $this->failure = new Deferred;
     }
 
     /** @inheritdoc */
-    public function read(): ?string
+    public function read(?int $length = null): ?string
     {
-        if ($this->pending) {
-            throw new PendingReadError;
-        }
-
-        $this->pending = true;
-
         if ($this->exception) {
             throw $this->exception;
         }
 
+        if ($this->pending) {
+            throw new PendingReadException('Cannot read from stream while another read is pending');
+        }
+
+        $length = $length ?? 8192;
+
+        if ($length < 0) {
+            throw new StreamException('Reading length can\'t be negative');
+        }
+
+        if ($length === 0) {
+            return '';
+        }
+
+        $this->pending = true;
+
         try {
-            if (!$this->firstRead) {
-                $this->iterator->next();
+            while (\strlen($this->buffer) < $length) {
+                if (!$this->firstRead) {
+                    Task::await(race([
+                        Task::async([$this->iterator, 'next']),
+                        $this->failure->awaitable(),
+                    ]));
+                }
+
+                if (!$this->iterator->valid()) {
+                    break;
+                }
+
+                $this->firstRead = false;
+                $chunk = $this->iterator->current();
+
+                if (!\is_string($chunk)) {
+                    throw new StreamException(\sprintf(
+                        "Unexpected iterator value of type '%s', expected string",
+                        \is_object($chunk) ? \get_class($chunk) : \gettype($chunk)
+                    ));
+                }
+
+                $this->buffer .= $chunk;
+                unset($chunk);
             }
 
-            if (!$this->iterator->valid()) {
+            if ($this->buffer === '') {
                 return null;
             }
 
-            $this->firstRead = false;
-            $chunk = $this->iterator->current();
-
-            if (!\is_string($chunk)) {
-                throw new StreamException(\sprintf(
-                    "Unexpected iterator value of type '%s', expected string",
-                    \is_object($chunk) ? \get_class($chunk) : \gettype($chunk)
-                ));
-            }
+            $chunk = \substr($this->buffer, 0, $length);
+            $this->buffer = \substr($this->buffer, \strlen($chunk));
 
             return $chunk;
         } catch (\Throwable $e) {
-            if (!$e instanceof StreamException) {
-                $e = new StreamException("Unexpected exception during read()", 0, $e);
+            if (!$e instanceof StreamClosedException) {
+                $e = new StreamClosedException("Unexpected exception during IteratorStream::read({$length})", 0, $e);
             }
 
             $this->exception = $e;
 
-            throw $e;
+            throw $this->exception;
         } finally {
             $this->pending = false;
+        }
+    }
+
+    /** @inheritdoc */
+    public function close(?\Throwable $e = null): void
+    {
+        if ($this->exception === null) {
+            $this->exception = new StreamClosedException('Cannot read from closed stream', 0, $e);
+            $this->failure->fail($this->exception);
         }
     }
 }

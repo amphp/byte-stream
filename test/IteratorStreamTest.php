@@ -1,15 +1,15 @@
-<?php
+<?php /** @noinspection PhpUnhandledExceptionInspection */
 
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\IteratorStream;
-use Amp\ByteStream\StreamException;
 use Amp\Emitter;
-use Amp\PHPUnit\TestCase;
-use Amp\PHPUnit\TestException;
+use Concurrent\AsyncTestCase;
+use Concurrent\Stream\StreamClosedException;
+use Concurrent\Stream\StreamException;
 use Concurrent\Task;
 
-class IteratorStreamTest extends TestCase
+class IteratorStreamTest extends AsyncTestCase
 {
     public function testReadIterator(): void
     {
@@ -29,17 +29,17 @@ class IteratorStreamTest extends TestCase
         });
 
         $buffer = "";
-        while (($chunk = $stream->read()) !== null) {
+        while (($chunk = $stream->read(1)) !== null) {
             $buffer .= $chunk;
         }
 
         $this->assertSame(\implode($values), $buffer);
-        $this->assertNull($stream->read());
+        $this->assertNull($stream->read(1));
     }
 
     public function testFailingIterator(): void
     {
-        $exception = new TestException;
+        $exception = new \RuntimeException();
         $value = "abc";
 
         $emitter = new Emitter;
@@ -53,17 +53,16 @@ class IteratorStreamTest extends TestCase
             $emitter->fail($exception);
         });
 
-        $callable = $this->createCallback(1);
+        $this->expectExceptionObject($exception);
 
         try {
-            while (null !== $chunk = $stream->read()) {
+            while (null !== $chunk = $stream->read(3)) {
                 $this->assertSame($value, $chunk);
             }
 
             $this->fail("No exception has been thrown");
-        } catch (StreamException $reason) {
-            $this->assertSame($exception, $reason->getPrevious());
-            $callable(); // <-- ensure this point is reached
+        } catch (StreamClosedException $reason) {
+            throw $reason->getPrevious();
         }
     }
 

@@ -3,11 +3,16 @@
 namespace Amp\ByteStream;
 
 // @codeCoverageIgnoreStart
+use Concurrent\Stream\PendingReadException;
+use Concurrent\Stream\ReadableStream;
+use Concurrent\Stream\StreamClosedException;
+use Concurrent\Stream\WritableStream;
+
 if (\strlen('…') !== 3) {
     throw new \Error(
         'The mbstring.func_overload ini setting is enabled. It must be disabled to use the stream package.'
     );
-} // @codeCoverageIgnoreEnd
+}
 
 if (!\defined('STDOUT')) {
     \define('STDOUT', \fopen('php://stdout', 'wb'));
@@ -15,21 +20,25 @@ if (!\defined('STDOUT')) {
 
 if (!\defined('STDERR')) {
     \define('STDERR', \fopen('php://stderr', 'wb'));
-}
+} // @codeCoverageIgnoreEnd
 
 /**
- * @param InputStream  $source
- * @param OutputStream $destination
+ * Pipes a readable stream into a writable stream.
  *
- * @return int
+ * @param ReadableStream $source Stream to read from.
+ * @param WritableStream $destination Stream to write to.
+ * @param int            $chunkSize Chunk size to use for reading.
  *
- * @throws StreamException
+ * @return int Bytes read from the readable stream.
+ *
+ * @throws StreamClosedException
+ * @throws PendingReadException
  */
-function pipe(InputStream $source, OutputStream $destination): int
+function pipe(ReadableStream $source, WritableStream $destination, int $chunkSize = 8192): int
 {
     $written = 0;
 
-    while (null !== $chunk = $source->read()) {
+    while (null !== $chunk = $source->read($chunkSize)) {
         $written += \strlen($chunk);
         $destination->write($chunk);
     }
@@ -38,18 +47,23 @@ function pipe(InputStream $source, OutputStream $destination): int
 }
 
 /**
- * @param InputStream $source
+ * Reads all bytes from a readable stream and buffers them into a string.
  *
- * @return string
+ * @param ReadableStream $source Stream to read from.
+ * @param int            $chunkSize Chunk size to use for reading.
  *
- * @throws StreamException
+ * @return string Buffered contents.
+ *
+ * @throws StreamClosedException
+ * @throws PendingReadException
  */
-function buffer(InputStream $source): string
+function buffer(ReadableStream $source, int $chunkSize = 8192): string
 {
     $buffer = "";
 
-    while (null !== $chunk = $source->read()) {
+    while (null !== $chunk = $source->read($chunkSize)) {
         $buffer .= $chunk;
+        unset($chunk); // free memory
     }
 
     return $buffer;
