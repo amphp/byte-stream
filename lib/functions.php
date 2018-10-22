@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream;
 
+use Amp\Loop;
 use Amp\Promise;
 use function Amp\call;
 
@@ -59,4 +60,61 @@ function buffer(InputStream $source): Promise
 
         return $buffer;
     });
+}
+
+/**
+ * The STDIN stream for the process associated with the currently active event loop.
+ *
+ * @return ResourceInputStream
+ */
+function getStdin(): ResourceInputStream
+{
+    static $key = InputStream::class . '\\stdin';
+
+    $stream = Loop::getState($key);
+
+    if (!$stream) {
+        $stream = new ResourceInputStream(\STDIN);
+        Loop::setState($key, $stream);
+    }
+
+    return $stream;
+}
+
+/**
+ * The STDOUT stream for the process associated with the currently active event loop.
+ *
+ * @return ResourceOutputStream
+ */
+function getStdout(): ResourceOutputStream
+{
+    static $key = OutputStream::class . '\\stdout';
+
+    $stream = Loop::getState($key);
+
+    if (!$stream) {
+        $stream = new ResourceOutputStream(\STDOUT);
+        Loop::setState($key, $stream);
+    }
+
+    return $stream;
+}
+
+/**
+ * The STDERR stream for the process associated with the currently active event loop.
+ *
+ * @return ResourceOutputStream
+ */
+function getStderr(): ResourceOutputStream
+{
+    static $key = OutputStream::class . '\\stderr';
+
+    $stream = Loop::getState($key);
+
+    if (!$stream) {
+        $stream = new ResourceOutputStream(\STDERR);
+        Loop::setState($key, $stream);
+    }
+
+    return $stream;
 }
