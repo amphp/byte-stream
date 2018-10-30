@@ -73,15 +73,15 @@ class Message implements InputStream, Promise
                 continue; // Do not succeed reads with empty string.
             } elseif ($this->pendingRead) {
                 $deferred = $this->pendingRead;
-                $this->pendingRead = null;
-                $this->buffer = "";
+                unset($this->pendingRead);
+                $this->buffer = ""; // Destroy last emitted chunk to free memory.
                 $deferred->resolve($buffer);
-                $buffer = ""; // Destroy last emitted chunk to free memory.
             } elseif (!$this->buffering) {
-                $buffer = ""; // Destroy last emitted chunk to free memory.
+                $this->buffer = ""; // Destroy last emitted chunk to free memory.
                 $this->backpressure = new Deferred;
                 yield $this->backpressure->promise();
             }
+            $buffer = "";
         }
 
         $this->complete = true;
