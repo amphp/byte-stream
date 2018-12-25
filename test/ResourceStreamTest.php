@@ -259,11 +259,11 @@ class ResourceStreamTest extends TestCase
             $middle = \tempnam(\sys_get_temp_dir(), 'byte-stream-middle-');
 
             \Amp\ByteStream\pipe(
-                new ResourceInputStream(fopen(__FILE__, 'rb')),
-                new ResourceOutputStream(fopen($middle, 'wb'))
+                new ResourceInputStream(\fopen(__FILE__, 'rb')),
+                new ResourceOutputStream(\fopen($middle, 'wb'))
             );
 
-            $middleReadStream = new ResourceInputStream(fopen($middle, 'rb'));
+            $middleReadStream = new ResourceInputStream(\fopen($middle, 'rb'));
             $buffer = '';
 
             yield new Delayed(0);
