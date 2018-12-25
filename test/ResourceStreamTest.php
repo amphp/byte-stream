@@ -267,8 +267,8 @@ class ResourceStreamTest extends TestCase
             $buffer = '';
 
             yield new Delayed(0);
-            while (null !== $chunk = yield $middleReadStream->read()) {
-                $buffer .= $chunk;
+            while (\strlen($buffer) < \filesize(__FILE__)) {
+                $buffer .= yield $middleReadStream->read();
             }
 
             $this->assertStringEqualsFile(__FILE__, $buffer);

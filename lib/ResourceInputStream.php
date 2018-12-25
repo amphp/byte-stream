@@ -40,7 +40,7 @@ final class ResourceInputStream implements InputStream
 
     /**
      * @param resource $stream Stream resource.
-     * @param int $chunkSize Chunk size per read operation.
+     * @param int      $chunkSize Chunk size per read operation.
      *
      * @throws \Error If an invalid stream or parameter has been passed.
      */
@@ -68,7 +68,10 @@ final class ResourceInputStream implements InputStream
         $readable = &$this->readable;
 
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (
-            &$deferred, &$readable, $chunkSize, $useSingleRead
+            &$deferred,
+            &$readable,
+            $chunkSize,
+            $useSingleRead
         ) {
             if ($useSingleRead) {
                 $data = @\fread($stream, $chunkSize);
@@ -91,12 +94,16 @@ final class ResourceInputStream implements InputStream
 
             $temp = $deferred;
             $deferred = null;
+
+            \assert($temp instanceof Deferred);
             $temp->resolve($data);
         });
 
         $this->immediateCallable = static function ($watcherId, $data) use (&$deferred) {
             $temp = $deferred;
             $deferred = null;
+
+            \assert($temp instanceof Deferred);
             $temp->resolve($data);
         };
 
