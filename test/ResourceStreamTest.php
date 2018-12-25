@@ -71,7 +71,8 @@ class ResourceStreamTest extends TestCase
 
         Loop::run(function () {
             try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
-                Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {});
+                Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {
+                });
             } catch (Loop\UnsupportedFeatureException $e) {
             }
 
@@ -94,7 +95,8 @@ class ResourceStreamTest extends TestCase
 
         Loop::run(function () {
             try { /* prevent crashes with phpdbg due to SIGPIPE not being handled... */
-                Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {});
+                Loop::onSignal(\defined("SIGPIPE") ? SIGPIPE : 13, function () {
+                });
             } catch (Loop\UnsupportedFeatureException $e) {
             }
 
@@ -247,6 +249,26 @@ class ResourceStreamTest extends TestCase
             }
 
             $this->assertSame($message, $received);
+        });
+    }
+
+    public function testIssue47()
+    {
+        Loop::run(function () {
+            $middle = \tempnam(\sys_get_temp_dir(), 'byte-stream-middle-');
+
+            \Amp\ByteStream\pipe(
+                new ResourceInputStream(fopen(__FILE__, 'rb')),
+                new ResourceOutputStream(fopen($middle, 'wb'))
+            );
+
+            $middleReadStream = new ResourceInputStream(fopen($middle, 'rb'));
+
+            while (null !== $chunk = yield $middleReadStream->read()) {
+                unset($chunk);
+            }
+
+            $this->assertTrue(true);
         });
     }
 }
