@@ -7,6 +7,7 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
+use Amp\Delayed;
 use Amp\Loop;
 use Amp\Success;
 use PHPUnit\Framework\TestCase;
@@ -263,12 +264,14 @@ class ResourceStreamTest extends TestCase
             );
 
             $middleReadStream = new ResourceInputStream(fopen($middle, 'rb'));
+            $buffer = '';
 
+            yield new Delayed(0);
             while (null !== $chunk = yield $middleReadStream->read()) {
-                unset($chunk);
+                $buffer .= $chunk;
             }
 
-            $this->assertTrue(true);
+            $this->assertStringEqualsFile(__FILE__, $buffer);
         });
     }
 }
