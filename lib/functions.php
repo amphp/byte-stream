@@ -2,12 +2,12 @@
 
 namespace Amp\ByteStream;
 
-// @codeCoverageIgnoreStart
 use Concurrent\Stream\PendingReadException;
 use Concurrent\Stream\ReadableStream;
 use Concurrent\Stream\StreamClosedException;
 use Concurrent\Stream\WritableStream;
 
+// @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
     throw new \Error(
         'The mbstring.func_overload ini setting is enabled. It must be disabled to use the stream package.'
