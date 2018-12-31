@@ -50,14 +50,21 @@ final class IteratorStream implements ReadableStream
 
         try {
             while (\strlen($this->buffer) < $length) {
-                if (!$this->firstRead) {
+                if ($this->firstRead) {
+                    $valid = Task::await(race([
+                        Task::async([$this->iterator, 'valid']),
+                        $this->failure->awaitable(),
+                    ]));
+                } else {
                     Task::await(race([
                         Task::async([$this->iterator, 'next']),
                         $this->failure->awaitable(),
                     ]));
+
+                    $valid = $this->iterator->valid();
                 }
 
-                if (!$this->iterator->valid()) {
+                if (!$valid) {
                     break;
                 }
 
