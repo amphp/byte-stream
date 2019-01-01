@@ -2,11 +2,17 @@
 
 namespace Amp\ByteStream;
 
+use Concurrent\Awaitable;
 use Concurrent\Stream\ReadableStream;
+use Concurrent\Task;
 
 class Payload implements ReadableStream
 {
+    /** @var ReadableStream */
     private $source;
+
+    /** @var Awaitable */
+    private $buffer;
 
     public function __construct(ReadableStream $source)
     {
@@ -33,6 +39,8 @@ class Payload implements ReadableStream
      */
     final public function buffer(): string
     {
-        return buffer($this->source);
+        $this->buffer = Task::async('Amp\ByteStream\buffer', $this->source);
+
+        return Task::await($this->buffer);
     }
 }
