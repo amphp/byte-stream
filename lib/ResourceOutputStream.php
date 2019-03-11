@@ -92,7 +92,7 @@ final class ResourceOutputStream implements OutputStream
                             if ($error = \error_get_last()) {
                                 $message .= \sprintf("; %s", $error["message"]);
                             }
-                            throw new StreamException($message);
+                            throw new CannotWriteChunkException($data, $message);
                         }
 
                         $writes->unshift([$data, $previous, $deferred]);
