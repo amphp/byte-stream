@@ -63,7 +63,7 @@ final class ResourceOutputStream implements OutputStream
             try {
                 while (!$writes->isEmpty()) {
                     /** @var \Amp\Deferred $deferred */
-                    list($data, $previous, $deferred) = $writes->shift();
+                    list($data, $previous, $deferred, $positionInOriginalChunk) = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
@@ -92,10 +92,10 @@ final class ResourceOutputStream implements OutputStream
                             if ($error = \error_get_last()) {
                                 $message .= \sprintf("; %s", $error["message"]);
                             }
-                            throw new StreamException($message);
+                            throw new CannotWriteChunkException($positionInOriginalChunk, $message);
                         }
 
-                        $writes->unshift([$data, $previous, $deferred]);
+                        $writes->unshift([$data, $previous, $deferred, $positionInOriginalChunk]);
                         return;
                     }
 
@@ -103,7 +103,7 @@ final class ResourceOutputStream implements OutputStream
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
-                        $writes->unshift([$data, $written + $previous, $deferred]);
+                        $writes->unshift([$data, $written + $previous, $deferred, $positionInOriginalChunk + $written]);
                         return;
                     }
 
@@ -208,13 +208,13 @@ final class ResourceOutputStream implements OutputStream
         if ($length - $written > self::LARGE_CHUNK_SIZE) {
             $chunks = \str_split($data, self::LARGE_CHUNK_SIZE);
             $data = \array_pop($chunks);
-            foreach ($chunks as $chunk) {
-                $this->writes->push([$chunk, $written, new Deferred]);
+            foreach ($chunks as $i => $chunk) {
+                $this->writes->push([$chunk, $written, new Deferred, $i * self::LARGE_CHUNK_SIZE]);
                 $written += self::LARGE_CHUNK_SIZE;
             }
         }
 
-        $this->writes->push([$data, $written, $deferred]);
+        $this->writes->push([$data, $written, $deferred, $written]);
         Loop::enable($this->watcher);
         $promise = $deferred->promise();
 
