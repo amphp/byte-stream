@@ -274,6 +274,11 @@ final class ResourceOutputStream implements OutputStream
         return $this->resource;
     }
 
+    public function setChunkSize(int $chunkSize)
+    {
+        $this->chunkSize = $chunkSize;
+    }
+
     public function __destruct()
     {
         if ($this->resource !== null) {

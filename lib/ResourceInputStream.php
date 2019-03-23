@@ -204,6 +204,11 @@ final class ResourceInputStream implements InputStream
         return $this->resource;
     }
 
+    public function setChunkSize(int $chunkSize)
+    {
+        $this->chunkSize = $chunkSize;
+    }
+
     /**
      * References the read watcher, so the loop keeps running in case there's an active read.
      *
