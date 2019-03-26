@@ -62,7 +62,7 @@ final class ResourceInputStream implements InputStream
         \stream_set_read_buffer($stream, 0);
 
         $this->resource = $stream;
-        $this->chunkSize = $chunkSize;
+        $this->chunkSize = &$chunkSize;
 
         $deferred = &$this->deferred;
         $readable = &$this->readable;
@@ -70,7 +70,7 @@ final class ResourceInputStream implements InputStream
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (
             &$deferred,
             &$readable,
-            $chunkSize,
+            &$chunkSize,
             $useSingleRead
         ) {
             if ($useSingleRead) {
