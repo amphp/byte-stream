@@ -274,4 +274,19 @@ class ResourceStreamTest extends TestCase
             $this->assertStringEqualsFile(__FILE__, $buffer);
         });
     }
+
+    public function testSetChunkSize()
+    {
+        Loop::run(function () {
+            list($a, $b) = $this->getStreamPair();
+            $a->setChunkSize(1);
+            $b->setChunkSize(1);
+
+            $this->assertSame(3, yield $a->write('foo'));
+            $this->assertSame('f', yield $b->read());
+
+            $b->setChunkSize(3);
+            $this->assertSame('oo', yield $b->read());
+        });
+    }
 }

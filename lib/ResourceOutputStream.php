@@ -51,13 +51,13 @@ final class ResourceOutputStream implements OutputStream
         \stream_set_write_buffer($stream, 0);
 
         $this->resource = $stream;
-        $this->chunkSize = $chunkSize;
+        $this->chunkSize = &$chunkSize;
 
         $writes = $this->writes = new \SplQueue;
         $writable = &$this->writable;
         $resource = &$this->resource;
 
-        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, $chunkSize, &$writable, &$resource) {
+        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, &$chunkSize, &$writable, &$resource) {
             static $emptyWrites = 0;
 
             try {
@@ -272,6 +272,11 @@ final class ResourceOutputStream implements OutputStream
     public function getResource()
     {
         return $this->resource;
+    }
+
+    public function setChunkSize(int $chunkSize)
+    {
+        $this->chunkSize = $chunkSize;
     }
 
     public function __destruct()
