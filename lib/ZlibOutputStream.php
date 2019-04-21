@@ -6,8 +6,10 @@ use Amp\Promise;
 
 /**
  * Allows compression of output streams using Zlib.
+ *
+ * @final
  */
-final class ZlibOutputStream implements OutputStream
+class ZlibOutputStream implements OutputStream
 {
     private $destination;
     private $encoding;

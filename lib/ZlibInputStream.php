@@ -7,8 +7,10 @@ use function Amp\call;
 
 /**
  * Allows decompression of input streams using Zlib.
+ *
+ * @final
  */
-final class ZlibInputStream implements InputStream
+class ZlibInputStream implements InputStream
 {
     private $source;
     private $encoding;

@@ -10,8 +10,10 @@ use Amp\Success;
 
 /**
  * Output stream abstraction for PHP's stream resources.
+ *
+ * @final
  */
-final class ResourceOutputStream implements OutputStream
+class ResourceOutputStream implements OutputStream
 {
     const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
     const LARGE_CHUNK_SIZE = 128 * 1024;

@@ -9,8 +9,10 @@ use Amp\Success;
 
 /**
  * Input stream abstraction for PHP's stream resources.
+ *
+ * @final
  */
-final class ResourceInputStream implements InputStream
+class ResourceInputStream implements InputStream
 {
     const DEFAULT_CHUNK_SIZE = 8192;
 
