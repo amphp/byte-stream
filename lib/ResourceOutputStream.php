@@ -71,10 +71,6 @@ final class ResourceOutputStream implements OutputStream
                         continue;
                     }
 
-                    if (!\is_resource($stream) || @\feof($stream)) {
-                        throw new StreamException("The stream was closed by the peer");
-                    }
-
                     // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
                     // Use conditional, because PHP doesn't like getting null passed
                     if ($chunkSize) {
@@ -100,6 +96,11 @@ final class ResourceOutputStream implements OutputStream
                     }
 
                     $emptyWrites = 0;
+
+                    if (!@\fflush($stream)) {
+                        throw new StreamException("Failed to flush data from buffer");
+                    }
+
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
@@ -179,10 +180,6 @@ final class ResourceOutputStream implements OutputStream
                 return new Success(0);
             }
 
-            if (!\is_resource($this->resource) || @\feof($this->resource)) {
-                return new Failure(new StreamException("The stream was closed by the peer"));
-            }
-
             // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
             // Use conditional, because PHP doesn't like getting null passed.
             if ($this->chunkSize) {
@@ -194,6 +191,9 @@ final class ResourceOutputStream implements OutputStream
             \assert($written !== false, "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
 
             if ($length === $written) {
+                if (!@\fflush($this->resource)) {
+                    return new Failure(new StreamException("Failed to flush data from buffer"));
+                }
                 if ($end) {
                     $this->close();
                 }

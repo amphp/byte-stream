@@ -44,7 +44,7 @@ class ResourceOutputStreamTest extends TestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage("The stream was closed by the peer");
+        $this->expectExceptionMessage("Failed to write to stream after multiple attempts");
         wait($stream->write("foobar"));
     }
 
@@ -60,7 +60,7 @@ class ResourceOutputStreamTest extends TestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage("The stream was closed by the peer");
+        $this->expectExceptionMessage("Failed to write to stream after multiple attempts");
 
         // The first write still succeeds somehow...
         wait($stream->write("foobar"));
@@ -88,7 +88,7 @@ class ResourceOutputStreamTest extends TestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage("The stream was closed by the peer");
+        $this->expectExceptionMessage("Failed to write to stream after multiple attempts");
 
         try {
             // The first write still succeeds somehow...
