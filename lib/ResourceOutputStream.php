@@ -71,7 +71,7 @@ final class ResourceOutputStream implements OutputStream
                         continue;
                     }
 
-                    if (!\is_resource($stream) || @\feof($stream)) {
+                    if (!\is_resource($stream)) {
                         throw new StreamException("The stream was closed by the peer");
                     }
 
@@ -87,6 +87,11 @@ final class ResourceOutputStream implements OutputStream
 
                     // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
                     if ($written === 0) {
+                        $metaData = @\stream_get_meta_data($stream);
+                        if (!\is_resource($stream) || ($metaData && $metaData['eof'])) {
+                            throw new StreamException("The stream was closed by the peer");
+                        }
+
                         if ($emptyWrites++ > self::MAX_CONSECUTIVE_EMPTY_WRITES) {
                             $message = "Failed to write to stream after multiple attempts";
                             if ($error = \error_get_last()) {
@@ -179,7 +184,7 @@ final class ResourceOutputStream implements OutputStream
                 return new Success(0);
             }
 
-            if (!\is_resource($this->resource) || @\feof($this->resource)) {
+            if (!\is_resource($this->resource)) {
                 return new Failure(new StreamException("The stream was closed by the peer"));
             }
 
