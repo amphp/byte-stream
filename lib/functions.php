@@ -74,7 +74,7 @@ function getInput(): ResourceInputStream
     $stream = Loop::getState($key);
 
     if (!$stream) {
-        $stream = new ResourceInputStream(fopen('php://input', 'r'));
+        $stream = new ResourceInputStream(\fopen('php://input', 'r'));
         Loop::setState($key, $stream);
     }
 
@@ -93,7 +93,7 @@ function getOutput(): ResourceOutputStream
     $stream = Loop::getState($key);
 
     if (!$stream) {
-        $stream = new ResourceOutputStream(fopen('php://output', 'w'));
+        $stream = new ResourceOutputStream(\fopen('php://output', 'w'));
         Loop::setState($key, $stream);
     }
 
