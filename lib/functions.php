@@ -63,11 +63,11 @@ function buffer(InputStream $source): Promise
 }
 
 /**
- * The php://input output buffer stream for the process associated with the currently active event loop.
+ * The php://input input buffer stream for the process associated with the currently active event loop.
  *
  * @return ResourceInputStream
  */
-function getInput(): ResourceInputStream
+function getInputBuffer(): ResourceInputStream
 {
     static $key = InputStream::class . '\\input';
 
@@ -82,11 +82,11 @@ function getInput(): ResourceInputStream
 }
 
 /**
- * The php://output stream for the process associated with the currently active event loop.
+ * The php://output output buffer stream for the process associated with the currently active event loop.
  *
  * @return ResourceOutputStream
  */
-function getOutput(): ResourceOutputStream
+function getOutputBuffer(): ResourceOutputStream
 {
     static $key = OutputStream::class . '\\output';
 
