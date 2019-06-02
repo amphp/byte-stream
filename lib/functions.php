@@ -67,7 +67,7 @@ function buffer(InputStream $source): Promise
  *
  * @return ResourceInputStream
  */
-function getInputBuffer(): ResourceInputStream
+function getInputBufferStream(): ResourceInputStream
 {
     static $key = InputStream::class . '\\input';
 
@@ -86,7 +86,7 @@ function getInputBuffer(): ResourceInputStream
  *
  * @return ResourceOutputStream
  */
-function getOutputBuffer(): ResourceOutputStream
+function getOutputBufferStream(): ResourceOutputStream
 {
     static $key = OutputStream::class . '\\output';
 

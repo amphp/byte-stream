@@ -8,19 +8,19 @@ use Amp\PHPUnit\TestCase;
 
 class StdStreamTest extends TestCase
 {
-    public function testGetInputBuffer()
+    public function testGetInputBufferStream()
     {
         Loop::run(function () {
-            $stream = ByteStream\getInputBuffer();
-            $this->assertSame($stream, ByteStream\getInputBuffer());
+            $stream = ByteStream\getInputBufferStream();
+            $this->assertSame($stream, ByteStream\getInputBufferStream());
         });
     }
 
-    public function testGetOutputBuffer()
+    public function testGetOutputBufferStream()
     {
         Loop::run(function () {
-            $stream = ByteStream\getOutputBuffer();
-            $this->assertSame($stream, ByteStream\getOutputBuffer());
+            $stream = ByteStream\getOutputBufferStream();
+            $this->assertSame($stream, ByteStream\getOutputBufferStream());
         });
     }
 
