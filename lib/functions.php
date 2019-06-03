@@ -63,6 +63,43 @@ function buffer(InputStream $source): Promise
 }
 
 /**
+ * The php://input input buffer stream for the process associated with the currently active event loop.
+ *
+ * @return ResourceInputStream
+ */
+function getInputBufferStream(): ResourceInputStream
+{
+    static $key = InputStream::class . '\\input';
+
+    $stream = Loop::getState($key);
+
+    if (!$stream) {
+        $stream = new ResourceInputStream(\fopen('php://input', 'r'));
+        Loop::setState($key, $stream);
+    }
+
+    return $stream;
+}
+
+/**
+ * The php://output output buffer stream for the process associated with the currently active event loop.
+ *
+ * @return ResourceOutputStream
+ */
+function getOutputBufferStream(): ResourceOutputStream
+{
+    static $key = OutputStream::class . '\\output';
+
+    $stream = Loop::getState($key);
+
+    if (!$stream) {
+        $stream = new ResourceOutputStream(\fopen('php://output', 'w'));
+        Loop::setState($key, $stream);
+    }
+
+    return $stream;
+}
+/**
  * The STDIN stream for the process associated with the currently active event loop.
  *
  * @return ResourceInputStream
