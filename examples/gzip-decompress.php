@@ -1,15 +1,15 @@
 <?php
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\Loop;
+use function Amp\ByteStream\getStdin;
+use function Amp\ByteStream\getStdout;
 
-require __DIR__ . "/../vendor/autoload.php";
+require __DIR__."/../vendor/autoload.php";
 
 Loop::run(function () {
-    $stdin = new ResourceInputStream(STDIN);
-    $stdout = new ResourceOutputStream(STDOUT);
+    $stdin = getStdin();
+    $stdout = getStdout();
 
     $gzin = new ZlibInputStream($stdin, ZLIB_ENCODING_GZIP);
 

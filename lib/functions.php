@@ -155,3 +155,39 @@ function getStderr(): ResourceOutputStream
 
     return $stream;
 }
+
+
+/**
+ * Buffered async readline function.
+ *
+ * @param string $prompt Optional prompt to print to console
+ *
+ * @return \Amp\Promise Will resolve with the read line
+ */
+function readLine(string $prompt = ''): Promise
+{
+    return call(static function () use ($prompt) {
+        $stdin = getStdin();
+        if ($prompt) {
+            yield getStdout()->write($prompt);
+        }
+        static $lines = [''];
+        while (\count($lines) < 2 && ($chunk = yield $stdin->read()) !== null) {
+            $chunk = \explode("\n", \str_replace(["\r", "\n\n"], "\n", $chunk));
+            $lines[\count($lines) - 1] .= \array_shift($chunk);
+            $lines = \array_merge($lines, $chunk);
+        }
+        return \array_shift($lines);
+    });
+}
+
+/**
+ * Simple wrapper function to asynchronously write a string to the PHP output buffer.
+ *
+ * @param string $string
+ * @return Promise
+ */
+function bufferEcho($string): Promise
+{
+    return getOutputBufferStream()->write($string);
+}

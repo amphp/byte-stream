@@ -4,7 +4,9 @@ namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
+use Amp\Loop;
 use PHPUnit\Framework\TestCase;
+use function Amp\ByteStream\bufferEcho;
 use function Amp\Promise\wait;
 
 class ResourceOutputStreamTest extends TestCase
@@ -65,5 +67,23 @@ class ResourceOutputStreamTest extends TestCase
         // The first write still succeeds somehow...
         wait($stream->write("foobar"));
         wait($stream->write("foobar"));
+    }
+
+    public function testEcho()
+    {
+        Loop::run(function () {
+            $data = "\n".\base64_encode(\random_bytes(10))."\n";
+            $found = false;
+            \ob_start(static function ($match) use (&$found, $data) {
+                if ($match === $data) {
+                    $found = true;
+                    return '';
+                }
+                return $match;
+            });
+            yield bufferEcho($data);
+            \ob_end_flush();
+            $this->assertTrue($found, "Data wasn't sent to the output buffer");
+        });
     }
 }
