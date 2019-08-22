@@ -125,7 +125,7 @@ function getStdin(): ResourceInputStream
  */
 function getStdinLineReader(): LineReader
 {
-    static $key = InputStream::class . '\\stdinLineReader';
+    static $key = LineReader::class . '\\stdin';
 
     $stream = Loop::getState($key);
 
