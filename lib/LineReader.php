@@ -49,4 +49,9 @@ final class LineReader
             return \rtrim($line, "\r");
         });
     }
+
+    public function getBuffer(): string
+    {
+        return $this->buffer;
+    }
 }

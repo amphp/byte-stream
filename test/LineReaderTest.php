@@ -72,6 +72,7 @@ class LineReaderTest extends TestCase
             }
 
             self::assertSame($expectedLines, $lines);
+            self::assertSame("", $reader->getBuffer());
         }));
     }
 }
