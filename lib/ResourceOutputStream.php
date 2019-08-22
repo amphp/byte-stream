@@ -72,7 +72,7 @@ final class ResourceOutputStream implements OutputStream
                     }
 
                     if (!\is_resource($stream) || (($metaData = @\stream_get_meta_data($stream)) && $metaData['eof'])) {
-                        throw new StreamException("The stream was closed by the peer");
+                        throw new ClosedException("The stream was closed by the peer");
                     }
 
                     // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
@@ -180,7 +180,7 @@ final class ResourceOutputStream implements OutputStream
             }
 
             if (!\is_resource($this->resource) || (($metaData = @\stream_get_meta_data($this->resource)) && $metaData['eof'])) {
-                throw new StreamException("The stream was closed by the peer");
+                return new Failure(new ClosedException("The stream was closed by the peer"));
             }
 
             // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.

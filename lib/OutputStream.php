@@ -17,6 +17,7 @@ interface OutputStream
      * @return Promise Succeeds once the data has been successfully written to the stream.
      *
      * @throws ClosedException If the stream has already been closed.
+     * @throws StreamException If writing to the stream fails.
      */
     public function write(string $data): Promise;
 
@@ -30,6 +31,7 @@ interface OutputStream
      * @return Promise Succeeds once the data has been successfully written to the stream.
      *
      * @throws ClosedException If the stream has already been closed.
+     * @throws StreamException If writing to the stream fails.
      */
     public function end(string $finalData = ""): Promise;
 }
