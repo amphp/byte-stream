@@ -9,52 +9,52 @@ use function Amp\Promise\wait;
 
 class LineReaderTest extends TestCase
 {
-    public function testSingleLine(): void
+    public function testSingleLine()
     {
         $this->check(["abc"], ["abc"]);
     }
 
-    public function testMultiLineLf(): void
+    public function testMultiLineLf()
     {
         $this->check(["abc\nef"], ["abc", "ef"]);
     }
 
-    public function testMultiLineCrLf(): void
+    public function testMultiLineCrLf()
     {
         $this->check(["abc\r\nef"], ["abc", "ef"]);
     }
 
-    public function testMultiLineEmptyNewlineStart(): void
+    public function testMultiLineEmptyNewlineStart()
     {
         $this->check(["\r\nabc\r\nef\r\n"], ["", "abc", "ef"]);
     }
 
-    public function testMultiLineEmptyNewlineEnd(): void
+    public function testMultiLineEmptyNewlineEnd()
     {
         $this->check(["abc\r\nef\r\n"], ["abc", "ef"]);
     }
 
-    public function testMultiLineEmptyNewlineMiddle(): void
+    public function testMultiLineEmptyNewlineMiddle()
     {
         $this->check(["abc\r\n\r\nef\r\n"], ["abc", "", "ef"]);
     }
 
-    public function testEmpty(): void
+    public function testEmpty()
     {
         $this->check([], []);
     }
 
-    public function testEmptyCrLf(): void
+    public function testEmptyCrLf()
     {
         $this->check(["\r\n"], [""]);
     }
 
-    public function testMultiLineSlow(): void
+    public function testMultiLineSlow()
     {
         $this->check(["a", "bc", "\r", "\n\r\nef\r", "\n"], ["abc", "", "ef"]);
     }
 
-    private function check(array $chunks, array $expectedLines): void
+    private function check(array $chunks, array $expectedLines)
     {
         wait(call(static function () use ($chunks, $expectedLines) {
             $inputStream = new IteratorStream(Iterator\fromIterable($chunks));
