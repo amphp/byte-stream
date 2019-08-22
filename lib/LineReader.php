@@ -55,7 +55,7 @@ final class LineReader
         return $this->buffer;
     }
 
-    public function clearBuffer(): void
+    public function clearBuffer()
     {
         $this->buffer = "";
     }
