@@ -49,6 +49,11 @@ class LineReaderTest extends TestCase
         $this->check(["\r\n"], [""]);
     }
 
+    public function testEmptyCr()
+    {
+        $this->check(["\r"], [""]);
+    }
+
     public function testMultiLineSlow()
     {
         $this->check(["a", "bc", "\r", "\n\r\nef\r", "\n"], ["abc", "", "ef"]);
