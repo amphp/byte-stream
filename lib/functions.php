@@ -138,6 +138,16 @@ function getStdinLineReader(): LineReader
 }
 
 /**
+ * Get data eventually buffered by the STDIN LineReader
+ *
+ * @return LineReader
+ */
+function getStdinBuffer(): string
+{
+    return getStdinLineReader()->getBuffer();
+}
+
+/**
  * The STDOUT stream for the process associated with the currently active event loop.
  *
  * @return ResourceOutputStream
