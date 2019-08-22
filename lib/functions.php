@@ -74,7 +74,7 @@ function getInputBufferStream(): ResourceInputStream
     $stream = Loop::getState($key);
 
     if (!$stream) {
-        $stream = new ResourceInputStream(\fopen('php://input', 'r'));
+        $stream = new ResourceInputStream(\fopen('php://input', 'rb'));
         Loop::setState($key, $stream);
     }
 
@@ -93,7 +93,7 @@ function getOutputBufferStream(): ResourceOutputStream
     $stream = Loop::getState($key);
 
     if (!$stream) {
-        $stream = new ResourceOutputStream(\fopen('php://output', 'w'));
+        $stream = new ResourceOutputStream(\fopen('php://output', 'wb'));
         Loop::setState($key, $stream);
     }
 
