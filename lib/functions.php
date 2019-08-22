@@ -167,17 +167,18 @@ function getStderr(): ResourceOutputStream
 function readLine(string $prompt = ''): Promise
 {
     return call(static function () use ($prompt) {
-        $stdin = getStdin();
+        static $key = InputStream::class . '\\stdinLine';
+
+        $stream = Loop::getState($key);
+
+        if (!$stream) {
+            $stream = new LineReader(getStdin());
+            Loop::setState($key, $stream);
+        }
         if ($prompt) {
             yield getStdout()->write($prompt);
         }
-        static $lines = [''];
-        while (\count($lines) < 2 && ($chunk = yield $stdin->read()) !== null) {
-            $chunk = \explode("\n", \str_replace(["\r", "\n\n"], "\n", $chunk));
-            $lines[\count($lines) - 1] .= \array_shift($chunk);
-            $lines = \array_merge($lines, $chunk);
-        }
-        return \array_shift($lines);
+        return $stream->readLine();
     });
 }
 
