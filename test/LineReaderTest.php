@@ -59,6 +59,22 @@ class LineReaderTest extends TestCase
         $this->check(["a", "bc", "\r", "\n\r\nef\r", "\n"], ["abc", "", "ef"]);
     }
 
+    public function testClearBuffer()
+    {
+        wait(call(static function () {
+            $inputStream = new IteratorStream(Iterator\fromIterable(["a\nb\nc"]));
+
+            $reader = new LineReader($inputStream);
+            self::assertSame("a", yield $reader->readLine());
+            self::assertSame("b\nc", $reader->getBuffer());
+
+            $reader->clearBuffer();
+
+            self::assertSame("", $reader->getBuffer());
+            self::assertNull(yield $reader->readLine());
+        }));
+    }
+
     private function check(array $chunks, array $expectedLines)
     {
         wait(call(static function () use ($chunks, $expectedLines) {
