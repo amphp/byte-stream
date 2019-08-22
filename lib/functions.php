@@ -177,9 +177,9 @@ function getStderr(): ResourceOutputStream
 
 
 /**
- * Buffered async readline function.
+ * Buffered async version of the readline() function.
  *
- * Please note that this function will hungrily eat data from stdin, 
+ * Please note that this function will hungrily eat data from stdin,
  * buffering data even after the first newline.
  * Use getStdinLineReader()->getBuffer() to obtain the remaining buffered data.
  *
@@ -187,7 +187,7 @@ function getStderr(): ResourceOutputStream
  *
  * @return \Amp\Promise Will resolve with the read line
  */
-function readLine(string $prompt = ''): Promise
+function prompt(string $prompt = ''): Promise
 {
     return call(static function () use ($prompt) {
         if ($prompt) {
