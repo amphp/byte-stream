@@ -119,6 +119,25 @@ function getStdin(): ResourceInputStream
 }
 
 /**
+ * Get LineReader instance associated with STDIN
+ *
+ * @return LineReader
+ */
+function getStdinLineReader(): LineReader
+{
+    static $key = InputStream::class . '\\stdinLineReader';
+
+    $stream = Loop::getState($key);
+
+    if (!$stream) {
+        $stream = new LineReader(getStdin());
+        Loop::setState($key, $stream);
+    }
+
+    return $stream;
+}
+
+/**
  * The STDOUT stream for the process associated with the currently active event loop.
  *
  * @return ResourceOutputStream
@@ -160,6 +179,10 @@ function getStderr(): ResourceOutputStream
 /**
  * Buffered async readline function.
  *
+ * Please note that this function will hungrily eat data from stdin, 
+ * buffering data even after the first newline.
+ * Use getStdinLineReader()->getBuffer() to obtain the remaining buffered data.
+ *
  * @param string $prompt Optional prompt to print to console
  *
  * @return \Amp\Promise Will resolve with the read line
@@ -167,18 +190,10 @@ function getStderr(): ResourceOutputStream
 function readLine(string $prompt = ''): Promise
 {
     return call(static function () use ($prompt) {
-        static $key = InputStream::class . '\\stdinLine';
-
-        $stream = Loop::getState($key);
-
-        if (!$stream) {
-            $stream = new LineReader(getStdin());
-            Loop::setState($key, $stream);
-        }
         if ($prompt) {
             yield getStdout()->write($prompt);
         }
-        return $stream->readLine();
+        return getStdinLineReader()->readLine();
     });
 }
 
