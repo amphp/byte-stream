@@ -122,7 +122,7 @@ function getStdin(): ResourceInputStream
 }
 
 /**
- * Get LineReader instance associated with STDIN
+ * Get LineReader instance associated with STDIN.
  *
  * @return LineReader
  */
@@ -141,7 +141,7 @@ function getStdinLineReader(): LineReader
 }
 
 /**
- * Get data eventually buffered by the STDIN LineReader
+ * Get data eventually buffered by the STDIN LineReader.
  *
  * @return LineReader
  */
@@ -151,7 +151,7 @@ function getStdinBuffer(): string
 }
 
 /**
- * Clear data eventually buffered by the STDIN LineReader
+ * Clear data eventually buffered by the STDIN LineReader.
  *
  * @return void
  */

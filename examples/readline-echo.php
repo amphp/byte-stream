@@ -1,8 +1,5 @@
 <?php
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
-use Amp\ByteStream\ZlibOutputStream;
 use Amp\Loop;
 use function Amp\ByteStream\bufferEcho;
 use function Amp\ByteStream\prompt;
