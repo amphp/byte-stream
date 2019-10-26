@@ -142,12 +142,12 @@ final class ResourceInputStream implements InputStream
                 Loop::cancel($this->watcher);
 
                 return new Success; // Stream closed, resolve read with null.
-            } else {
-                $this->deferred = new Deferred;
-                Loop::enable($this->watcher);
-
-                return $this->deferred->promise();
             }
+
+            $this->deferred = new Deferred;
+            Loop::enable($this->watcher);
+
+            return $this->deferred->promise();
         }
 
         // Prevent an immediate read → write loop from blocking everything
