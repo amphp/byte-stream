@@ -61,15 +61,16 @@ final class ResourceInputStream implements InputStream
         \stream_set_blocking($stream, false);
         \stream_set_read_buffer($stream, 0);
 
-        $this->resource = $stream;
+        $this->resource = &$stream;
         $this->chunkSize = &$chunkSize;
 
         $deferred = &$this->deferred;
         $readable = &$this->readable;
 
-        $this->watcher = Loop::onReadable($this->resource, static function ($watcher, $stream) use (
+        $this->watcher = Loop::onReadable($this->resource, static function ($watcher) use (
             &$deferred,
             &$readable,
+            &$stream,
             &$chunkSize,
             $useSingleRead
         ) {
@@ -86,11 +87,12 @@ final class ResourceInputStream implements InputStream
             // See https://github.com/amphp/byte-stream/issues/32
             if ($data === '' && @\feof($stream)) {
                 $readable = false;
-                Loop::cancel($watcher);
+                $stream = null;
                 $data = null; // Stream closed, resolve read with null.
+                Loop::cancel($watcher);
+            } else {
+                Loop::disable($watcher);
             }
-
-            Loop::disable($watcher);
 
             $temp = $deferred;
             $deferred = null;
@@ -136,8 +138,10 @@ final class ResourceInputStream implements InputStream
             // See https://github.com/amphp/byte-stream/issues/32
             if (@\feof($this->resource)) {
                 $this->readable = false;
+                $this->resource = null;
                 Loop::cancel($this->watcher);
-                $data = null; // Stream closed, resolve read with null.
+
+                return new Success; // Stream closed, resolve read with null.
             } else {
                 $this->deferred = new Deferred;
                 Loop::enable($this->watcher);
@@ -170,7 +174,6 @@ final class ResourceInputStream implements InputStream
             } else {
                 @\fclose($this->resource);
             }
-            $this->resource = null;
         }
 
         $this->free();
@@ -182,6 +185,7 @@ final class ResourceInputStream implements InputStream
     private function free()
     {
         $this->readable = false;
+        $this->resource = null;
 
         if ($this->deferred !== null) {
             $deferred = $this->deferred;
