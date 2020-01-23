@@ -83,10 +83,13 @@ final class ResourceOutputStream implements OutputStream
                         $written = @\fwrite($stream, $data);
                     }
 
-                    \assert($written !== false, "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
+                    \assert(
+                        $written !== false || (PHP_VERSION_ID >= 70400 && PHP_VERSION_ID <= 70401), // PHP 7.4.0 and 7.4.1 may return false on EAGAIN.
+                        "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the still referenced in the loop."
+                    );
 
                     // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
-                    if ($written === 0) {
+                    if ($written === 0 || $written === false) {
                         if ($emptyWrites++ > self::MAX_CONSECUTIVE_EMPTY_WRITES) {
                             $message = "Failed to write to stream after multiple attempts";
                             if ($error = \error_get_last()) {
@@ -191,7 +194,12 @@ final class ResourceOutputStream implements OutputStream
                 $written = @\fwrite($this->resource, $data);
             }
 
-            \assert($written !== false, "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
+            \assert(
+                $written !== false || (PHP_VERSION_ID >= 70400 && PHP_VERSION_ID <= 70401), // PHP 7.4.0 and 7.4.1 may return false on EAGAIN.
+                "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the still referenced in the loop."
+            );
+
+            $written = (int) $written; // Cast potential false to 0.
 
             if ($length === $written) {
                 if ($end) {
