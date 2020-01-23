@@ -85,8 +85,8 @@ final class ResourceOutputStream implements OutputStream
 
                     \assert($written !== false, "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
 
-                    // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
-                    if ($written === 0) {
+                    // Broken pipes between processes on macOS/FreeBSD (and probably Docker) do not detect EOF properly.
+                    if ($written === 0 || $written === false) {
                         if ($emptyWrites++ > self::MAX_CONSECUTIVE_EMPTY_WRITES) {
                             $message = "Failed to write to stream after multiple attempts";
                             if ($error = \error_get_last()) {
