@@ -9,5 +9,4 @@ docs export-ignore
 .gitmodules export-ignore
 .php_cs.dist export-ignore
 infection.json.dist export-ignore
-middle export-ignore
 README.md export-ignore
