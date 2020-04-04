@@ -4,7 +4,6 @@ namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\ResourceInputStream;
 use Amp\PHPUnit\AsyncTestCase;
-use function Amp\Promise\wait;
 
 class ResourceInputStreamTest extends AsyncTestCase
 {

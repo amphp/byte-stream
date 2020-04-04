@@ -8,10 +8,8 @@ use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\Delayed;
-use Amp\Loop;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Success;
-use function Amp\delay;
 
 class ResourceStreamTest extends AsyncTestCase
 {
@@ -105,7 +103,8 @@ class ResourceStreamTest extends AsyncTestCase
     {
         $this->expectException(ClosedException::class);
 
-        list($a) = $this->getStreamPair(4096);
+        /** @noinspection PhpUnusedLocalVariableInspection Required to keep reference */
+        list($a, $b) = $this->getStreamPair(4096);
 
         $message = \str_repeat(".", 8192 /* default chunk size */);
 
@@ -157,7 +156,8 @@ class ResourceStreamTest extends AsyncTestCase
     {
         $this->expectException(PendingReadError::class);
 
-        list(, $b) = $this->getStreamPair();
+        /** @noinspection PhpUnusedLocalVariableInspection Required to keep reference */
+        list($a, $b) = $this->getStreamPair();
 
         $b->read();
         $b->read();

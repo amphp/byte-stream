@@ -4,7 +4,6 @@ namespace Amp\ByteStream;
 
 use Amp\Iterator;
 use Amp\PHPUnit\AsyncTestCase;
-use function Amp\Promise\wait;
 
 class InputStreamChainTest extends AsyncTestCase
 {
