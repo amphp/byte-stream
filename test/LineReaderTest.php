@@ -3,92 +3,86 @@
 namespace Amp\ByteStream;
 
 use Amp\Iterator;
-use Amp\PHPUnit\TestCase;
-use function Amp\call;
-use function Amp\Promise\wait;
+use Amp\PHPUnit\AsyncTestCase;
 
-class LineReaderTest extends TestCase
+class LineReaderTest extends AsyncTestCase
 {
     public function testSingleLine()
     {
-        $this->check(["abc"], ["abc"]);
+        yield from $this->check(["abc"], ["abc"]);
     }
 
     public function testMultiLineLf()
     {
-        $this->check(["abc\nef"], ["abc", "ef"]);
+        yield from $this->check(["abc\nef"], ["abc", "ef"]);
     }
 
     public function testMultiLineCrLf()
     {
-        $this->check(["abc\r\nef"], ["abc", "ef"]);
+        yield from $this->check(["abc\r\nef"], ["abc", "ef"]);
     }
 
     public function testMultiLineEmptyNewlineStart()
     {
-        $this->check(["\r\nabc\r\nef\r\n"], ["", "abc", "ef"]);
+        yield from $this->check(["\r\nabc\r\nef\r\n"], ["", "abc", "ef"]);
     }
 
     public function testMultiLineEmptyNewlineEnd()
     {
-        $this->check(["abc\r\nef\r\n"], ["abc", "ef"]);
+        yield from $this->check(["abc\r\nef\r\n"], ["abc", "ef"]);
     }
 
     public function testMultiLineEmptyNewlineMiddle()
     {
-        $this->check(["abc\r\n\r\nef\r\n"], ["abc", "", "ef"]);
+        yield from $this->check(["abc\r\n\r\nef\r\n"], ["abc", "", "ef"]);
     }
 
     public function testEmpty()
     {
-        $this->check([], []);
+        yield from $this->check([], []);
     }
 
     public function testEmptyCrLf()
     {
-        $this->check(["\r\n"], [""]);
+        yield from $this->check(["\r\n"], [""]);
     }
 
     public function testEmptyCr()
     {
-        $this->check(["\r"], [""]);
+        yield from $this->check(["\r"], [""]);
     }
 
     public function testMultiLineSlow()
     {
-        $this->check(["a", "bc", "\r", "\n\r\nef\r", "\n"], ["abc", "", "ef"]);
+        yield from $this->check(["a", "bc", "\r", "\n\r\nef\r", "\n"], ["abc", "", "ef"]);
     }
 
     public function testClearBuffer()
     {
-        wait(call(static function () {
-            $inputStream = new IteratorStream(Iterator\fromIterable(["a\nb\nc"]));
+        $inputStream = new IteratorStream(Iterator\fromIterable(["a\nb\nc"]));
 
-            $reader = new LineReader($inputStream);
-            self::assertSame("a", yield $reader->readLine());
-            self::assertSame("b\nc", $reader->getBuffer());
+        $reader = new LineReader($inputStream);
+        self::assertSame("a", yield $reader->readLine());
+        self::assertSame("b\nc", $reader->getBuffer());
 
-            $reader->clearBuffer();
+        $reader->clearBuffer();
 
-            self::assertSame("", $reader->getBuffer());
-            self::assertNull(yield $reader->readLine());
-        }));
+        self::assertSame("", $reader->getBuffer());
+        self::assertNull(yield $reader->readLine());
     }
 
     private function check(array $chunks, array $expectedLines)
     {
-        wait(call(static function () use ($chunks, $expectedLines) {
-            $inputStream = new IteratorStream(Iterator\fromIterable($chunks));
+        $inputStream = new IteratorStream(Iterator\fromIterable($chunks));
 
-            $reader = new LineReader($inputStream);
-            $lines = [];
+        $reader = new LineReader($inputStream);
+        $lines = [];
 
-            while (null !== $line = yield $reader->readLine()) {
-                $lines[] = $line;
-            }
+        while (null !== $line = yield $reader->readLine()) {
+            $lines[] = $line;
+        }
 
-            self::assertSame($expectedLines, $lines);
-            self::assertSame("", $reader->getBuffer());
-        }));
+        self::assertSame($expectedLines, $lines);
+        self::assertSame("", $reader->getBuffer());
     }
 }

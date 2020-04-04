@@ -3,10 +3,10 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\ResourceInputStream;
-use PHPUnit\Framework\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 use function Amp\Promise\wait;
 
-class ResourceInputStreamTest extends TestCase
+class ResourceInputStreamTest extends AsyncTestCase
 {
     public function testGetResource()
     {
@@ -54,7 +54,7 @@ class ResourceInputStreamTest extends TestCase
         try {
             // Read must succeed before the sub-process exits
             $start = \microtime(true);
-            self::assertNull(wait($stream->read()));
+            self::assertNull(yield $stream->read());
             self::assertLessThanOrEqual(1, \microtime(true) - $start);
         } finally {
             \proc_terminate($proc);

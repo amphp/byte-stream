@@ -9,18 +9,17 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\StreamException;
 use Amp\Iterator;
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 use function Amp\ByteStream\parseLineDelimitedJson;
-use function Amp\Promise\wait;
 
-class ParseLineDelimitedJsonTest extends TestCase
+class ParseLineDelimitedJsonTest extends AsyncTestCase
 {
     public function test()
     {
-        $result = wait(Iterator\toArray(parseLineDelimitedJson(new InMemoryStream(\implode("\n", [
+        $result = yield Iterator\toArray(parseLineDelimitedJson(new InMemoryStream(\implode("\n", [
             \json_encode(['foo' => "\nbar\r\n"]),
             \json_encode(['foo' => []]),
-        ])))));
+        ]))));
 
         self::assertEquals([
             (object) ['foo' => "\nbar\r\n"],
@@ -33,6 +32,6 @@ class ParseLineDelimitedJsonTest extends TestCase
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Failed to parse JSON');
 
-        wait(Iterator\toArray(parseLineDelimitedJson(new InMemoryStream('{'))));
+        yield Iterator\toArray(parseLineDelimitedJson(new InMemoryStream('{')));
     }
 }

@@ -3,10 +3,10 @@
 namespace Amp\ByteStream;
 
 use Amp\Iterator;
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 use function Amp\Promise\wait;
 
-class InputStreamChainTest extends TestCase
+class InputStreamChainTest extends AsyncTestCase
 {
     public function test()
     {
@@ -16,7 +16,7 @@ class InputStreamChainTest extends TestCase
             $this->createStream(["kak"])
         );
 
-        self::assertSame("abcdefhikak", wait(buffer($stream)));
+        self::assertSame("abcdefhikak", yield buffer($stream));
     }
 
     private function createStream(array $chunks): InputStream

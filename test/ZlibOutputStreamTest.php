@@ -9,58 +9,51 @@ use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\ByteStream\ZlibOutputStream;
-use Amp\Loop;
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 
-class ZlibOutputStreamTest extends TestCase
+class ZlibOutputStreamTest extends AsyncTestCase
 {
     public function testWrite()
     {
-        Loop::run(function () {
-            $file1 = __DIR__ . "/fixtures/foobar.txt";
-            $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
+        $file1 = __DIR__ . "/fixtures/foobar.txt";
+        $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
 
-            $bufferStream = new OutputBuffer();
-            $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
+        $bufferStream = new OutputBuffer();
+        $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
-            $fileStream = new ResourceInputStream(\fopen($file1, "r"));
-            while (($chunk = yield $fileStream->read()) !== null) {
-                yield $outputStream->write($chunk);
-            }
+        $fileStream = new ResourceInputStream(\fopen($file1, "r"));
+        while (($chunk = yield $fileStream->read()) !== null) {
+            yield $outputStream->write($chunk);
+        }
 
-            yield $outputStream->end();
+        yield $outputStream->end();
 
-            $inputStream = new ZlibInputStream(new InMemoryStream(yield $bufferStream), \ZLIB_ENCODING_GZIP);
+        $inputStream = new ZlibInputStream(new InMemoryStream(yield $bufferStream), \ZLIB_ENCODING_GZIP);
 
-            $buffer = "";
-            while (($chunk = yield $inputStream->read()) !== null) {
-                $buffer .= $chunk;
-            }
+        $buffer = "";
+        while (($chunk = yield $inputStream->read()) !== null) {
+            $buffer .= $chunk;
+        }
 
-            $this->assertSame(\file_get_contents($file1), $buffer);
-        });
+        $this->assertSame(\file_get_contents($file1), $buffer);
     }
 
     public function testThrowsOnWritingToClosedContext()
     {
         $this->expectException(ClosedException::class);
 
-        Loop::run(function () {
-            $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
-            $gzStream->end("foo");
-            $gzStream->write("bar");
-        });
+        $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream->end("foo");
+        $gzStream->write("bar");
     }
 
     public function testThrowsOnEndingToClosedContext()
     {
         $this->expectException(ClosedException::class);
 
-        Loop::run(function () {
-            $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
-            $gzStream->end("foo");
-            $gzStream->end("bar");
-        });
+        $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream->end("foo");
+        $gzStream->end("bar");
     }
 
     public function testGetEncoding()

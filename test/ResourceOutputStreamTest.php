@@ -4,10 +4,9 @@ namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
-use PHPUnit\Framework\TestCase;
-use function Amp\Promise\wait;
+use Amp\PHPUnit\AsyncTestCase;
 
-class ResourceOutputStreamTest extends TestCase
+class ResourceOutputStreamTest extends AsyncTestCase
 {
     public function testGetResource()
     {
@@ -34,7 +33,8 @@ class ResourceOutputStreamTest extends TestCase
 
     public function testBrokenPipe()
     {
-        if (($sockets = @\stream_socket_pair(\stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP)) === false) {
+        if (($sockets = @\stream_socket_pair(\stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
+                STREAM_SOCK_STREAM, STREAM_IPPROTO_IP)) === false) {
             $this->fail("Failed to create socket pair.");
         }
 
@@ -45,7 +45,8 @@ class ResourceOutputStreamTest extends TestCase
 
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage("fwrite(): send of 6 bytes failed with errno=32 Broken pipe");
-        wait($stream->write("foobar"));
+
+        yield $stream->write("foobar");
     }
 
     public function testClosedRemoteSocket()
@@ -63,7 +64,7 @@ class ResourceOutputStreamTest extends TestCase
         $this->expectExceptionMessage("fwrite(): send of 6 bytes failed with errno=32 Broken pipe");
 
         // The first write still succeeds somehow...
-        wait($stream->write("foobar"));
-        wait($stream->write("foobar"));
+        yield $stream->write("foobar");
+        yield $stream->write("foobar");
     }
 }

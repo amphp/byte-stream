@@ -4,16 +4,15 @@ namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\IteratorStream;
 use Amp\Iterator;
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 use function Amp\ByteStream\buffer;
-use function Amp\Promise\wait;
 
-class BufferTest extends TestCase
+class BufferTest extends AsyncTestCase
 {
     public function testBuffer()
     {
         $stream = new IteratorStream(Iterator\fromIterable(["abc", "def", "g"], 10));
 
-        $this->assertSame("abcdefg", wait(buffer($stream)));
+        $this->assertSame("abcdefg", yield buffer($stream));
     }
 }

@@ -6,37 +6,34 @@ use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
-use Amp\Loop;
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 use Amp\Producer;
 
-class ZlibInputStreamTest extends TestCase
+class ZlibInputStreamTest extends AsyncTestCase
 {
     public function testRead()
     {
-        Loop::run(function () {
-            $file1 = __DIR__ . "/fixtures/foobar.txt";
-            $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
+        $file1 = __DIR__ . "/fixtures/foobar.txt";
+        $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
 
-            $stream = new IteratorStream(new Producer(function (callable $emit) use ($file2) {
-                $content = \file_get_contents($file2);
+        $stream = new IteratorStream(new Producer(function (callable $emit) use ($file2) {
+            $content = \file_get_contents($file2);
 
-                while ($content !== "") {
-                    yield $emit($content[0]);
-                    $content = \substr($content, 1);
-                }
-            }));
-
-            $gzStream = new ZlibInputStream($stream, \ZLIB_ENCODING_GZIP);
-
-            $buffer = "";
-            while (($chunk = yield $gzStream->read()) !== null) {
-                $buffer .= $chunk;
+            while ($content !== "") {
+                yield $emit($content[0]);
+                $content = \substr($content, 1);
             }
+        }));
 
-            $expected = \str_replace("\r\n", "\n", \file_get_contents($file1));
-            $this->assertSame($expected, $buffer);
-        });
+        $gzStream = new ZlibInputStream($stream, \ZLIB_ENCODING_GZIP);
+
+        $buffer = "";
+        while (($chunk = yield $gzStream->read()) !== null) {
+            $buffer .= $chunk;
+        }
+
+        $expected = \str_replace("\r\n", "\n", \file_get_contents($file1));
+        $this->assertSame($expected, $buffer);
     }
 
     public function testGetEncoding()
@@ -71,10 +68,8 @@ class ZlibInputStreamTest extends TestCase
     {
         $this->expectException(StreamException::class);
 
-        Loop::run(function () {
-            $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
+        $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
 
-            yield $gzStream->read();
-        });
+        yield $gzStream->read();
     }
 }
