@@ -30,6 +30,8 @@ interface InputStream
      *
      * @return Promise Resolves with a string when new data is available or `null` if the stream has closed.
      *
+     * @psalm-return Promise<string|null>
+     *
      * @throws PendingReadError Thrown if another read operation is still pending.
      */
     public function read(): Promise;

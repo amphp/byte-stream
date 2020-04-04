@@ -10,9 +10,13 @@ use function Amp\call;
  */
 final class ZlibInputStream implements InputStream
 {
+    /** @var InputStream|null */
     private $source;
+    /** @var int */
     private $encoding;
+    /** @var array */
     private $options;
+    /** @var resource|null */
     private $resource;
 
     /**
@@ -45,9 +49,12 @@ final class ZlibInputStream implements InputStream
                 return null;
             }
 
+            \assert($this->source !== null);
+
             $data = yield $this->source->read();
 
             // Needs a double guard, as stream might have been closed while reading
+            /** @psalm-suppress ParadoxicalCondition */
             if ($this->resource === null) {
                 return null;
             }
@@ -74,7 +81,10 @@ final class ZlibInputStream implements InputStream
         });
     }
 
-    /** @internal */
+    /**
+     * @internal
+     * @return void
+     */
     private function close()
     {
         $this->resource = null;

@@ -12,9 +12,11 @@ require __DIR__ . '/../vendor/autoload.php';
 Loop::set(new Loop\NativeDriver());
 
 $args = \getopt('i:o:t:');
-$if = isset($args['i']) ? $args['i'] : '/dev/zero';
-$of = isset($args['o']) ? $args['o'] : '/dev/null';
-$t  = isset($args['t']) ? $args['t'] : 30;
+$if = $args['i'] ?? '/dev/zero';
+$of = $args['o'] ?? '/dev/null';
+$t  = (int) ($args['t'] ?? 30);
+
+\assert(\is_string($if) && \is_string($of));
 
 // passing file descriptors requires mapping paths (https://bugs.php.net/bug.php?id=53465)
 $if = \preg_replace('(^/dev/fd/)', 'php://fd/', $if);
@@ -49,7 +51,10 @@ Loop::run(function () use ($stderr, $in, $out) {
 
     $t = \microtime(true) - $start;
 
-    $bytes = \ftell($out->getResource());
+    $resource = $out->getResource();
+    \assert($resource !== null);
+
+    $bytes = \ftell($resource);
 
     $stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . \round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
     $stderr->write('peak memory usage of ' . \round(\memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);

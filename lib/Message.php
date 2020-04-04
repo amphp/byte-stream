@@ -38,22 +38,22 @@ class Message implements InputStream, Promise
     /** @var string */
     private $buffer = "";
 
-    /** @var \Amp\Deferred|null */
+    /** @var Deferred|null */
     private $pendingRead;
 
-    /** @var \Amp\Coroutine */
+    /** @var Coroutine|null */
     private $coroutine;
 
     /** @var bool True if onResolve() has been called. */
     private $buffering = false;
 
-    /** @var \Amp\Deferred|null */
+    /** @var Deferred|null */
     private $backpressure;
 
     /** @var bool True if the iterator has completed. */
     private $complete = false;
 
-    /** @var \Throwable Used to fail future reads on failure. */
+    /** @var \Throwable|null Used to fail future reads on failure. */
     private $error;
 
     /**

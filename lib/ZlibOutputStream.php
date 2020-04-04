@@ -9,9 +9,13 @@ use Amp\Promise;
  */
 final class ZlibOutputStream implements OutputStream
 {
+    /** @var OutputStream|null */
     private $destination;
+    /** @var int */
     private $encoding;
+    /** @var array */
     private $options;
+    /** @var resource|null */
     private $resource;
 
     /**
@@ -42,6 +46,8 @@ final class ZlibOutputStream implements OutputStream
             throw new ClosedException("The stream has already been closed");
         }
 
+        \assert($this->destination !== null);
+
         $compressed = \deflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
 
         if ($compressed === false) {
@@ -65,6 +71,8 @@ final class ZlibOutputStream implements OutputStream
             throw new ClosedException("The stream has already been closed");
         }
 
+        \assert($this->destination !== null);
+
         $compressed = \deflate_add($this->resource, $finalData, \ZLIB_FINISH);
 
         if ($compressed === false) {
@@ -79,7 +87,10 @@ final class ZlibOutputStream implements OutputStream
         return $promise;
     }
 
-    /** @internal */
+    /**
+     * @internal
+     * @return void
+     */
     private function close()
     {
         $this->resource = null;

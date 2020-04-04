@@ -9,10 +9,16 @@ use Amp\Promise;
 
 final class IteratorStream implements InputStream
 {
+    /** @var Iterator<string> */
     private $iterator;
+    /** @var \Throwable|null */
     private $exception;
+    /** @var bool */
     private $pending = false;
 
+    /**
+     * @psam-param Iterator<string> $iterator
+     */
     public function __construct(Iterator $iterator)
     {
         $this->iterator = $iterator;
@@ -30,6 +36,7 @@ final class IteratorStream implements InputStream
         }
 
         $this->pending = true;
+        /** @var Deferred<string|null> $deferred */
         $deferred = new Deferred;
 
         $this->iterator->advance()->onResolve(function ($error, $hasNextElement) use ($deferred) {

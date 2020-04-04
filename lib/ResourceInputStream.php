@@ -14,13 +14,13 @@ final class ResourceInputStream implements InputStream
 {
     const DEFAULT_CHUNK_SIZE = 8192;
 
-    /** @var resource */
+    /** @var resource|null */
     private $resource;
 
     /** @var string */
     private $watcher;
 
-    /** @var \Amp\Deferred|null */
+    /** @var Deferred|null */
     private $deferred;
 
     /** @var bool */
@@ -35,7 +35,7 @@ final class ResourceInputStream implements InputStream
     /** @var callable */
     private $immediateCallable;
 
-    /** @var string */
+    /** @var string|null */
     private $immediateWatcher;
 
     /**
@@ -123,6 +123,8 @@ final class ResourceInputStream implements InputStream
             return new Success; // Resolve with null on closed stream.
         }
 
+        \assert($this->resource !== null);
+
         // Attempt a direct read, because Windows suffers from slow I/O on STDIN otherwise.
         if ($this->useSingleRead) {
             $data = @\fread($this->resource, $this->chunkSize);
@@ -172,6 +174,7 @@ final class ResourceInputStream implements InputStream
             if ($meta && \strpos($meta["mode"], "+") !== false) {
                 @\stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
             } else {
+                /** @psalm-suppress InvalidPropertyAssignmentValue */
                 @\fclose($this->resource);
             }
         }
@@ -181,6 +184,8 @@ final class ResourceInputStream implements InputStream
 
     /**
      * Nulls reference to resource, marks stream unreadable, and succeeds any pending read with null.
+     *
+     * @return void
      */
     private function free()
     {
@@ -208,6 +213,9 @@ final class ResourceInputStream implements InputStream
         return $this->resource;
     }
 
+    /**
+     * @return void
+     */
     public function setChunkSize(int $chunkSize)
     {
         $this->chunkSize = $chunkSize;
@@ -215,6 +223,8 @@ final class ResourceInputStream implements InputStream
 
     /**
      * References the read watcher, so the loop keeps running in case there's an active read.
+     *
+     * @return void
      *
      * @see Loop::reference()
      */
@@ -229,6 +239,8 @@ final class ResourceInputStream implements InputStream
 
     /**
      * Unreferences the read watcher, so the loop doesn't keep running even if there are active reads.
+     *
+     * @return void
      *
      * @see Loop::unreference()
      */

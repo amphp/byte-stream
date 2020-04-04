@@ -23,7 +23,7 @@ final class InMemoryStream implements InputStream
     /**
      * Reads data from the stream.
      *
-     * @return Promise Resolves with the full contents or `null` if the stream has closed / already been consumed.
+     * @return Promise<string|null> Resolves with the full contents or `null` if the stream has closed / already been consumed.
      */
     public function read(): Promise
     {

@@ -8,7 +8,9 @@ use function Amp\call;
 
 final class InputStreamChain implements InputStream
 {
+    /** @var InputStream[] */
     private $streams;
+    /** @var bool */
     private $reading = false;
 
     public function __construct(InputStream ...$streams)

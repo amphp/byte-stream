@@ -8,12 +8,13 @@ use Amp\Success;
 
 class OutputBuffer implements OutputStream, Promise
 {
-    /** @var \Amp\Deferred|null */
+    /** @var Deferred */
     private $deferred;
 
     /** @var string */
-    private $contents;
+    private $contents = '';
 
+    /** @var bool */
     private $closed = false;
 
     public function __construct()
