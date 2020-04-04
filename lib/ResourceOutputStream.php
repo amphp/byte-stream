@@ -63,7 +63,7 @@ final class ResourceOutputStream implements OutputStream
             try {
                 while (!$writes->isEmpty()) {
                     /** @var Deferred $deferred */
-                    [$data, $previous, $deferred] = $writes->shift();
+                    list($data, $previous, $deferred) = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
@@ -128,7 +128,7 @@ final class ResourceOutputStream implements OutputStream
                 /** @psalm-suppress PossiblyUndefinedVariable */
                 $deferred->fail($exception);
                 while (!$writes->isEmpty()) {
-                    [, , $deferred] = $writes->shift();
+                    list(, , $deferred) = $writes->shift();
                     $deferred->fail($exception);
                 }
 
@@ -288,7 +288,7 @@ final class ResourceOutputStream implements OutputStream
             $exception = new ClosedException("The socket was closed before writing completed");
             do {
                 /** @var Deferred $deferred */
-                [, , $deferred] = $this->writes->shift();
+                list(, , $deferred) = $this->writes->shift();
                 $deferred->fail($exception);
             } while (!$this->writes->isEmpty());
         }
