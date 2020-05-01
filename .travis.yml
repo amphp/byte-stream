@@ -1,4 +1,4 @@
-sudo: false
+os: linux
 
 language: php
 
@@ -10,7 +10,14 @@ php:
   - 7.4
   - nightly
 
-matrix:
+jobs:
+  include:
+    - name: macOS
+      os: osx
+      language: generic
+      before_install:
+        - curl -s http://getcomposer.org/installer | php
+        - mv composer.phar /usr/local/bin/composer
   allow_failures:
     - php: nightly
   fast_finish: true

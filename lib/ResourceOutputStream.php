@@ -13,7 +13,9 @@ use Amp\Success;
  */
 final class ResourceOutputStream implements OutputStream
 {
+    /** @deprecated No longer used. */
     const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
+
     const LARGE_CHUNK_SIZE = 128 * 1024;
 
     /** @var resource|null */
@@ -58,7 +60,14 @@ final class ResourceOutputStream implements OutputStream
         $resource = &$this->resource;
 
         $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, &$chunkSize, &$writable, &$resource) {
-            static $emptyWrites = 0;
+            $firstWrite = true;
+
+            // Using error handler to verify that a write of zero bytes was not due an error.
+            // @see https://github.com/reactphp/stream/pull/150
+            $error = 0;
+            \set_error_handler(static function (int $errno) use (&$error) {
+                $error = $errno;
+            });
 
             try {
                 while (!$writes->isEmpty()) {
@@ -97,21 +106,17 @@ final class ResourceOutputStream implements OutputStream
                         throw new StreamException($message);
                     }
 
+                    $written = (int) $written; // Cast potential false to 0.
+
                     // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
-                    if ($written === 0 || $written === false) {
-                        if ($emptyWrites++ > self::MAX_CONSECUTIVE_EMPTY_WRITES) {
-                            $message = "Failed to write to stream after multiple attempts";
-                            if ($error = \error_get_last()) {
-                                $message .= \sprintf("; %s", $error["message"]);
-                            }
-                            throw new StreamException($message);
+                    // fwrite() may write zero bytes on subsequent calls due to the buffer filling again.
+                    if ($written === 0 && $error !== 0 && $firstWrite) {
+                        $message = "Failed to write to stream";
+                        if ($error = \error_get_last()) {
+                            $message .= \sprintf("; %s", $error["message"]);
                         }
-
-                        $writes->unshift([$data, $previous, $deferred]);
-                        return;
+                        throw new StreamException($message);
                     }
-
-                    $emptyWrites = 0;
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
@@ -120,6 +125,8 @@ final class ResourceOutputStream implements OutputStream
                     }
 
                     $deferred->resolve($written + $previous);
+
+                    $firstWrite = false;
                 }
             } catch (\Throwable $exception) {
                 $resource = null;
@@ -137,6 +144,8 @@ final class ResourceOutputStream implements OutputStream
                 if ($writes->isEmpty()) {
                     Loop::disable($watcher);
                 }
+
+                \restore_error_handler();
             }
         });
 
