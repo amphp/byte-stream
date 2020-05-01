@@ -62,13 +62,6 @@ final class ResourceOutputStream implements OutputStream
         $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, &$chunkSize, &$writable, &$resource) {
             $firstWrite = true;
 
-            // Using error handler to verify that a write of zero bytes was not due an error.
-            // @see https://github.com/reactphp/stream/pull/150
-            $error = 0;
-            \set_error_handler(static function (int $errno) use (&$error) {
-                $error = $errno;
-            });
-
             try {
                 while (!$writes->isEmpty()) {
                     /** @var Deferred $deferred */
@@ -84,6 +77,13 @@ final class ResourceOutputStream implements OutputStream
                         throw new ClosedException("The stream was closed by the peer");
                     }
 
+                    // Using error handler to verify that a write of zero bytes was not due an error.
+                    // @see https://github.com/reactphp/stream/pull/150
+                    $error = 0;
+                    \set_error_handler(static function (int $errno) use (&$error) {
+                        $error = $errno;
+                    });
+
                     // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
                     // Use conditional, because PHP doesn't like getting null passed
                     if ($chunkSize) {
@@ -91,6 +91,8 @@ final class ResourceOutputStream implements OutputStream
                     } else {
                         $written = @\fwrite($stream, $data);
                     }
+
+                    \restore_error_handler();
 
                     \assert(
                         $written !== false || \PHP_VERSION_ID >= 70400, // PHP 7.4+ returns false on EPIPE.
@@ -144,8 +146,6 @@ final class ResourceOutputStream implements OutputStream
                 if ($writes->isEmpty()) {
                     Loop::disable($watcher);
                 }
-
-                \restore_error_handler();
             }
         });
 
