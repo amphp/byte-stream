@@ -26,6 +26,7 @@
         }
     ],
     "require": {
+        "php": ">=7.1",
         "amphp/amp": "^2"
     },
     "require-dev": {
