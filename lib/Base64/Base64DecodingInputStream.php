@@ -10,7 +10,7 @@ use function Amp\call;
 
 final class Base64DecodingInputStream implements InputStream
 {
-    /** @var InputStream */
+    /** @var InputStream|null */
     private $source;
 
     /** @var string|null */
@@ -23,11 +23,11 @@ final class Base64DecodingInputStream implements InputStream
 
     public function read(): Promise
     {
-        if ($this->source === null) {
-            return new Failure(new StreamException('Failed to read stream chunk due to invalid base64 data'));
-        }
-
         return call(function () {
+            if ($this->source === null) {
+                throw new StreamException('Failed to read stream chunk due to invalid base64 data');
+            }
+
             $chunk = yield $this->source->read();
             if ($chunk === null) {
                 if ($this->buffer === null) {
