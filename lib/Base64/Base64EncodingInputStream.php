@@ -1,7 +1,8 @@
 <?php
 
-namespace Amp\ByteStream;
+namespace Amp\ByteStream\Base64;
 
+use Amp\ByteStream\InputStream;
 use Amp\Promise;
 use function Amp\call;
 

@@ -1,8 +1,8 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream\Test\Base64;
 
-use Amp\ByteStream\Base64DecodingInputStream;
+use Amp\ByteStream\Base64\Base64DecodingInputStream;
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\StreamException;

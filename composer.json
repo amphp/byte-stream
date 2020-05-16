@@ -33,7 +33,7 @@
         "phpunit/phpunit": "^6 || ^7 || ^8",
         "friendsofphp/php-cs-fixer": "^2.3",
         "amphp/php-cs-fixer-config": "dev-master",
-        "vimeo/psalm": "^3.9@dev",
+        "psalm/phar": "^3.11@dev",
         "jetbrains/phpstorm-stubs": "^2019.3"
     },
     "autoload": {

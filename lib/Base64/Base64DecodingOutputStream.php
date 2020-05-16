@@ -1,7 +1,9 @@
 <?php
 
-namespace Amp\ByteStream;
+namespace Amp\ByteStream\Base64;
 
+use Amp\ByteStream\OutputStream;
+use Amp\ByteStream\StreamException;
 use Amp\Failure;
 use Amp\Promise;
 
