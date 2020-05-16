@@ -59,10 +59,8 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
         $this->assertSame('foo.bar', yield $promise);
     }
 
-    protected function setUp(): void
+    protected function setUpAsync()
     {
-        parent::setUp();
-
         $this->emitter = new Emitter;
         $this->stream = new Base64DecodingInputStream(new IteratorStream($this->emitter->iterate()));
     }
