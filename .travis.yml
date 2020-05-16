@@ -18,10 +18,8 @@ env:
   - AMP_DEBUG=true
 
 install:
-  - if [[ ${TRAVIS_PHP_VERSION:0:3} == "7.0" ]]; then composer remove --dev psalm/phar; fi
   - composer update -n --prefer-dist
-  - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.2.0/coveralls.phar
-  - chmod +x coveralls.phar
+  - wget https://github.com/php-coveralls/php-coveralls/releases/download/v2.2.0/php-coveralls.phar
 
 script:
   - vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml
@@ -29,7 +27,7 @@ script:
   - vendor/bin/psalm.phar
 
 after_script:
-  - ./coveralls.phar -v
+  - php php-coveralls.phar -v
 
 cache:
   directories:
