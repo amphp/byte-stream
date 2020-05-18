@@ -13,7 +13,7 @@ use Amp\Success;
  */
 final class ResourceOutputStream implements OutputStream
 {
-    const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
+    const MAX_CONSECUTIVE_EMPTY_WRITES = 1; // EAGAIN should not occur on next watcher invocation.
     const LARGE_CHUNK_SIZE = 128 * 1024;
 
     /** @var resource|null */
@@ -100,7 +100,7 @@ final class ResourceOutputStream implements OutputStream
                     // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
                     if ($written === 0 || $written === false) {
                         if ($emptyWrites++ > self::MAX_CONSECUTIVE_EMPTY_WRITES) {
-                            $message = "Failed to write to stream after multiple attempts";
+                            $message = "Failed to write to stream";
                             if ($error = \error_get_last()) {
                                 $message .= \sprintf("; %s", $error["message"]);
                             }

@@ -2,8 +2,10 @@
 
 namespace Amp\ByteStream\Test;
 
+use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
+use Amp\Delayed;
 use Amp\PHPUnit\AsyncTestCase;
 
 class ResourceOutputStreamTest extends AsyncTestCase
@@ -34,10 +36,10 @@ class ResourceOutputStreamTest extends AsyncTestCase
     public function testBrokenPipe()
     {
         if (($sockets = @\stream_socket_pair(
-            \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
-            STREAM_SOCK_STREAM,
-            STREAM_IPPROTO_IP
-        )) === false) {
+                \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
+                STREAM_SOCK_STREAM,
+                STREAM_IPPROTO_IP
+            )) === false) {
             $this->fail("Failed to create socket pair.");
         }
 
@@ -68,6 +70,36 @@ class ResourceOutputStreamTest extends AsyncTestCase
 
         // The first write still succeeds somehow...
         yield $stream->write("foobar");
+
+        // A delay seems required for the OS to realize the socket is indeed closed.
+        yield new Delayed(10);
+
         yield $stream->write("foobar");
+    }
+
+    /**
+     * @requires PHPUnit >= 7
+     *
+     * @see https://github.com/reactphp/stream/pull/150
+     */
+    public function testUploadBiggerBlockSecure()
+    {
+        $size = 2 ** 18; // 256kb
+
+        $resource = \stream_socket_client('tls://httpbin.org:443');
+
+        $output = new ResourceOutputStream($resource);
+
+        $body = \str_repeat('.', $size);
+
+        yield $output->write("POST /post HTTP/1.0\r\nHost: httpbin.org\r\nContent-Length: $size\r\n\r\n" . $body);
+
+        $input = new ResourceInputStream($resource);
+        $buffer = '';
+        while (null !== ($chunk = yield $input->read())) {
+            $buffer .= $chunk;
+        }
+
+        $this->assertStringContainsString($body, $buffer);
     }
 }
