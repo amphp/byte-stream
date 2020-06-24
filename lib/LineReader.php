@@ -7,15 +7,21 @@ use function Amp\call;
 
 final class LineReader
 {
+    const DEFAULT_ENDING = "\n";
+
+    /** @var string */
+    private $ending;
+
     /** @var string */
     private $buffer = "";
 
     /** @var InputStream */
     private $source;
 
-    public function __construct(InputStream $inputStream)
+    public function __construct(InputStream $inputStream, string $ending = self::DEFAULT_ENDING)
     {
         $this->source = $inputStream;
+        $this->ending = $ending;
     }
 
     /**
@@ -24,19 +30,17 @@ final class LineReader
     public function readLine(): Promise
     {
         return call(function () {
-            if (($pos = \strpos($this->buffer, "\n")) !== false) {
-                $line = \substr($this->buffer, 0, $pos);
-                $this->buffer = \substr($this->buffer, $pos + 1);
-                return \rtrim($line, "\r");
+            if (false !== strpos($this->buffer, $this->ending)) {
+                [$line, $this->buffer] = explode($this->ending, $this->buffer, 2);
+                return $this->ending === self::DEFAULT_ENDING ? \rtrim($line, "\r") : $line;
             }
 
             while (null !== $chunk = yield $this->source->read()) {
                 $this->buffer .= $chunk;
 
-                if (($pos = \strpos($this->buffer, "\n")) !== false) {
-                    $line = \substr($this->buffer, 0, $pos);
-                    $this->buffer = \substr($this->buffer, $pos + 1);
-                    return \rtrim($line, "\r");
+                if (false !== \strpos($this->buffer, $this->ending)) {
+                    [$line, $this->buffer] = explode($this->ending, $this->buffer, 2);
+                    return $this->ending === self::DEFAULT_ENDING ? \rtrim($line, "\r") : $line;
                 }
             }
 
@@ -46,7 +50,7 @@ final class LineReader
 
             $line = $this->buffer;
             $this->buffer = "";
-            return \rtrim($line, "\r");
+            return $this->ending === self::DEFAULT_ENDING ? \rtrim($line, "\r") : $line;
         });
     }
 

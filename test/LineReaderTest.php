@@ -71,6 +71,21 @@ class LineReaderTest extends AsyncTestCase
         self::assertNull(yield $reader->readLine());
     }
 
+    public function testCustomDelimiter()
+    {
+        $inputStream = new IteratorStream(Iterator\fromIterable(["a|b|c", "|", "||d|e|f"]));
+
+        $reader = new LineReader($inputStream, "|");
+        $lines = [];
+
+        while (null !== $line = yield $reader->readLine()) {
+            $lines[] = $line;
+        }
+
+        self::assertSame(["a", "b", "c", "", "", "d", "e", "f"], $lines);
+        self::assertSame("", $reader->getBuffer());
+    }
+
     private function check(array $chunks, array $expectedLines)
     {
         $inputStream = new IteratorStream(Iterator\fromIterable($chunks));
