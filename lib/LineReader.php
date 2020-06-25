@@ -7,10 +7,11 @@ use function Amp\call;
 
 final class LineReader
 {
-    const DEFAULT_ENDING = "\n";
-
     /** @var string */
-    private $ending;
+    private $delimiter;
+
+    /** @var bool */
+    protected $lineMode;
 
     /** @var string */
     private $buffer = "";
@@ -18,10 +19,11 @@ final class LineReader
     /** @var InputStream */
     private $source;
 
-    public function __construct(InputStream $inputStream, string $ending = self::DEFAULT_ENDING)
+    public function __construct(InputStream $inputStream, string $delimiter = null)
     {
-        $this->source = $inputStream;
-        $this->ending = $ending;
+        $this->source    = $inputStream;
+        $this->delimiter = $delimiter === null ? "\n" : $delimiter;
+        $this->lineMode  = $delimiter === null;
     }
 
     /**
@@ -30,17 +32,17 @@ final class LineReader
     public function readLine(): Promise
     {
         return call(function () {
-            if (false !== strpos($this->buffer, $this->ending)) {
-                [$line, $this->buffer] = explode($this->ending, $this->buffer, 2);
-                return $this->ending === self::DEFAULT_ENDING ? \rtrim($line, "\r") : $line;
+            if (false !== strpos($this->buffer, $this->delimiter)) {
+                [$line, $this->buffer] = explode($this->delimiter, $this->buffer, 2);
+                return $this->lineMode ? \rtrim($line, "\r") : $line;
             }
 
             while (null !== $chunk = yield $this->source->read()) {
                 $this->buffer .= $chunk;
 
-                if (false !== \strpos($this->buffer, $this->ending)) {
-                    [$line, $this->buffer] = explode($this->ending, $this->buffer, 2);
-                    return $this->ending === self::DEFAULT_ENDING ? \rtrim($line, "\r") : $line;
+                if (false !== \strpos($this->buffer, $this->delimiter)) {
+                    [$line, $this->buffer] = explode($this->delimiter, $this->buffer, 2);
+                    return $this->lineMode ? \rtrim($line, "\r") : $line;
                 }
             }
 
@@ -50,7 +52,7 @@ final class LineReader
 
             $line = $this->buffer;
             $this->buffer = "";
-            return $this->ending === self::DEFAULT_ENDING ? \rtrim($line, "\r") : $line;
+            return $this->lineMode ? \rtrim($line, "\r") : $line;
         });
     }
 
