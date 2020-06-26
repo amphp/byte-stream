@@ -11,7 +11,7 @@ final class LineReader
     private $delimiter;
 
     /** @var bool */
-    protected $lineMode;
+    private $lineMode;
 
     /** @var string */
     private $buffer = "";
@@ -21,9 +21,9 @@ final class LineReader
 
     public function __construct(InputStream $inputStream, string $delimiter = null)
     {
-        $this->source    = $inputStream;
+        $this->source = $inputStream;
         $this->delimiter = $delimiter === null ? "\n" : $delimiter;
-        $this->lineMode  = $delimiter === null;
+        $this->lineMode = $delimiter === null;
     }
 
     /**
@@ -32,8 +32,8 @@ final class LineReader
     public function readLine(): Promise
     {
         return call(function () {
-            if (false !== strpos($this->buffer, $this->delimiter)) {
-                [$line, $this->buffer] = explode($this->delimiter, $this->buffer, 2);
+            if (false !== \strpos($this->buffer, $this->delimiter)) {
+                [$line, $this->buffer] = \explode($this->delimiter, $this->buffer, 2);
                 return $this->lineMode ? \rtrim($line, "\r") : $line;
             }
 
@@ -41,7 +41,7 @@ final class LineReader
                 $this->buffer .= $chunk;
 
                 if (false !== \strpos($this->buffer, $this->delimiter)) {
-                    [$line, $this->buffer] = explode($this->delimiter, $this->buffer, 2);
+                    [$line, $this->buffer] = \explode($this->delimiter, $this->buffer, 2);
                     return $this->lineMode ? \rtrim($line, "\r") : $line;
                 }
             }
