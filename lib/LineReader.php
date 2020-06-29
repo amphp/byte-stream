@@ -8,14 +8,22 @@ use function Amp\call;
 final class LineReader
 {
     /** @var string */
+    private $delimiter;
+
+    /** @var bool */
+    private $lineMode;
+
+    /** @var string */
     private $buffer = "";
 
     /** @var InputStream */
     private $source;
 
-    public function __construct(InputStream $inputStream)
+    public function __construct(InputStream $inputStream, string $delimiter = null)
     {
         $this->source = $inputStream;
+        $this->delimiter = $delimiter === null ? "\n" : $delimiter;
+        $this->lineMode = $delimiter === null;
     }
 
     /**
@@ -24,19 +32,17 @@ final class LineReader
     public function readLine(): Promise
     {
         return call(function () {
-            if (($pos = \strpos($this->buffer, "\n")) !== false) {
-                $line = \substr($this->buffer, 0, $pos);
-                $this->buffer = \substr($this->buffer, $pos + 1);
-                return \rtrim($line, "\r");
+            if (false !== \strpos($this->buffer, $this->delimiter)) {
+                list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
+                return $this->lineMode ? \rtrim($line, "\r") : $line;
             }
 
             while (null !== $chunk = yield $this->source->read()) {
                 $this->buffer .= $chunk;
 
-                if (($pos = \strpos($this->buffer, "\n")) !== false) {
-                    $line = \substr($this->buffer, 0, $pos);
-                    $this->buffer = \substr($this->buffer, $pos + 1);
-                    return \rtrim($line, "\r");
+                if (false !== \strpos($this->buffer, $this->delimiter)) {
+                    list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
+                    return $this->lineMode ? \rtrim($line, "\r") : $line;
                 }
             }
 
@@ -46,7 +52,7 @@ final class LineReader
 
             $line = $this->buffer;
             $this->buffer = "";
-            return \rtrim($line, "\r");
+            return $this->lineMode ? \rtrim($line, "\r") : $line;
         });
     }
 
