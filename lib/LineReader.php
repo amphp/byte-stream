@@ -33,7 +33,7 @@ final class LineReader
     {
         return call(function () {
             if (false !== \strpos($this->buffer, $this->delimiter)) {
-                [$line, $this->buffer] = \explode($this->delimiter, $this->buffer, 2);
+                list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
                 return $this->lineMode ? \rtrim($line, "\r") : $line;
             }
 
@@ -41,7 +41,7 @@ final class LineReader
                 $this->buffer .= $chunk;
 
                 if (false !== \strpos($this->buffer, $this->delimiter)) {
-                    [$line, $this->buffer] = \explode($this->delimiter, $this->buffer, 2);
+                    list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
                     return $this->lineMode ? \rtrim($line, "\r") : $line;
                 }
             }
