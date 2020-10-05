@@ -2,20 +2,17 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-use function Amp\call;
-
 /**
  * Allows decompression of input streams using Zlib.
  */
 final class ZlibInputStream implements InputStream
 {
-    /** @var InputStream|null */
-    private $source;
-    /** @var int */
-    private $encoding;
-    /** @var array */
-    private $options;
+    private ?InputStream $source;
+
+    private int $encoding;
+
+    private array $options;
+
     /** @var resource|null */
     private $resource;
 
@@ -42,50 +39,48 @@ final class ZlibInputStream implements InputStream
     }
 
     /** @inheritdoc */
-    public function read(): Promise
+    public function read(): ?string
     {
-        return call(function () {
-            if ($this->resource === null) {
-                return null;
-            }
+        if ($this->resource === null) {
+            return null;
+        }
 
-            \assert($this->source !== null);
+        \assert($this->source !== null);
 
-            $data = yield $this->source->read();
+        $data = $this->source->read();
 
-            // Needs a double guard, as stream might have been closed while reading
-            /** @psalm-suppress ParadoxicalCondition */
-            if ($this->resource === null) {
-                return null;
-            }
+        // Needs a double guard, as stream might have been closed while reading
+        /** @psalm-suppress ParadoxicalCondition */
+        if ($this->resource === null) {
+            return null;
+        }
 
-            if ($data === null) {
-                $decompressed = @\inflate_add($this->resource, "", \ZLIB_FINISH);
-
-                if ($decompressed === false) {
-                    throw new StreamException("Failed adding data to deflate context");
-                }
-
-                $this->close();
-
-                return $decompressed;
-            }
-
-            $decompressed = @\inflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+        if ($data === null) {
+            $decompressed = @\inflate_add($this->resource, "", \ZLIB_FINISH);
 
             if ($decompressed === false) {
                 throw new StreamException("Failed adding data to deflate context");
             }
 
+            $this->close();
+
             return $decompressed;
-        });
+        }
+
+        $decompressed = @\inflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+
+        if ($decompressed === false) {
+            throw new StreamException("Failed adding data to deflate context");
+        }
+
+        return $decompressed;
     }
 
     /**
      * @internal
      * @return void
      */
-    private function close()
+    private function close(): void
     {
         $this->resource = null;
         $this->source = null;

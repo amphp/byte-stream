@@ -4,38 +4,41 @@ namespace Amp\ByteStream\Test\Base64;
 
 use Amp\ByteStream\Base64\Base64EncodingInputStream;
 use Amp\ByteStream\InputStream;
-use Amp\ByteStream\IteratorStream;
-use Amp\Emitter;
+use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\PipelineSource;
+use function Amp\async;
+use function Amp\await;
 use function Amp\ByteStream\buffer;
 
 class Base64EncodingInputStreamTest extends AsyncTestCase
 {
-    /** @var Emitter */
-    private $emitter;
+    private PipelineSource $source;
 
-    /** @var InputStream */
-    private $stream;
+    private InputStream $stream;
 
-    public function testRead(): \Generator
+    protected function setUp(): void
     {
-        $promise = buffer($this->stream);
+        parent::setUp();
 
-        $this->emitter->emit('f');
-        $this->emitter->emit('o');
-        $this->emitter->emit('o');
-        $this->emitter->emit('.');
-        $this->emitter->emit('b');
-        $this->emitter->emit('a');
-        $this->emitter->emit('r');
-        $this->emitter->complete();
-
-        $this->assertSame('Zm9vLmJhcg==', yield $promise);
+        $this->source = new PipelineSource;
+        $this->stream = new Base64EncodingInputStream(new PipelineStream($this->source->pipe()));
     }
 
-    protected function setUpAsync()
+
+    public function testRead(): void
     {
-        $this->emitter = new Emitter;
-        $this->stream = new Base64EncodingInputStream(new IteratorStream($this->emitter->iterate()));
+        $promise = async(fn() => buffer($this->stream));
+
+        $this->source->emit('f');
+        $this->source->emit('o');
+        $this->source->emit('o');
+        $this->source->emit('.');
+        $this->source->emit('b');
+        $this->source->emit('a');
+        $this->source->emit('r');
+        $this->source->complete();
+
+        $this->assertSame('Zm9vLmJhcg==', await($promise));
     }
 }

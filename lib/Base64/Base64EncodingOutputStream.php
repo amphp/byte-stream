@@ -8,17 +8,17 @@ use Amp\Promise;
 final class Base64EncodingOutputStream implements OutputStream
 {
     /** @var OutputStream */
-    private $destination;
+    private OutputStream $destination;
 
     /** @var string */
-    private $buffer = '';
+    private string $buffer = '';
 
     public function __construct(OutputStream $destination)
     {
         $this->destination = $destination;
     }
 
-    public function write(string $data): Promise
+    public function write(string $data): void
     {
         $this->buffer .= $data;
 
@@ -26,14 +26,14 @@ final class Base64EncodingOutputStream implements OutputStream
         $chunk = \base64_encode(\substr($this->buffer, 0, $length - $length % 3));
         $this->buffer = \substr($this->buffer, $length - $length % 3);
 
-        return $this->destination->write($chunk);
+        $this->destination->write($chunk);
     }
 
-    public function end(string $finalData = ""): Promise
+    public function end(string $finalData = ""): void
     {
         $chunk = \base64_encode($this->buffer . $finalData);
         $this->buffer = '';
 
-        return $this->destination->end($chunk);
+        $this->destination->end($chunk);
     }
 }

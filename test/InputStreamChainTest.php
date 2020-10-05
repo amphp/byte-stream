@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Iterator;
+use Amp\Pipeline;
 use Amp\PHPUnit\AsyncTestCase;
 
 class InputStreamChainTest extends AsyncTestCase
@@ -15,11 +15,11 @@ class InputStreamChainTest extends AsyncTestCase
             $this->createStream(["kak"])
         );
 
-        self::assertSame("abcdefhikak", yield buffer($stream));
+        self::assertSame("abcdefhikak", buffer($stream));
     }
 
     private function createStream(array $chunks): InputStream
     {
-        return new IteratorStream(Iterator\fromIterable($chunks, 1));
+        return new PipelineStream(Pipeline\fromIterable($chunks, 1));
     }
 }

@@ -9,9 +9,9 @@ use function Amp\call;
 final class InputStreamChain implements InputStream
 {
     /** @var InputStream[] */
-    private $streams;
-    /** @var bool */
-    private $reading = false;
+    private array $streams;
+
+    private bool $reading = false;
 
     public function __construct(InputStream ...$streams)
     {
@@ -19,34 +19,32 @@ final class InputStreamChain implements InputStream
     }
 
     /** @inheritDoc */
-    public function read(): Promise
+    public function read(): ?string
     {
         if ($this->reading) {
             throw new PendingReadError;
         }
 
         if (!$this->streams) {
-            return new Success(null);
+            return null;
         }
 
-        return call(function () {
-            $this->reading = true;
+        $this->reading = true;
 
-            try {
-                while ($this->streams) {
-                    $chunk = yield $this->streams[0]->read();
-                    if ($chunk === null) {
-                        \array_shift($this->streams);
-                        continue;
-                    }
-
-                    return $chunk;
+        try {
+            while ($this->streams) {
+                $chunk = $this->streams[0]->read();
+                if ($chunk === null) {
+                    \array_shift($this->streams);
+                    continue;
                 }
 
-                return null;
-            } finally {
-                $this->reading = false;
+                return $chunk;
             }
-        });
+
+            return null;
+        } finally {
+            $this->reading = false;
+        }
     }
 }

@@ -19,7 +19,7 @@ interface OutputStream
      * @throws ClosedException If the stream has already been closed.
      * @throws StreamException If writing to the stream fails.
      */
-    public function write(string $data): Promise;
+    public function write(string $data): void;
 
     /**
      * Marks the stream as no longer writable. Optionally writes a final data chunk before. Note that this is not the
@@ -33,5 +33,5 @@ interface OutputStream
      * @throws ClosedException If the stream has already been closed.
      * @throws StreamException If writing to the stream fails.
      */
-    public function end(string $finalData = ""): Promise;
+    public function end(string $finalData = ""): void;
 }

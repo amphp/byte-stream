@@ -2,24 +2,23 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Iterator;
-use function Amp\await;
+use Amp\Pipeline;
 
-final class IteratorStream implements InputStream
+final class PipelineStream implements InputStream
 {
-    /** @var Iterator<string> */
-    private Iterator $iterator;
+    /** @var Pipeline<string> */
+    private Pipeline $pipeline;
 
     private ?\Throwable $exception = null;
 
     private bool $pending = false;
 
     /**
-     * @psam-param Iterator<string> $iterator
+     * @psalm-param Stream<string> $iterator
      */
-    public function __construct(Iterator $iterator)
+    public function __construct(Pipeline $pipeline)
     {
-        $this->iterator = $iterator;
+        $this->pipeline = $pipeline;
     }
 
     /** @inheritdoc */
@@ -36,17 +35,13 @@ final class IteratorStream implements InputStream
         $this->pending = true;
 
         try {
-            $hasNextElement = await($this->iterator->advance());
-
-            if (!$hasNextElement) {
+            if (null === $chunk = $this->pipeline->continue()) {
                 return null;
             }
 
-            $chunk = $this->iterator->getCurrent();
-
             if (!\is_string($chunk)) {
                 throw new StreamException(\sprintf(
-                    "Unexpected iterator value of type '%s', expected string",
+                    "Unexpected pipeline value of type '%s', expected string",
                     \is_object($chunk) ? \get_class($chunk) : \gettype($chunk)
                 ));
             }
@@ -55,9 +50,10 @@ final class IteratorStream implements InputStream
         } catch (\Throwable $exception) {
             $this->exception = $exception instanceof StreamException
                 ? $exception
-                : new StreamException("Iterator threw an exception", 0, $exception);
+                : new StreamException("Pipeline threw an exception", 0, $exception);
             throw $exception;
         } finally {
             $this->pending = false;
         }
-    }}
+    }
+}

@@ -2,19 +2,17 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-
 /**
  * Allows compression of output streams using Zlib.
  */
 final class ZlibOutputStream implements OutputStream
 {
-    /** @var OutputStream|null */
-    private $destination;
-    /** @var int */
-    private $encoding;
-    /** @var array */
-    private $options;
+    private ?OutputStream $destination;
+
+    private int $encoding;
+
+    private array $options;
+
     /** @var resource|null */
     private $resource;
 
@@ -40,7 +38,7 @@ final class ZlibOutputStream implements OutputStream
     }
 
     /** @inheritdoc */
-    public function write(string $data): Promise
+    public function write(string $data): void
     {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
@@ -54,18 +52,16 @@ final class ZlibOutputStream implements OutputStream
             throw new StreamException("Failed adding data to deflate context");
         }
 
-        $promise = $this->destination->write($compressed);
-        $promise->onResolve(function ($error) {
-            if ($error) {
-                $this->close();
-            }
-        });
-
-        return $promise;
+        try {
+            $this->destination->write($compressed);
+        } catch (\Throwable $e) {
+            $this->close();
+            throw $e;
+        }
     }
 
     /** @inheritdoc */
-    public function end(string $finalData = ""): Promise
+    public function end(string $finalData = ""): void
     {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
@@ -79,19 +75,19 @@ final class ZlibOutputStream implements OutputStream
             throw new StreamException("Failed adding data to deflate context");
         }
 
-        $promise = $this->destination->end($compressed);
-        $promise->onResolve(function () {
+        try {
+            $this->destination->end($compressed);
+        } catch (\Throwable $e) {
             $this->close();
-        });
-
-        return $promise;
+            throw $e;
+        }
     }
 
     /**
      * @internal
      * @return void
      */
-    private function close()
+    private function close(): void
     {
         $this->resource = null;
         $this->destination = null;

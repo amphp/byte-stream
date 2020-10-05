@@ -5,6 +5,7 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\OutputBuffer;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\await;
 
 class OutputBufferTest extends AsyncTestCase
 {
@@ -14,7 +15,7 @@ class OutputBufferTest extends AsyncTestCase
         $output->write('foo');
         $output->end();
 
-        $this->assertSame('foo', yield $output);
+        $this->assertSame('foo', await($output));
     }
 
     public function testEnd()
@@ -23,7 +24,7 @@ class OutputBufferTest extends AsyncTestCase
         $output->write('foo');
         $output->end('bar');
 
-        $this->assertSame('foobar', yield $output);
+        $this->assertSame('foobar', await($output));
     }
 
     public function testThrowsOnWritingToClosedBuffer()

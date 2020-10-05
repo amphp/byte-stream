@@ -2,26 +2,26 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\IteratorStream;
+use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
-use Amp\Emitter;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
+use Amp\PipelineSource;
 
-class IteratorStreamTest extends AsyncTestCase
+class PipelineStreamTest extends AsyncTestCase
 {
     public function testReadIterator()
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new IteratorStream($emitter->iterate());
+        $source = new PipelineSource;
+        $stream = new PipelineStream($source->pipe());
 
         foreach ($values as $value) {
-            $emitter->emit($value);
+            $source->emit($value);
         }
 
-        $emitter->complete();
+        $source->complete();
 
         $buffer = "";
         while (($chunk = $stream->read()) !== null) {
@@ -37,11 +37,11 @@ class IteratorStreamTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new Emitter;
-        $stream = new IteratorStream($emitter->iterate());
+        $source = new PipelineSource;
+        $stream = new PipelineStream($source->pipe());
 
-        $emitter->emit($value);
-        $emitter->fail($exception);
+        $source->emit($value);
+        $source->fail($exception);
 
         $callable = $this->createCallback(1);
 
@@ -63,10 +63,10 @@ class IteratorStreamTest extends AsyncTestCase
 
         $value = 42;
 
-        $emitter = new Emitter;
-        $stream = new IteratorStream($emitter->iterate());
+        $source = new PipelineSource;
+        $stream = new PipelineStream($source->pipe());
 
-        $emitter->emit($value);
+        $source->emit($value);
 
         $stream->read();
     }
@@ -77,10 +77,10 @@ class IteratorStreamTest extends AsyncTestCase
 
         $value = 42;
 
-        $emitter = new Emitter;
-        $stream = new IteratorStream($emitter->iterate());
+        $source = new PipelineSource;
+        $stream = new PipelineStream($source->pipe());
 
-        $emitter->emit($value);
+        $source->emit($value);
 
         try {
             $stream->read();

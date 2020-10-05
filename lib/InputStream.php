@@ -34,5 +34,5 @@ interface InputStream
      *
      * @throws PendingReadError Thrown if another read operation is still pending.
      */
-    public function read(): Promise;
+    public function read(): ?string;
 }

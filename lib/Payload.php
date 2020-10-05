@@ -2,9 +2,10 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Coroutine;
 use Amp\Promise;
-use function Amp\call;
+use function Amp\async;
+use function Amp\await;
+use function Amp\defer;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
@@ -13,17 +14,14 @@ use function Amp\call;
  */
 class Payload implements InputStream
 {
-    /** @var InputStream */
-    private $stream;
+    private InputStream $stream;
 
-    /** @var \Amp\Promise|null */
-    private $promise;
+    private ?Promise $promise = null;
 
-    /** @var \Amp\Promise|null */
-    private $lastRead;
+    private ?Promise $lastRead = null;
 
     /**
-     * @param \Amp\ByteStream\InputStream $stream
+     * @param InputStream $stream
      */
     public function __construct(InputStream $stream)
     {
@@ -33,18 +31,18 @@ class Payload implements InputStream
     public function __destruct()
     {
         if (!$this->promise) {
-            Promise\rethrow(new Coroutine($this->consume()));
+            defer(fn() => $this->consume());
         }
     }
 
-    private function consume(): \Generator
+    private function consume(): void
     {
         try {
-            if ($this->lastRead && null === yield $this->lastRead) {
+            if ($this->lastRead && null === await($this->lastRead)) {
                 return;
             }
 
-            while (null !== yield $this->stream->read()) {
+            while (null !== $this->stream->read()) {
                 // Discard unread bytes from message.
             }
         } catch (\Throwable $exception) {
@@ -57,36 +55,37 @@ class Payload implements InputStream
      *
      * @throws \Error If a buffered message was requested by calling buffer().
      */
-    final public function read(): Promise
+    final public function read(): ?string
     {
         if ($this->promise) {
             throw new \Error("Cannot stream message data once a buffered message has been requested");
         }
 
-        return $this->lastRead = $this->stream->read();
+        return await($this->lastRead = async(fn() => $this->stream->read()));
     }
 
     /**
      * Buffers the entire message and resolves the returned promise then.
      *
-     * @return Promise<string> Resolves with the entire message contents.
+     * @return string The entire message contents.
      */
-    final public function buffer(): Promise
+    final public function buffer(): string
     {
         if ($this->promise) {
-            return $this->promise;
+            return await($this->promise);
         }
 
-        return $this->promise = call(function () {
+        return await($this->promise = async(function (): string {
             $buffer = '';
-            if ($this->lastRead && null === yield $this->lastRead) {
+            if ($this->lastRead && null === await($this->lastRead)) {
                 return $buffer;
             }
 
-            while (null !== $chunk = yield $this->stream->read()) {
+            while (null !== $chunk = $this->stream->read()) {
                 $buffer .= $chunk;
             }
+
             return $buffer;
-        });
+        }));
     }
 }

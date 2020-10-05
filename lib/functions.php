@@ -2,11 +2,13 @@
 
 namespace Amp\ByteStream;
 
+use Amp\AsyncGenerator;
 use Amp\Iterator;
 use Amp\Loop;
+use Amp\Pipeline;
 use Amp\Producer;
 use Amp\Promise;
-use function Amp\call;
+use function Amp\async;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -24,21 +26,20 @@ if (!\defined('STDERR')) {
 }
 
 /**
- * @param \Amp\ByteStream\InputStream  $source
- * @param \Amp\ByteStream\OutputStream $destination
+ * @param InputStream  $source
+ * @param OutputStream $destination
  *
- * @return \Amp\Promise
+ * @return Promise<int> Resolves with the number of bytes written to the destination.
  */
 function pipe(InputStream $source, OutputStream $destination): Promise
 {
-    return call(function () use ($source, $destination): \Generator {
+    return async(function () use ($source, $destination): int {
         $written = 0;
 
-        while (($chunk = yield $source->read()) !== null) {
+        while (($chunk = $source->read()) !== null) {
             $written += \strlen($chunk);
-            $writePromise = $destination->write($chunk);
+            $destination->write($chunk);
             $chunk = null; // free memory
-            yield $writePromise;
         }
 
         return $written;
@@ -46,22 +47,20 @@ function pipe(InputStream $source, OutputStream $destination): Promise
 }
 
 /**
- * @param \Amp\ByteStream\InputStream $source
+ * @param InputStream $source
  *
- * @return \Amp\Promise
+ * @return string Entire contents of the InputStream.
  */
-function buffer(InputStream $source): Promise
+function buffer(InputStream $source): string
 {
-    return call(function () use ($source): \Generator {
-        $buffer = "";
+    $buffer = "";
 
-        while (($chunk = yield $source->read()) !== null) {
-            $buffer .= $chunk;
-            $chunk = null; // free memory
-        }
+    while (($chunk = $source->read()) !== null) {
+        $buffer .= $chunk;
+        $chunk = null; // free memory
+    }
 
-        return $buffer;
-    });
+    return $buffer;
 }
 
 /**
@@ -159,12 +158,12 @@ function getStderr(): ResourceOutputStream
     return $stream;
 }
 
-function parseLineDelimitedJson(InputStream $stream, bool $assoc = false, int $depth = 512, int $options = 0): Iterator
+function parseLineDelimitedJson(InputStream $stream, bool $assoc = false, int $depth = 512, int $options = 0): Pipeline
 {
-    return new Producer(static function (callable $emit) use ($stream, $assoc, $depth, $options) {
+    return new AsyncGenerator(static function () use ($stream, $assoc, $depth, $options): \Generator {
         $reader = new LineReader($stream);
 
-        while (null !== $line = yield $reader->readLine()) {
+        while (null !== $line = $reader->readLine()) {
             $line = \trim($line);
 
             if ($line === '') {
@@ -182,7 +181,7 @@ function parseLineDelimitedJson(InputStream $stream, bool $assoc = false, int $d
                 throw new StreamException('Failed to parse JSON: ' . \json_last_error_msg(), $error);
             }
 
-            yield $emit($data);
+            yield $data;
         }
     });
 }

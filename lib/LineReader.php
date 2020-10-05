@@ -2,22 +2,15 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-use function Amp\call;
-
 final class LineReader
 {
-    /** @var string */
-    private $delimiter;
+    private string $delimiter;
 
-    /** @var bool */
-    private $lineMode;
+    private bool $lineMode;
 
-    /** @var string */
-    private $buffer = "";
+    private string $buffer = "";
 
-    /** @var InputStream */
-    private $source;
+    private InputStream $source;
 
     public function __construct(InputStream $inputStream, string $delimiter = null)
     {
@@ -26,34 +19,29 @@ final class LineReader
         $this->lineMode = $delimiter === null;
     }
 
-    /**
-     * @return Promise<string|null>
-     */
-    public function readLine(): Promise
+    public function readLine(): ?string
     {
-        return call(function () {
+        if (false !== \strpos($this->buffer, $this->delimiter)) {
+            list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
+            return $this->lineMode ? \rtrim($line, "\r") : $line;
+        }
+
+        while (null !== $chunk = $this->source->read()) {
+            $this->buffer .= $chunk;
+
             if (false !== \strpos($this->buffer, $this->delimiter)) {
                 list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
                 return $this->lineMode ? \rtrim($line, "\r") : $line;
             }
+        }
 
-            while (null !== $chunk = yield $this->source->read()) {
-                $this->buffer .= $chunk;
+        if ($this->buffer === "") {
+            return null;
+        }
 
-                if (false !== \strpos($this->buffer, $this->delimiter)) {
-                    list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
-                    return $this->lineMode ? \rtrim($line, "\r") : $line;
-                }
-            }
-
-            if ($this->buffer === "") {
-                return null;
-            }
-
-            $line = $this->buffer;
-            $this->buffer = "";
-            return $this->lineMode ? \rtrim($line, "\r") : $line;
-        });
+        $line = $this->buffer;
+        $this->buffer = "";
+        return $this->lineMode ? \rtrim($line, "\r") : $line;
     }
 
     public function getBuffer(): string
@@ -64,7 +52,7 @@ final class LineReader
     /**
      * @return void
      */
-    public function clearBuffer()
+    public function clearBuffer(): void
     {
         $this->buffer = "";
     }

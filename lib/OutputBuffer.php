@@ -4,36 +4,33 @@ namespace Amp\ByteStream;
 
 use Amp\Deferred;
 use Amp\Promise;
-use Amp\Success;
 
 class OutputBuffer implements OutputStream, Promise
 {
     /** @var Deferred */
-    private $deferred;
+    private Deferred $deferred;
 
     /** @var string */
-    private $contents = '';
+    private string $contents = '';
 
     /** @var bool */
-    private $closed = false;
+    private bool $closed = false;
 
     public function __construct()
     {
         $this->deferred = new Deferred;
     }
 
-    public function write(string $data): Promise
+    public function write(string $data): void
     {
         if ($this->closed) {
             throw new ClosedException("The stream has already been closed.");
         }
 
         $this->contents .= $data;
-
-        return new Success(\strlen($data));
     }
 
-    public function end(string $finalData = ""): Promise
+    public function end(string $finalData = ""): void
     {
         if ($this->closed) {
             throw new ClosedException("The stream has already been closed.");
@@ -44,11 +41,9 @@ class OutputBuffer implements OutputStream, Promise
 
         $this->deferred->resolve($this->contents);
         $this->contents = "";
-
-        return new Success(\strlen($finalData));
     }
 
-    public function onResolve(callable $onResolved)
+    public function onResolve(callable $onResolved): void
     {
         $this->deferred->promise()->onResolve($onResolved);
     }

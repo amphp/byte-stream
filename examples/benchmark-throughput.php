@@ -42,20 +42,20 @@ $stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' secon
 
 Loop::delay($t * 1000, [$in, "close"]);
 
-Loop::run(function () use ($stderr, $in, $out) {
-    $start = \microtime(true);
+$start = \microtime(true);
 
-    while (($chunk = yield $in->read()) !== null) {
-        yield $out->write($chunk);
-    }
+$bytes = 0;
 
-    $t = \microtime(true) - $start;
+while (($chunk = $in->read()) !== null) {
+    $bytes += $out->write($chunk);
+}
 
-    $resource = $out->getResource();
-    \assert($resource !== null);
+$t = \microtime(true) - $start;
 
-    $bytes = \ftell($resource);
+$resource = $out->getResource();
+\assert($resource !== null);
 
-    $stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . \round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
-    $stderr->write('peak memory usage of ' . \round(\memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);
-});
+$bytes = \ftell($resource);
+
+$stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . \round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
+$stderr->write('peak memory usage of ' . \round(\memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);

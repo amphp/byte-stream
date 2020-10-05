@@ -3,10 +3,9 @@
 namespace Amp\ByteStream;
 
 use Amp\Deferred;
-use Amp\Failure;
 use Amp\Loop;
 use Amp\Promise;
-use Amp\Success;
+use function Amp\await;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -20,16 +19,16 @@ final class ResourceOutputStream implements OutputStream
     private $resource;
 
     /** @var string */
-    private $watcher;
+    private string $watcher;
 
     /** @var \SplQueue<array> */
-    private $writes;
+    private \SplQueue $writes;
 
     /** @var bool */
-    private $writable = true;
+    private bool $writable = true;
 
     /** @var int|null */
-    private $chunkSize;
+    private ?int $chunkSize = null;
 
     /**
      * @param resource $stream Stream resource.
@@ -57,7 +56,12 @@ final class ResourceOutputStream implements OutputStream
         $writable = &$this->writable;
         $resource = &$this->resource;
 
-        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use ($writes, &$chunkSize, &$writable, &$resource) {
+        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use (
+            $writes,
+            &$chunkSize,
+            &$writable,
+            &$resource
+        ): void {
             static $emptyWrites = 0;
 
             try {
@@ -152,9 +156,9 @@ final class ResourceOutputStream implements OutputStream
      *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function write(string $data): Promise
+    public function write(string $data): void
     {
-        return $this->send($data, false);
+        $this->send($data, false);
     }
 
     /**
@@ -166,15 +170,15 @@ final class ResourceOutputStream implements OutputStream
      *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function end(string $finalData = ""): Promise
+    public function end(string $finalData = ""): void
     {
-        return $this->send($finalData, true);
+        $this->send($finalData, true);
     }
 
-    private function send(string $data, bool $end = false): Promise
+    private function send(string $data, bool $end = false): int
     {
         if (!$this->writable) {
-            return new Failure(new ClosedException("The stream is not writable"));
+            throw new ClosedException("The stream is not writable");
         }
 
         $length = \strlen($data);
@@ -189,11 +193,11 @@ final class ResourceOutputStream implements OutputStream
                 if ($end) {
                     $this->close();
                 }
-                return new Success(0);
+                return 0;
             }
 
             if (!\is_resource($this->resource) || (($metaData = @\stream_get_meta_data($this->resource)) && $metaData['eof'])) {
-                return new Failure(new ClosedException("The stream was closed by the peer"));
+                throw new ClosedException("The stream was closed by the peer");
             }
 
             // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
@@ -215,7 +219,7 @@ final class ResourceOutputStream implements OutputStream
                 if ($error = \error_get_last()) {
                     $message .= \sprintf("; %s", $error["message"]);
                 }
-                return new Failure(new StreamException($message));
+                throw new StreamException($message);
             }
 
             $written = (int) $written; // Cast potential false to 0.
@@ -224,7 +228,7 @@ final class ResourceOutputStream implements OutputStream
                 if ($end) {
                     $this->close();
                 }
-                return new Success($written);
+                return $written;
             }
 
             $data = \substr($data, $written);
@@ -249,7 +253,7 @@ final class ResourceOutputStream implements OutputStream
             $promise->onResolve([$this, "close"]);
         }
 
-        return $promise;
+        return await($promise);
     }
 
     /**

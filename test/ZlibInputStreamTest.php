@@ -2,12 +2,12 @@
 
 namespace Amp\ByteStream\Test;
 
+use Amp\AsyncGenerator;
 use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\IteratorStream;
+use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Producer;
 
 class ZlibInputStreamTest extends AsyncTestCase
 {
@@ -16,11 +16,11 @@ class ZlibInputStreamTest extends AsyncTestCase
         $file1 = __DIR__ . "/fixtures/foobar.txt";
         $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
 
-        $stream = new IteratorStream(new Producer(function (callable $emit) use ($file2) {
+        $stream = new PipelineStream(new AsyncGenerator(function () use ($file2) {
             $content = \file_get_contents($file2);
 
-            while ($content !== "") {
-                yield $emit($content[0]);
+            while (\strlen($content)) {
+                yield $content[0];
                 $content = \substr($content, 1);
             }
         }));
@@ -28,7 +28,7 @@ class ZlibInputStreamTest extends AsyncTestCase
         $gzStream = new ZlibInputStream($stream, \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
-        while (($chunk = yield $gzStream->read()) !== null) {
+        while (($chunk = $gzStream->read()) !== null) {
             $buffer .= $chunk;
         }
 
@@ -41,13 +41,6 @@ class ZlibInputStreamTest extends AsyncTestCase
         $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
 
         $this->assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
-    }
-
-    public function testInvalidEncoding()
-    {
-        $this->expectException(StreamException::class);
-
-        new ZlibInputStream(new InMemoryStream(""), 1337);
     }
 
     public function testGetOptions()
@@ -70,6 +63,6 @@ class ZlibInputStreamTest extends AsyncTestCase
 
         $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
 
-        yield $gzStream->read();
+        $gzStream->read();
     }
 }

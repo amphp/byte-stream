@@ -10,7 +10,7 @@ class InMemoryStreamTest extends AsyncTestCase
     public function testSingleReadConsumesEverything()
     {
         $stream = new InMemoryStream("foobar");
-        $this->assertSame("foobar", yield $stream->read());
-        $this->assertNull(yield $stream->read());
+        $this->assertSame("foobar", $stream->read());
+        $this->assertNull($stream->read());
     }
 }

@@ -4,64 +4,66 @@ namespace Amp\ByteStream\Test\Base64;
 
 use Amp\ByteStream\Base64\Base64DecodingInputStream;
 use Amp\ByteStream\InputStream;
-use Amp\ByteStream\IteratorStream;
+use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
-use Amp\Emitter;
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\PipelineSource;
+use function Amp\async;
+use function Amp\await;
 use function Amp\ByteStream\buffer;
 
 class Base64DecodingInputStreamTest extends AsyncTestCase
 {
-    /** @var Emitter */
-    private $emitter;
+    private PipelineSource $source;
 
-    /** @var InputStream */
-    private $stream;
+    private InputStream $stream;
 
-    public function testRead(): \Generator
+    protected function setUp(): void
     {
-        $promise = buffer($this->stream);
+        parent::setUp();
 
-        $this->emitter->emit('Z');
-        $this->emitter->emit('m9vLmJhcg=');
-        $this->emitter->emit('=');
-        $this->emitter->complete();
-
-        $this->assertSame('foo.bar', yield $promise);
+        $this->source = new PipelineSource;
+        $this->stream = new Base64DecodingInputStream(new PipelineStream($this->source->pipe()));
     }
 
-    public function testInvalidDataMissingPadding(): \Generator
+    public function testRead(): void
     {
-        $promise = buffer($this->stream);
+        $promise = async(fn() => buffer($this->stream));
 
-        $this->emitter->emit('Z');
-        $this->emitter->emit('m9vLmJhcg=');
-        $this->emitter->emit(''); // missing =
-        $this->emitter->complete();
+        $this->source->emit('Z');
+        $this->source->emit('m9vLmJhcg=');
+        $this->source->emit('=');
+        $this->source->complete();
+
+        $this->assertSame('foo.bar', await($promise));
+    }
+
+    public function testInvalidDataMissingPadding(): void
+    {
+        $promise = async(fn() => buffer($this->stream));
+
+        $this->source->emit('Z');
+        $this->source->emit('m9vLmJhcg=');
+        $this->source->emit(''); // missing =
+        $this->source->complete();
 
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Failed to read stream chunk due to invalid base64 data');
 
-        $this->assertSame('foo.bar', yield $promise);
+        $this->assertSame('foo.bar', await($promise));
     }
 
-    public function testInvalidDataChar(): \Generator
+    public function testInvalidDataChar(): void
     {
-        $promise = buffer($this->stream);
+        $promise = async(fn() => buffer($this->stream));
 
-        $this->emitter->emit('Z');
-        $this->emitter->emit('!');
-        $this->emitter->complete();
+        $this->source->emit('Z');
+        $this->source->emit('!');
+        $this->source->complete();
 
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Failed to read stream chunk due to invalid base64 data');
 
-        $this->assertSame('foo.bar', yield $promise);
-    }
-
-    protected function setUpAsync()
-    {
-        $this->emitter = new Emitter;
-        $this->stream = new Base64DecodingInputStream(new IteratorStream($this->emitter->iterate()));
+        $this->assertSame('foo.bar', await($promise));
     }
 }

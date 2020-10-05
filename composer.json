@@ -26,12 +26,12 @@
         }
     ],
     "require": {
-        "php": ">=7.1",
-        "amphp/amp": "^2"
+        "php": ">=8",
+        "amphp/amp": "^3-dev"
     },
     "require-dev": {
-        "amphp/phpunit-util": "^1.4",
-        "phpunit/phpunit": "^6 || ^7 || ^8",
+        "amphp/phpunit-util": "^2-dev",
+        "phpunit/phpunit": "^9",
         "friendsofphp/php-cs-fixer": "^2.3",
         "amphp/php-cs-fixer-config": "dev-master",
         "psalm/phar": "^3.11.4",
@@ -54,5 +54,11 @@
         "branch-alias": {
             "dev-master": "1.x-dev"
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/amphp/green-thread"
+        }
+    ]
 }

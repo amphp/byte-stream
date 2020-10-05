@@ -3,13 +3,15 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\Payload;
 use Amp\ByteStream\PendingReadError;
-use Amp\Emitter;
+use Amp\ByteStream\PipelineStream;
 use Amp\Loop;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
+use Amp\PipelineSource;
+use function Amp\async;
+use function Amp\await;
 
 class PayloadTest extends AsyncTestCase
 {
@@ -17,8 +19,8 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -26,15 +28,15 @@ class PayloadTest extends AsyncTestCase
 
         $emitter->complete();
 
-        $this->assertSame(\implode($values), yield $stream->buffer());
+        $this->assertSame(\implode($values), $stream->buffer());
     }
 
     public function testFullStreamConsumption()
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -45,20 +47,20 @@ class PayloadTest extends AsyncTestCase
         });
 
         $buffer = "";
-        while (($chunk = yield $stream->read()) !== null) {
+        while (($chunk = $stream->read()) !== null) {
             $buffer .= $chunk;
         }
 
         $this->assertSame(\implode($values), $buffer);
-        $this->assertSame("", yield $stream->buffer());
+        $this->assertSame("", $stream->buffer());
     }
 
     public function testFastResolvingStream()
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -67,20 +69,20 @@ class PayloadTest extends AsyncTestCase
         $emitter->complete();
 
         $emitted = [];
-        while (($chunk = yield $stream->read()) !== null) {
+        while (($chunk = $stream->read()) !== null) {
             $emitted[] = $chunk;
         }
 
         $this->assertSame($values, $emitted);
-        $this->assertSame("", yield $stream->buffer());
+        $this->assertSame("", $stream->buffer());
     }
 
     public function testFastResolvingStreamBufferingOnly()
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -88,19 +90,19 @@ class PayloadTest extends AsyncTestCase
 
         $emitter->complete();
 
-        $this->assertSame(\implode($values), yield $stream->buffer());
+        $this->assertSame(\implode($values), $stream->buffer());
     }
 
     public function testPartialStreamConsumption()
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($values[0]);
 
-        $chunk = yield $stream->read();
+        $chunk = $stream->read();
 
         $this->assertSame(\array_shift($values), $chunk);
 
@@ -110,7 +112,7 @@ class PayloadTest extends AsyncTestCase
 
         $emitter->complete();
 
-        $this->assertSame(\implode($values), yield $stream->buffer());
+        $this->assertSame(\implode($values), $stream->buffer());
     }
 
     public function testFailingStream()
@@ -118,8 +120,8 @@ class PayloadTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($value);
         $emitter->fail($exception);
@@ -127,7 +129,7 @@ class PayloadTest extends AsyncTestCase
         $callable = $this->createCallback(1);
 
         try {
-            while (($chunk = yield $stream->read()) !== null) {
+            while (($chunk = $stream->read()) !== null) {
                 $this->assertSame($value, $chunk);
             }
 
@@ -143,16 +145,16 @@ class PayloadTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
-        $readPromise = $stream->read();
+        $readPromise = async(fn() => $stream->read());
         $emitter->fail($exception);
 
         $callable = $this->createCallback(1);
 
         try {
-            yield $readPromise;
+            await($readPromise);
 
             $this->fail("No exception has been thrown");
         } catch (TestException $reason) {
@@ -163,62 +165,62 @@ class PayloadTest extends AsyncTestCase
 
     public function testEmptyStream()
     {
-        $emitter = new Emitter;
+        $emitter = new PipelineSource;
         $emitter->complete();
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
-        $this->assertNull(yield $stream->read());
+        $this->assertNull($stream->read());
     }
 
     public function testEmptyStringStream()
     {
         $value = "";
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($value);
 
         $emitter->complete();
 
-        $this->assertSame("", yield $stream->buffer());
+        $this->assertSame("", $stream->buffer());
     }
 
     public function testReadAfterCompletion()
     {
         $value = "abc";
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($value);
         $emitter->complete();
 
-        $this->assertSame($value, yield $stream->read());
-        $this->assertNull(yield $stream->read());
+        $this->assertSame($value, $stream->read());
+        $this->assertNull($stream->read());
     }
 
     public function testPendingRead()
     {
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         Loop::delay(0, function () use ($emitter) {
             $emitter->emit("test");
         });
 
-        $this->assertSame("test", yield $stream->read());
+        $this->assertSame("test", $stream->read());
     }
 
     public function testPendingReadError()
     {
-        $emitter = new Emitter;
-        $stream = new Payload(new IteratorStream($emitter->iterate()));
-        $stream->read();
+        $emitter = new PipelineSource;
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        async(fn () => $stream->read());
 
         $this->expectException(PendingReadError::class);
 
-        $stream->read();
+        await(async(fn () => $stream->read()));
     }
 
     public function testReadAfterBuffer()
@@ -229,14 +231,14 @@ class PayloadTest extends AsyncTestCase
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Cannot stream message data once a buffered message has been requested");
 
-        yield $stream->read();
+        $stream->read();
     }
 
     public function testFurtherCallsToBufferReturnSameData()
     {
         $data = "test";
         $stream = new Payload(new InMemoryStream($data));
-        $this->assertSame($data, yield $stream->buffer());
-        $this->assertSame($data, yield $stream->buffer());
+        $this->assertSame($data, $stream->buffer());
+        $this->assertSame($data, $stream->buffer());
     }
 }

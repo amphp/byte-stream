@@ -22,16 +22,16 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
         $fileStream = new ResourceInputStream(\fopen($file1, "r"));
-        while (($chunk = yield $fileStream->read()) !== null) {
-            yield $outputStream->write($chunk);
+        while (($chunk = $fileStream->read()) !== null) {
+            $outputStream->write($chunk);
         }
 
-        yield $outputStream->end();
+        $outputStream->end();
 
         $inputStream = new ZlibInputStream(new InMemoryStream(yield $bufferStream), \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
-        while (($chunk = yield $inputStream->read()) !== null) {
+        while (($chunk = $inputStream->read()) !== null) {
             $buffer .= $chunk;
         }
 
@@ -63,13 +63,6 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $this->assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
 
-    public function testInvalidEncoding()
-    {
-        $this->expectException(StreamException::class);
-
-        new ZlibOutputStream(new OutputBuffer(), 1337);
-    }
-
     public function testGetOptions()
     {
         $options = [
@@ -82,12 +75,5 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, $options);
 
         $this->assertSame($options, $gzStream->getOptions());
-    }
-
-    public function testInvalidOptions()
-    {
-        $this->expectException(StreamException::class);
-
-        new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
     }
 }

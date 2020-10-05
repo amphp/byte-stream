@@ -6,49 +6,50 @@ use Amp\ByteStream\Base64\Base64DecodingOutputStream;
 use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\await;
 
 class Base64DecodingOutputStreamTest extends AsyncTestCase
 {
-    public function testWrite(): \Generator
+    public function testWrite(): void
     {
         $buffer = new OutputBuffer;
         $stream = new Base64DecodingOutputStream($buffer);
 
-        yield $stream->write('Zm9');
-        yield $stream->write('');
-        yield $stream->write('vLmJhcg==');
-        yield $stream->end();
+        $stream->write('Zm9');
+        $stream->write('');
+        $stream->write('vLmJhcg==');
+        $stream->end();
 
-        $this->assertSame('foo.bar', yield $buffer);
+        $this->assertSame('foo.bar', await($buffer));
     }
 
-    public function testEnd(): \Generator
+    public function testEnd(): void
     {
         $buffer = new OutputBuffer;
         $stream = new Base64DecodingOutputStream($buffer);
 
-        yield $stream->write('Zm9');
-        yield $stream->write('');
-        yield $stream->end('vLmJhcg==');
+        $stream->write('Zm9');
+        $stream->write('');
+        $stream->end('vLmJhcg==');
 
-        $this->assertSame('foo.bar', yield $buffer);
+        $this->assertSame('foo.bar', await($buffer));
     }
 
-    public function testInvalidDataMissingPadding(): \Generator
+    public function testInvalidDataMissingPadding(): void
     {
         $buffer = new OutputBuffer;
         $stream = new Base64DecodingOutputStream($buffer);
 
-        yield $stream->write('Zm9');
-        yield $stream->write('');
+        $stream->write('Zm9');
+        $stream->write('');
 
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Invalid base64 near offset 3');
 
-        yield $stream->end('vLmJhcg=');
+        $stream->end('vLmJhcg=');
     }
 
-    public function testInvalidDataChar(): \Generator
+    public function testInvalidDataChar(): void
     {
         $buffer = new OutputBuffer;
         $stream = new Base64DecodingOutputStream($buffer);
@@ -56,6 +57,6 @@ class Base64DecodingOutputStreamTest extends AsyncTestCase
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Invalid base64 near offset 0');
 
-        yield $stream->write('Z!fsdf');
+        $stream->write('Z!fsdf');
     }
 }

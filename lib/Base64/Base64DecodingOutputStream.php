@@ -10,46 +10,46 @@ use Amp\Promise;
 final class Base64DecodingOutputStream implements OutputStream
 {
     /** @var OutputStream */
-    private $destination;
+    private OutputStream $destination;
 
     /** @var string */
-    private $buffer = '';
+    private string $buffer = '';
 
     /** @var int */
-    private $offset = 0;
+    private int $offset = 0;
 
     public function __construct(OutputStream $destination)
     {
         $this->destination = $destination;
     }
 
-    public function write(string $data): Promise
+    public function write(string $data): void
     {
         $this->buffer .= $data;
 
         $length = \strlen($this->buffer);
         $chunk = \base64_decode(\substr($this->buffer, 0, $length - $length % 4), true);
         if ($chunk === false) {
-            return new Failure(new StreamException('Invalid base64 near offset ' . $this->offset));
+            throw new StreamException('Invalid base64 near offset ' . $this->offset);
         }
 
         $this->offset += $length - $length % 4;
         $this->buffer = \substr($this->buffer, $length - $length % 4);
 
-        return $this->destination->write($chunk);
+        $this->destination->write($chunk);
     }
 
-    public function end(string $finalData = ""): Promise
+    public function end(string $finalData = ""): void
     {
         $this->offset += \strlen($this->buffer);
 
         $chunk = \base64_decode($this->buffer . $finalData, true);
         if ($chunk === false) {
-            return new Failure(new StreamException('Invalid base64 near offset ' . $this->offset));
+            throw new StreamException('Invalid base64 near offset ' . $this->offset);
         }
 
         $this->buffer = '';
 
-        return $this->destination->end($chunk);
+        $this->destination->end($chunk);
     }
 }

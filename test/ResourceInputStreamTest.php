@@ -53,7 +53,7 @@ class ResourceInputStreamTest extends AsyncTestCase
         try {
             // Read must succeed before the sub-process exits
             $start = \microtime(true);
-            self::assertNull(yield $stream->read());
+            self::assertNull($stream->read());
             self::assertLessThanOrEqual(1, \microtime(true) - $start);
         } finally {
             \proc_terminate($proc);

@@ -4,8 +4,8 @@ namespace Amp\ByteStream;
 
 use Amp\Deferred;
 use Amp\Loop;
-use Amp\Promise;
 use Amp\Success;
+use function Amp\await;
 
 /**
  * Input stream abstraction for PHP's stream resources.
@@ -18,25 +18,19 @@ final class ResourceInputStream implements InputStream
     private $resource;
 
     /** @var string */
-    private $watcher;
+    private string $watcher;
 
     /** @var Deferred|null */
-    private $deferred;
+    private ?Deferred $deferred = null;
 
     /** @var bool */
-    private $readable = true;
+    private bool $readable = true;
 
     /** @var int */
-    private $chunkSize;
+    private int $chunkSize;
 
     /** @var bool */
-    private $useSingleRead;
-
-    /** @var callable */
-    private $immediateCallable;
-
-    /** @var string|null */
-    private $immediateWatcher;
+    private bool $useSingleRead;
 
     /**
      * @param resource $stream Stream resource.
@@ -73,7 +67,7 @@ final class ResourceInputStream implements InputStream
             &$stream,
             &$chunkSize,
             $useSingleRead
-        ) {
+        ): void {
             if ($useSingleRead) {
                 $data = @\fread($stream, $chunkSize);
             } else {
@@ -101,26 +95,18 @@ final class ResourceInputStream implements InputStream
             $temp->resolve($data);
         });
 
-        $this->immediateCallable = static function ($watcherId, $data) use (&$deferred) {
-            $temp = $deferred;
-            $deferred = null;
-
-            \assert($temp instanceof Deferred);
-            $temp->resolve($data);
-        };
-
         Loop::disable($this->watcher);
     }
 
     /** @inheritdoc */
-    public function read(): Promise
+    public function read(): ?string
     {
         if ($this->deferred !== null) {
             throw new PendingReadError;
         }
 
         if (!$this->readable) {
-            return new Success; // Resolve with null on closed stream.
+            return null; // Resolve with null on closed stream.
         }
 
         \assert($this->resource !== null);
@@ -143,21 +129,18 @@ final class ResourceInputStream implements InputStream
                 $this->resource = null;
                 Loop::cancel($this->watcher);
 
-                return new Success; // Stream closed, resolve read with null.
+                return null;
             }
 
             $this->deferred = new Deferred;
             Loop::enable($this->watcher);
 
-            return $this->deferred->promise();
+            return await($this->deferred->promise());
         }
 
         // Prevent an immediate read → write loop from blocking everything
         // See e.g. examples/benchmark-throughput.php
-        $this->deferred = new Deferred;
-        $this->immediateWatcher = Loop::defer($this->immediateCallable, $data);
-
-        return $this->deferred->promise();
+        return await(new Success($data));
     }
 
     /**
@@ -199,10 +182,6 @@ final class ResourceInputStream implements InputStream
         }
 
         Loop::cancel($this->watcher);
-
-        if ($this->immediateWatcher !== null) {
-            Loop::cancel($this->immediateWatcher);
-        }
     }
 
     /**
