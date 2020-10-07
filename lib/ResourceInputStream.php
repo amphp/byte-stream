@@ -150,7 +150,7 @@ final class ResourceInputStream implements InputStream
      */
     public function close()
     {
-        if ($this->resource) {
+        if ($this->resource &&  \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
 

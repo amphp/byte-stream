@@ -75,7 +75,10 @@ final class ResourceOutputStream implements OutputStream
                         continue;
                     }
 
-                    if (!\is_resource($stream) || (($metaData = @\stream_get_meta_data($stream)) && $metaData['eof'])) {
+                    if (!\is_resource($stream)
+                        || \get_resource_type($stream) !== 'stream'
+                        || (($metaData = @\stream_get_meta_data($stream)) && $metaData['eof'])
+                    ) {
                         throw new ClosedException("The stream was closed by the peer");
                     }
 
@@ -263,7 +266,7 @@ final class ResourceOutputStream implements OutputStream
      */
     public function close()
     {
-        if ($this->resource) {
+        if ($this->resource && \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
 
