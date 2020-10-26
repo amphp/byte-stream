@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream;
 
+use Amp\Deferred;
 use Amp\Promise;
 use function Amp\async;
 use function Amp\await;
@@ -16,9 +17,9 @@ class Payload implements InputStream
 {
     private InputStream $stream;
 
-    private ?Promise $promise = null;
+    private Promise $promise;
 
-    private ?Promise $lastRead = null;
+    private Promise $lastRead;
 
     /**
      * @param InputStream $stream
@@ -30,7 +31,7 @@ class Payload implements InputStream
 
     public function __destruct()
     {
-        if (!$this->promise) {
+        if (!isset($this->promise)) {
             defer(fn() => $this->consume());
         }
     }
@@ -38,7 +39,7 @@ class Payload implements InputStream
     private function consume(): void
     {
         try {
-            if ($this->lastRead && null === await($this->lastRead)) {
+            if (isset($this->lastRead) && !await($this->lastRead)) {
                 return;
             }
 
@@ -46,7 +47,7 @@ class Payload implements InputStream
                 // Discard unread bytes from message.
             }
         } catch (\Throwable $exception) {
-            // If exception is thrown here the connection closed anyway.
+            // If exception is thrown here the stream completed anyway.
         }
     }
 
@@ -57,11 +58,22 @@ class Payload implements InputStream
      */
     final public function read(): ?string
     {
-        if ($this->promise) {
+        if (isset($this->promise)) {
             throw new \Error("Cannot stream message data once a buffered message has been requested");
         }
 
-        return await($this->lastRead = async(fn() => $this->stream->read()));
+        $deferred = new Deferred;
+        $this->lastRead = $deferred->promise();
+
+        try {
+            $chunk = $this->stream->read();
+            $deferred->resolve($chunk !== null);
+        } catch (\Throwable $exception) {
+            $deferred->fail($exception);
+            throw $exception;
+        }
+
+        return $chunk;
     }
 
     /**
@@ -71,13 +83,13 @@ class Payload implements InputStream
      */
     final public function buffer(): string
     {
-        if ($this->promise) {
+        if (isset($this->promise)) {
             return await($this->promise);
         }
 
         return await($this->promise = async(function (): string {
             $buffer = '';
-            if ($this->lastRead && null === await($this->lastRead)) {
+            if (isset($this->lastRead) && !await($this->lastRead)) {
                 return $buffer;
             }
 
