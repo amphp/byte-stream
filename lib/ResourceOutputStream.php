@@ -2,10 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
 use Amp\Loop;
-use Amp\Promise;
-use function Amp\await;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -66,12 +63,14 @@ final class ResourceOutputStream implements OutputStream
 
             try {
                 while (!$writes->isEmpty()) {
-                    /** @var Deferred $deferred */
-                    list($data, $previous, $deferred) = $writes->shift();
+                    /** @var \Fiber|null $fiber */
+                    [$data, $previous, $fiber] = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        $deferred->resolve(0);
+                        if ($fiber !== null) {
+                            $fiber->resume(0);
+                        }
                         continue;
                     }
 
@@ -114,7 +113,7 @@ final class ResourceOutputStream implements OutputStream
                             throw new StreamException($message);
                         }
 
-                        $writes->unshift([$data, $previous, $deferred]);
+                        $writes->unshift([$data, $previous, $fiber]);
                         return;
                     }
 
@@ -122,21 +121,27 @@ final class ResourceOutputStream implements OutputStream
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
-                        $writes->unshift([$data, $written + $previous, $deferred]);
+                        $writes->unshift([$data, $written + $previous, $fiber]);
                         return;
                     }
 
-                    $deferred->resolve($written + $previous);
+                    if ($fiber !== null) {
+                        $fiber->resume($written + $previous);
+                    }
                 }
             } catch (\Throwable $exception) {
                 $resource = null;
                 $writable = false;
 
                 /** @psalm-suppress PossiblyUndefinedVariable */
-                $deferred->fail($exception);
+                if ($fiber !== null) {
+                    $fiber->throw($exception);
+                }
                 while (!$writes->isEmpty()) {
-                    list(, , $deferred) = $writes->shift();
-                    $deferred->fail($exception);
+                    [, , $fiber] = $writes->shift();
+                    if ($fiber !== null) {
+                        $fiber->throw($exception);
+                    }
                 }
 
                 Loop::cancel($watcher);
@@ -155,8 +160,6 @@ final class ResourceOutputStream implements OutputStream
      *
      * @param string $data Bytes to write.
      *
-     * @return Promise Succeeds once the data has been successfully written to the stream.
-     *
      * @throws ClosedException If the stream has already been closed.
      */
     public function write(string $data): void
@@ -168,8 +171,6 @@ final class ResourceOutputStream implements OutputStream
      * Closes the stream after all pending writes have been completed. Optionally writes a final data chunk before.
      *
      * @param string $finalData Bytes to write.
-     *
-     * @return Promise Succeeds once the data has been successfully written to the stream.
      *
      * @throws ClosedException If the stream has already been closed.
      */
@@ -237,34 +238,30 @@ final class ResourceOutputStream implements OutputStream
             $data = \substr($data, $written);
         }
 
-        $deferred = new Deferred;
-
         if ($length - $written > self::LARGE_CHUNK_SIZE) {
             $chunks = \str_split($data, self::LARGE_CHUNK_SIZE);
             $data = \array_pop($chunks);
             foreach ($chunks as $chunk) {
-                $this->writes->push([$chunk, $written, new Deferred]);
+                $this->writes->push([$chunk, $written, null]);
                 $written += self::LARGE_CHUNK_SIZE;
             }
         }
 
-        $this->writes->push([$data, $written, $deferred]);
         Loop::enable($this->watcher);
-        $promise = $deferred->promise();
+
+        $bytes = \Fiber::suspend(fn(\Fiber $fiber) => $this->writes->push([$data, $written, $fiber]), Loop::get());
 
         if ($end) {
-            $promise->onResolve([$this, "close"]);
+            $this->close();
         }
 
-        return await($promise);
+        return $bytes;
     }
 
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
-     *
-     * @return void
      */
-    public function close()
+    public function close(): void
     {
         if ($this->resource && \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
@@ -283,10 +280,8 @@ final class ResourceOutputStream implements OutputStream
 
     /**
      * Nulls reference to resource, marks stream unwritable, and fails any pending write.
-     *
-     * @return void
      */
-    private function free()
+    private function free(): void
     {
         $this->resource = null;
         $this->writable = false;
@@ -294,9 +289,11 @@ final class ResourceOutputStream implements OutputStream
         if (!$this->writes->isEmpty()) {
             $exception = new ClosedException("The socket was closed before writing completed");
             do {
-                /** @var Deferred $deferred */
-                list(, , $deferred) = $this->writes->shift();
-                $deferred->fail($exception);
+                /** @var \Fiber|null $fiber */
+                [, , $fiber] = $this->writes->shift();
+                if ($fiber !== null) {
+                    $fiber->throw($exception);
+                }
             } while (!$this->writes->isEmpty());
         }
 
@@ -311,10 +308,7 @@ final class ResourceOutputStream implements OutputStream
         return $this->resource;
     }
 
-    /**
-     * @return void
-     */
-    public function setChunkSize(int $chunkSize)
+    public function setChunkSize(int $chunkSize): void
     {
         $this->chunkSize = $chunkSize;
     }

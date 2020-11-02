@@ -2,10 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
 use Amp\Loop;
-use Amp\Success;
-use function Amp\await;
 
 /**
  * Input stream abstraction for PHP's stream resources.
@@ -17,19 +14,16 @@ final class ResourceInputStream implements InputStream
     /** @var resource|null */
     private $resource;
 
-    /** @var string */
     private string $watcher;
 
-    /** @var Deferred|null */
-    private ?Deferred $deferred = null;
+    private ?\Fiber $fiber = null;
 
-    /** @var bool */
+    private \Closure $enqueue;
+
     private bool $readable = true;
 
-    /** @var int */
     private int $chunkSize;
 
-    /** @var bool */
     private bool $useSingleRead;
 
     /**
@@ -58,11 +52,15 @@ final class ResourceInputStream implements InputStream
         $this->resource = &$stream;
         $this->chunkSize = &$chunkSize;
 
-        $deferred = &$this->deferred;
+        $fiber = &$this->fiber;
         $readable = &$this->readable;
 
+        $this->enqueue = static function (\Fiber $suspended) use (&$fiber): void {
+            $fiber = $suspended;
+        };
+
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher) use (
-            &$deferred,
+            &$fiber,
             &$readable,
             &$stream,
             &$chunkSize,
@@ -88,11 +86,11 @@ final class ResourceInputStream implements InputStream
                 Loop::disable($watcher);
             }
 
-            $temp = $deferred;
-            $deferred = null;
+            $temp = $fiber;
+            $fiber = null;
 
-            \assert($temp instanceof Deferred);
-            $temp->resolve($data);
+            \assert($temp instanceof \Fiber);
+            $temp->resume($data);
         });
 
         Loop::disable($this->watcher);
@@ -101,7 +99,7 @@ final class ResourceInputStream implements InputStream
     /** @inheritdoc */
     public function read(): ?string
     {
-        if ($this->deferred !== null) {
+        if ($this->fiber !== null) {
             throw new PendingReadError;
         }
 
@@ -111,44 +109,20 @@ final class ResourceInputStream implements InputStream
 
         \assert($this->resource !== null);
 
-        // Attempt a direct read, because Windows suffers from slow I/O on STDIN otherwise.
-        if ($this->useSingleRead) {
-            $data = @\fread($this->resource, $this->chunkSize);
-        } else {
-            $data = @\stream_get_contents($this->resource, $this->chunkSize);
+        if (\feof($this->resource)) {
+            $this->free();
+            return null;
         }
 
-        \assert($data !== false, "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
+        Loop::enable($this->watcher);
 
-        if ($data === '') {
-            // Error suppression, because pthreads does crazy things with resources,
-            // which might be closed during two operations.
-            // See https://github.com/amphp/byte-stream/issues/32
-            if (@\feof($this->resource)) {
-                $this->readable = false;
-                $this->resource = null;
-                Loop::cancel($this->watcher);
-
-                return null;
-            }
-
-            $this->deferred = new Deferred;
-            Loop::enable($this->watcher);
-
-            return await($this->deferred->promise());
-        }
-
-        // Prevent an immediate read → write loop from blocking everything
-        // See e.g. examples/benchmark-throughput.php
-        return await(new Success($data));
+        return \Fiber::suspend($this->enqueue, Loop::get());
     }
 
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
-     *
-     * @return void
      */
-    public function close()
+    public function close(): void
     {
         if ($this->resource &&  \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
@@ -167,18 +141,16 @@ final class ResourceInputStream implements InputStream
 
     /**
      * Nulls reference to resource, marks stream unreadable, and succeeds any pending read with null.
-     *
-     * @return void
      */
-    private function free()
+    private function free(): void
     {
         $this->readable = false;
         $this->resource = null;
 
-        if ($this->deferred !== null) {
-            $deferred = $this->deferred;
-            $this->deferred = null;
-            $deferred->resolve();
+        if ($this->fiber !== null) {
+            $fiber = $this->fiber;
+            $this->fiber = null;
+            Loop::defer(static fn() => $fiber->resume());
         }
 
         Loop::cancel($this->watcher);
@@ -192,10 +164,7 @@ final class ResourceInputStream implements InputStream
         return $this->resource;
     }
 
-    /**
-     * @return void
-     */
-    public function setChunkSize(int $chunkSize)
+    public function setChunkSize(int $chunkSize): void
     {
         $this->chunkSize = $chunkSize;
     }
@@ -203,11 +172,9 @@ final class ResourceInputStream implements InputStream
     /**
      * References the read watcher, so the loop keeps running in case there's an active read.
      *
-     * @return void
-     *
      * @see Loop::reference()
      */
-    public function reference()
+    public function reference(): void
     {
         if (!$this->resource) {
             throw new \Error("Resource has already been freed");
@@ -219,11 +186,9 @@ final class ResourceInputStream implements InputStream
     /**
      * Unreferences the read watcher, so the loop doesn't keep running even if there are active reads.
      *
-     * @return void
-     *
      * @see Loop::unreference()
      */
-    public function unreference()
+    public function unreference(): void
     {
         if (!$this->resource) {
             throw new \Error("Resource has already been freed");
