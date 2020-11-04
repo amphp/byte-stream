@@ -68,9 +68,7 @@ final class ResourceOutputStream implements OutputStream
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        if ($fiber !== null) {
-                            $fiber->resume(0);
-                        }
+                        $fiber?->resume(0);
                         continue;
                     }
 
@@ -125,23 +123,17 @@ final class ResourceOutputStream implements OutputStream
                         return;
                     }
 
-                    if ($fiber !== null) {
-                        $fiber->resume($written + $previous);
-                    }
+                    $fiber?->resume($written + $previous);
                 }
             } catch (\Throwable $exception) {
                 $resource = null;
                 $writable = false;
 
                 /** @psalm-suppress PossiblyUndefinedVariable */
-                if ($fiber !== null) {
-                    $fiber->throw($exception);
-                }
+                $fiber?->throw($exception);
                 while (!$writes->isEmpty()) {
                     [, , $fiber] = $writes->shift();
-                    if ($fiber !== null) {
-                        $fiber->throw($exception);
-                    }
+                    $fiber?->throw($exception);
                 }
 
                 Loop::cancel($watcher);
@@ -287,14 +279,14 @@ final class ResourceOutputStream implements OutputStream
         $this->writable = false;
 
         if (!$this->writes->isEmpty()) {
-            $exception = new ClosedException("The socket was closed before writing completed");
-            do {
-                /** @var \Fiber|null $fiber */
-                [, , $fiber] = $this->writes->shift();
-                if ($fiber !== null) {
-                    $fiber->throw($exception);
-                }
-            } while (!$this->writes->isEmpty());
+            Loop::defer(function (): void {
+                $exception = new ClosedException("The socket was closed before writing completed");
+                do {
+                    /** @var \Fiber|null $fiber */
+                    [, , $fiber] = $this->writes->shift();
+                    $fiber?->throw($exception);
+                } while (!$this->writes->isEmpty());
+            });
         }
 
         Loop::cancel($this->watcher);
