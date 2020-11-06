@@ -63,12 +63,12 @@ final class ResourceOutputStream implements OutputStream
 
             try {
                 while (!$writes->isEmpty()) {
-                    /** @var \Fiber|null $fiber */
-                    [$data, $previous, $fiber] = $writes->shift();
+                    /** @var \Continuation|null $continuation */
+                    [$data, $previous, $continuation] = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        $fiber?->resume(0);
+                        $continuation?->resume(0);
                         continue;
                     }
 
@@ -111,7 +111,7 @@ final class ResourceOutputStream implements OutputStream
                             throw new StreamException($message);
                         }
 
-                        $writes->unshift([$data, $previous, $fiber]);
+                        $writes->unshift([$data, $previous, $continuation]);
                         return;
                     }
 
@@ -119,21 +119,21 @@ final class ResourceOutputStream implements OutputStream
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
-                        $writes->unshift([$data, $written + $previous, $fiber]);
+                        $writes->unshift([$data, $written + $previous, $continuation]);
                         return;
                     }
 
-                    $fiber?->resume($written + $previous);
+                    $continuation?->resume($written + $previous);
                 }
             } catch (\Throwable $exception) {
                 $resource = null;
                 $writable = false;
 
                 /** @psalm-suppress PossiblyUndefinedVariable */
-                $fiber?->throw($exception);
+                $continuation?->throw($exception);
                 while (!$writes->isEmpty()) {
-                    [, , $fiber] = $writes->shift();
-                    $fiber?->throw($exception);
+                    [, , $continuation] = $writes->shift();
+                    $continuation?->throw($exception);
                 }
 
                 Loop::cancel($watcher);
@@ -241,7 +241,10 @@ final class ResourceOutputStream implements OutputStream
 
         Loop::enable($this->watcher);
 
-        $bytes = \Fiber::suspend(fn(\Fiber $fiber) => $this->writes->push([$data, $written, $fiber]), Loop::get());
+        $bytes = \Fiber::suspend(
+            fn(\Continuation $continuation) => $this->writes->push([$data, $written, $continuation]),
+            Loop::get()
+        );
 
         if ($end) {
             $this->close();
@@ -282,9 +285,9 @@ final class ResourceOutputStream implements OutputStream
             Loop::defer(function (): void {
                 $exception = new ClosedException("The socket was closed before writing completed");
                 do {
-                    /** @var \Fiber|null $fiber */
-                    [, , $fiber] = $this->writes->shift();
-                    $fiber?->throw($exception);
+                    /** @var \Continuation|null $continuation */
+                    [, , $continuation] = $this->writes->shift();
+                    $continuation?->throw($exception);
                 } while (!$this->writes->isEmpty());
             });
         }
