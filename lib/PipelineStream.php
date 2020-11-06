@@ -9,12 +9,12 @@ final class PipelineStream implements InputStream
     /** @var Pipeline<string> */
     private Pipeline $pipeline;
 
-    private ?\Throwable $exception = null;
+    private \Throwable $exception;
 
     private bool $pending = false;
 
     /**
-     * @psalm-param Stream<string> $iterator
+     * @psalm-param Pipeline<string> $pipeline
      */
     public function __construct(Pipeline $pipeline)
     {
@@ -24,7 +24,7 @@ final class PipelineStream implements InputStream
     /** @inheritdoc */
     public function read(): ?string
     {
-        if ($this->exception) {
+        if (isset($this->exception)) {
             throw $this->exception;
         }
 

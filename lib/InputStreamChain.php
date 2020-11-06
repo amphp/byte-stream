@@ -2,10 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-use Amp\Success;
-use function Amp\call;
-
 final class InputStreamChain implements InputStream
 {
     /** @var InputStream[] */

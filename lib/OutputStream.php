@@ -2,8 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-
 /**
  * An `OutputStream` allows writing data in chunks. Writers can wait on the returned promises to feel the backpressure.
  */
@@ -14,7 +12,7 @@ interface OutputStream
      *
      * @param string $data Bytes to write.
      *
-     * @return Promise Succeeds once the data has been successfully written to the stream.
+     * @return void Returns once the data has been successfully written to the stream.
      *
      * @throws ClosedException If the stream has already been closed.
      * @throws StreamException If writing to the stream fails.
@@ -28,7 +26,7 @@ interface OutputStream
      *
      * @param string $finalData Bytes to write.
      *
-     * @return Promise Succeeds once the data has been successfully written to the stream.
+     * @return void Returns once the data has been successfully written to the stream.
      *
      * @throws ClosedException If the stream has already been closed.
      * @throws StreamException If writing to the stream fails.

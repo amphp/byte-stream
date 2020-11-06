@@ -2,9 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Promise;
-use Amp\Success;
-
 /**
  * Input stream with a single already known data chunk.
  */
