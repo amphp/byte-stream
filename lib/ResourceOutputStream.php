@@ -171,6 +171,44 @@ final class ResourceOutputStream implements OutputStream
         $this->send($finalData, true);
     }
 
+    /**
+     * Closes the stream forcefully. Multiple `close()` calls are ignored.
+     */
+    public function close(): void
+    {
+        if ($this->resource && \get_resource_type($this->resource) === 'stream') {
+            // Error suppression, as resource might already be closed
+            $meta = @\stream_get_meta_data($this->resource);
+
+            if ($meta && \strpos($meta["mode"], "+") !== false) {
+                @\stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
+            } else {
+                /** @psalm-suppress InvalidPropertyAssignmentValue psalm reports this as closed-resource */
+                @\fclose($this->resource);
+            }
+        }
+
+        $this->free();
+    }
+
+    /**
+     * @return resource|null Stream resource or null if end() has been called or the stream closed.
+     */
+    public function getResource()
+    {
+        return $this->resource;
+    }
+
+    public function setChunkSize(int $chunkSize): void
+    {
+        $this->chunkSize = $chunkSize;
+    }
+
+    public function __destruct()
+    {
+        $this->free();
+    }
+
     private function send(string $data, bool $end = false): int
     {
         if (!$this->writable) {
@@ -254,30 +292,14 @@ final class ResourceOutputStream implements OutputStream
     }
 
     /**
-     * Closes the stream forcefully. Multiple `close()` calls are ignored.
-     */
-    public function close(): void
-    {
-        if ($this->resource && \get_resource_type($this->resource) === 'stream') {
-            // Error suppression, as resource might already be closed
-            $meta = @\stream_get_meta_data($this->resource);
-
-            if ($meta && \strpos($meta["mode"], "+") !== false) {
-                @\stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
-            } else {
-                /** @psalm-suppress InvalidPropertyAssignmentValue psalm reports this as closed-resource */
-                @\fclose($this->resource);
-            }
-        }
-
-        $this->free();
-    }
-
-    /**
      * Nulls reference to resource, marks stream unwritable, and fails any pending write.
      */
     private function free(): void
     {
+        if ($this->resource === null) {
+            return;
+        }
+
         $this->resource = null;
         $this->writable = false;
 
@@ -293,25 +315,5 @@ final class ResourceOutputStream implements OutputStream
         }
 
         Loop::cancel($this->watcher);
-    }
-
-    /**
-     * @return resource|null Stream resource or null if end() has been called or the stream closed.
-     */
-    public function getResource()
-    {
-        return $this->resource;
-    }
-
-    public function setChunkSize(int $chunkSize): void
-    {
-        $this->chunkSize = $chunkSize;
-    }
-
-    public function __destruct()
-    {
-        if ($this->resource !== null) {
-            $this->free();
-        }
     }
 }
