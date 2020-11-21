@@ -16,7 +16,7 @@ final class ResourceInputStream implements InputStream
 
     private string $watcher;
 
-    private ?\Continuation $continuation = null;
+    private ?\Fiber $fiber = null;
 
     private \Closure $enqueue;
 
@@ -52,15 +52,15 @@ final class ResourceInputStream implements InputStream
         $this->resource = &$stream;
         $this->chunkSize = &$chunkSize;
 
-        $continuation = &$this->continuation;
+        $fiber = &$this->fiber;
         $readable = &$this->readable;
 
-        $this->enqueue = static function (\Continuation $continue) use (&$continuation): void {
-            $continuation = $continue;
+        $this->enqueue = static function (\Fiber $suspended) use (&$fiber): void {
+            $fiber = $suspended;
         };
 
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher) use (
-            &$continuation,
+            &$fiber,
             &$readable,
             &$stream,
             &$chunkSize,
@@ -86,10 +86,10 @@ final class ResourceInputStream implements InputStream
                 Loop::disable($watcher);
             }
 
-            $temp = $continuation;
-            $continuation = null;
+            $temp = $fiber;
+            $fiber = null;
 
-            \assert($temp instanceof \Continuation);
+            \assert($temp instanceof \Fiber);
             $temp->resume($data);
         });
 
@@ -99,7 +99,7 @@ final class ResourceInputStream implements InputStream
     /** @inheritdoc */
     public function read(): ?string
     {
-        if ($this->continuation !== null) {
+        if ($this->fiber !== null) {
             throw new PendingReadError;
         }
 
@@ -147,10 +147,10 @@ final class ResourceInputStream implements InputStream
         $this->readable = false;
         $this->resource = null;
 
-        if ($this->continuation !== null) {
-            $continuation = $this->continuation;
-            $this->continuation = null;
-            Loop::defer(static fn() => $continuation->resume());
+        if ($this->fiber !== null) {
+            $fiber = $this->fiber;
+            $this->fiber = null;
+            Loop::defer(static fn() => $fiber->resume());
         }
 
         Loop::cancel($this->watcher);

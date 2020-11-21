@@ -7,13 +7,10 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
-use Amp\Delayed;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Success;
 use function Amp\async;
 use function Amp\await;
 use function Amp\defer;
-use function Amp\sleep;
 
 class ResourceStreamTest extends AsyncTestCase
 {
