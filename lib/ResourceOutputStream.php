@@ -278,11 +278,8 @@ final class ResourceOutputStream implements OutputStream
         }
 
         Loop::enable($this->watcher);
-
-        $bytes = \Fiber::suspend(
-            fn(\Fiber $fiber) => $this->writes->push([$data, $written, $fiber]),
-            Loop::get()
-        );
+        $this->writes->push([$data, $written, \Fiber::this()]);
+        $bytes = \Fiber::suspend(Loop::get());
 
         if ($end) {
             $this->close();

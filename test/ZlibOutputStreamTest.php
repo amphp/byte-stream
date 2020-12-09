@@ -10,6 +10,7 @@ use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\ByteStream\ZlibOutputStream;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\await;
 
 class ZlibOutputStreamTest extends AsyncTestCase
 {
@@ -28,7 +29,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
 
         $outputStream->end();
 
-        $inputStream = new ZlibInputStream(new InMemoryStream(yield $bufferStream), \ZLIB_ENCODING_GZIP);
+        $inputStream = new ZlibInputStream(new InMemoryStream(await($bufferStream)), \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $inputStream->read()) !== null) {

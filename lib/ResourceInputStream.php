@@ -18,8 +18,6 @@ final class ResourceInputStream implements InputStream
 
     private ?\Fiber $fiber = null;
 
-    private \Closure $enqueue;
-
     private bool $readable = true;
 
     private int $chunkSize;
@@ -54,11 +52,6 @@ final class ResourceInputStream implements InputStream
 
         $fiber = &$this->fiber;
         $readable = &$this->readable;
-
-        $this->enqueue = static function (\Fiber $suspended) use (&$fiber): void {
-            $fiber = $suspended;
-        };
-
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher) use (
             &$fiber,
             &$readable,
@@ -115,8 +108,8 @@ final class ResourceInputStream implements InputStream
         }
 
         Loop::enable($this->watcher);
-
-        return \Fiber::suspend($this->enqueue, Loop::get());
+        $this->fiber = \Fiber::this();
+        return \Fiber::suspend(Loop::get());
     }
 
     /**
