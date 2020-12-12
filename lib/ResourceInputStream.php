@@ -109,7 +109,7 @@ final class ResourceInputStream implements InputStream
 
         Loop::enable($this->watcher);
         $this->fiber = \Fiber::this();
-        return \Fiber::suspend(Loop::get());
+        return \Fiber::suspend(Loop::getDriver());
     }
 
     /**
