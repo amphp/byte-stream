@@ -279,7 +279,7 @@ final class ResourceOutputStream implements OutputStream
 
         Loop::enable($this->watcher);
         $this->writes->push([$data, $written, \Fiber::this()]);
-        $bytes = \Fiber::suspend(Loop::getDriver());
+        $bytes = \Fiber::suspend(Loop::getScheduler());
 
         if ($end) {
             $this->close();
