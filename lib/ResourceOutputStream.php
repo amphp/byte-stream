@@ -2,7 +2,9 @@
 
 namespace Amp\ByteStream;
 
+use Amp\Deferred;
 use Amp\Loop;
+use function Amp\await;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -63,12 +65,12 @@ final class ResourceOutputStream implements OutputStream
 
             try {
                 while (!$writes->isEmpty()) {
-                    /** @var \Fiber|null $fiber */
-                    [$data, $previous, $fiber] = $writes->shift();
+                    /** @var Deferred|null $deferred */
+                    [$data, $previous, $deferred] = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        $fiber?->resume(0);
+                        $deferred?->resolve(0);
                         continue;
                     }
 
@@ -111,7 +113,7 @@ final class ResourceOutputStream implements OutputStream
                             throw new StreamException($message);
                         }
 
-                        $writes->unshift([$data, $previous, $fiber]);
+                        $writes->unshift([$data, $previous, $deferred]);
                         return;
                     }
 
@@ -119,21 +121,21 @@ final class ResourceOutputStream implements OutputStream
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
-                        $writes->unshift([$data, $written + $previous, $fiber]);
+                        $writes->unshift([$data, $written + $previous, $deferred]);
                         return;
                     }
 
-                    $fiber?->resume($written + $previous);
+                    $deferred?->resolve($written + $previous);
                 }
             } catch (\Throwable $exception) {
                 $resource = null;
                 $writable = false;
 
                 /** @psalm-suppress PossiblyUndefinedVariable */
-                $fiber?->throw($exception);
+                $deferred?->fail($exception);
                 while (!$writes->isEmpty()) {
-                    [, , $fiber] = $writes->shift();
-                    $fiber?->throw($exception);
+                    [, , $deferred] = $writes->shift();
+                    $deferred?->fail($exception);
                 }
 
                 Loop::cancel($watcher);
@@ -278,8 +280,8 @@ final class ResourceOutputStream implements OutputStream
         }
 
         Loop::enable($this->watcher);
-        $this->writes->push([$data, $written, \Fiber::this()]);
-        $bytes = \Fiber::suspend(Loop::getScheduler());
+        $this->writes->push([$data, $written, $deferred = new Deferred]);
+        $bytes = await($deferred->promise());
 
         if ($end) {
             $this->close();
@@ -304,9 +306,9 @@ final class ResourceOutputStream implements OutputStream
             Loop::defer(function (): void {
                 $exception = new ClosedException("The socket was closed before writing completed");
                 do {
-                    /** @var \Fiber|null $fiber */
-                    [, , $fiber] = $this->writes->shift();
-                    $fiber?->throw($exception);
+                    /** @var Deferred|null $deferred */
+                    [, , $deferred] = $this->writes->shift();
+                    $deferred?->fail($exception);
                 } while (!$this->writes->isEmpty());
             });
         }

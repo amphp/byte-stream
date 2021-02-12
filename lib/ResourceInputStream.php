@@ -2,7 +2,9 @@
 
 namespace Amp\ByteStream;
 
+use Amp\Deferred;
 use Amp\Loop;
+use function Amp\await;
 
 /**
  * Input stream abstraction for PHP's stream resources.
@@ -16,7 +18,7 @@ final class ResourceInputStream implements InputStream
 
     private string $watcher;
 
-    private ?\Fiber $fiber = null;
+    private ?Deferred $deferred = null;
 
     private bool $readable = true;
 
@@ -50,10 +52,10 @@ final class ResourceInputStream implements InputStream
         $this->resource = &$stream;
         $this->chunkSize = &$chunkSize;
 
-        $fiber = &$this->fiber;
+        $deferred = &$this->deferred;
         $readable = &$this->readable;
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher) use (
-            &$fiber,
+            &$deferred,
             &$readable,
             &$stream,
             &$chunkSize,
@@ -79,11 +81,11 @@ final class ResourceInputStream implements InputStream
                 Loop::disable($watcher);
             }
 
-            $temp = $fiber;
-            $fiber = null;
+            $temp = $deferred;
+            $deferred = null;
 
-            \assert($temp instanceof \Fiber);
-            $temp->resume($data);
+            \assert($temp instanceof Deferred);
+            $temp->resolve($data);
         });
 
         Loop::disable($this->watcher);
@@ -92,7 +94,7 @@ final class ResourceInputStream implements InputStream
     /** @inheritdoc */
     public function read(): ?string
     {
-        if ($this->fiber !== null) {
+        if ($this->deferred !== null) {
             throw new PendingReadError;
         }
 
@@ -108,8 +110,8 @@ final class ResourceInputStream implements InputStream
         }
 
         Loop::enable($this->watcher);
-        $this->fiber = \Fiber::this();
-        return \Fiber::suspend(Loop::getScheduler());
+        $this->deferred = new Deferred;
+        return await($this->deferred->promise());
     }
 
     /**
@@ -140,10 +142,10 @@ final class ResourceInputStream implements InputStream
         $this->readable = false;
         $this->resource = null;
 
-        if ($this->fiber !== null) {
-            $fiber = $this->fiber;
-            $this->fiber = null;
-            Loop::defer(static fn() => $fiber->resume());
+        if ($this->deferred !== null) {
+            $deferred = $this->deferred;
+            $this->deferred = null;
+            $deferred->resolve();
         }
 
         Loop::cancel($this->watcher);
