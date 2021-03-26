@@ -3,7 +3,6 @@
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\ZlibInputStream;
-use Amp\Loop;
 
 require __DIR__ . "/../vendor/autoload.php";
 

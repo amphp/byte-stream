@@ -4,8 +4,6 @@ namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\StreamException;
-use Amp\Promise;
-use function Amp\call;
 
 final class Base64DecodingInputStream implements InputStream
 {

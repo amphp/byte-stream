@@ -11,7 +11,7 @@ use Amp\PHPUnit\AsyncTestCase;
 
 class ZlibInputStreamTest extends AsyncTestCase
 {
-    public function testRead()
+    public function testRead(): void
     {
         $file1 = __DIR__ . "/fixtures/foobar.txt";
         $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
@@ -33,17 +33,17 @@ class ZlibInputStreamTest extends AsyncTestCase
         }
 
         $expected = \str_replace("\r\n", "\n", \file_get_contents($file1));
-        $this->assertSame($expected, $buffer);
+        self::assertSame($expected, $buffer);
     }
 
-    public function testGetEncoding()
+    public function testGetEncoding(): void
     {
         $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
 
-        $this->assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
+        self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
 
-    public function testGetOptions()
+    public function testGetOptions(): void
     {
         $options = [
             "level" => -1,
@@ -54,10 +54,10 @@ class ZlibInputStreamTest extends AsyncTestCase
 
         $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP, $options);
 
-        $this->assertSame($options, $gzStream->getOptions());
+        self::assertSame($options, $gzStream->getOptions());
     }
 
-    public function testInvalidStream()
+    public function testInvalidStream(): void
     {
         $this->expectException(StreamException::class);
 

@@ -6,7 +6,7 @@ use Amp\Deferred;
 use Amp\Promise;
 use function Amp\async;
 use function Amp\await;
-use function Amp\defer;
+use function Revolt\EventLoop\defer;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
@@ -32,22 +32,7 @@ class Payload implements InputStream
     public function __destruct()
     {
         if (!isset($this->promise)) {
-            defer(fn() => $this->consume());
-        }
-    }
-
-    private function consume(): void
-    {
-        try {
-            if (isset($this->lastRead) && !await($this->lastRead)) {
-                return;
-            }
-
-            while (null !== $this->stream->read()) {
-                // Discard unread bytes from message.
-            }
-        } catch (\Throwable $exception) {
-            // If exception is thrown here the stream completed anyway.
+            defer(fn () => $this->consume());
         }
     }
 
@@ -99,5 +84,20 @@ class Payload implements InputStream
 
             return $buffer;
         }));
+    }
+
+    private function consume(): void
+    {
+        try {
+            if (isset($this->lastRead) && !await($this->lastRead)) {
+                return;
+            }
+
+            while (null !== $this->stream->read()) {
+                // Discard unread bytes from message.
+            }
+        } catch (\Throwable $exception) {
+            // If exception is thrown here the stream completed anyway.
+        }
     }
 }

@@ -7,10 +7,10 @@ use Amp\PHPUnit\AsyncTestCase;
 
 class InMemoryStreamTest extends AsyncTestCase
 {
-    public function testSingleReadConsumesEverything()
+    public function testSingleReadConsumesEverything(): void
     {
         $stream = new InMemoryStream("foobar");
-        $this->assertSame("foobar", $stream->read());
-        $this->assertNull($stream->read());
+        self::assertSame("foobar", $stream->read());
+        self::assertNull($stream->read());
     }
 }

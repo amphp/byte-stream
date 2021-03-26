@@ -7,36 +7,36 @@ use Amp\PHPUnit\AsyncTestCase;
 
 class StdStreamTest extends AsyncTestCase
 {
-    public function testGetInputBufferStream()
+    public function testGetInputBufferStream(): void
     {
         $stream = ByteStream\getInputBufferStream();
-        $this->assertSame($stream, ByteStream\getInputBufferStream());
+        self::assertSame($stream, ByteStream\getInputBufferStream());
     }
 
-    public function testGetOutputBufferStream()
+    public function testGetOutputBufferStream(): void
     {
         $stream = ByteStream\getOutputBufferStream();
-        $this->assertSame($stream, ByteStream\getOutputBufferStream());
+        self::assertSame($stream, ByteStream\getOutputBufferStream());
     }
 
-    public function testGetStdin()
+    public function testGetStdin(): void
     {
         $stream = ByteStream\getStdin();
-        $this->assertSame($stream, ByteStream\getStdin());
-        $this->assertSame(\STDIN, $stream->getResource());
+        self::assertSame($stream, ByteStream\getStdin());
+        self::assertSame(\STDIN, $stream->getResource());
     }
 
-    public function testGetStdout()
+    public function testGetStdout(): void
     {
         $stream = ByteStream\getStdout();
-        $this->assertSame($stream, ByteStream\getStdout());
-        $this->assertSame(\STDOUT, $stream->getResource());
+        self::assertSame($stream, ByteStream\getStdout());
+        self::assertSame(\STDOUT, $stream->getResource());
     }
 
-    public function testGetStderr()
+    public function testGetStderr(): void
     {
         $stream = ByteStream\getStderr();
-        $this->assertSame($stream, ByteStream\getStderr());
-        $this->assertSame(\STDERR, $stream->getResource());
+        self::assertSame($stream, ByteStream\getStderr());
+        self::assertSame(\STDERR, $stream->getResource());
     }
 }

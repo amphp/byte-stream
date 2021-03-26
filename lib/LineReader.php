@@ -15,22 +15,22 @@ final class LineReader
     public function __construct(InputStream $inputStream, string $delimiter = null)
     {
         $this->source = $inputStream;
-        $this->delimiter = $delimiter === null ? "\n" : $delimiter;
+        $this->delimiter = $delimiter ?? "\n";
         $this->lineMode = $delimiter === null;
     }
 
     public function readLine(): ?string
     {
-        if (false !== \strpos($this->buffer, $this->delimiter)) {
-            list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
+        if (\str_contains($this->buffer, $this->delimiter)) {
+            [$line, $this->buffer] = \explode($this->delimiter, $this->buffer, 2);
             return $this->lineMode ? \rtrim($line, "\r") : $line;
         }
 
         while (null !== $chunk = $this->source->read()) {
             $this->buffer .= $chunk;
 
-            if (false !== \strpos($this->buffer, $this->delimiter)) {
-                list($line, $this->buffer) = \explode($this->delimiter, $this->buffer, 2);
+            if (\str_contains($this->buffer, $this->delimiter)) {
+                [$line, $this->buffer] = \explode($this->delimiter, $this->buffer, 2);
                 return $this->lineMode ? \rtrim($line, "\r") : $line;
             }
         }

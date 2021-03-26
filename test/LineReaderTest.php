@@ -7,57 +7,57 @@ use Amp\Pipeline;
 
 class LineReaderTest extends AsyncTestCase
 {
-    public function testSingleLine()
+    public function testSingleLine(): void
     {
         $this->check(["abc"], ["abc"]);
     }
 
-    public function testMultiLineLf()
+    public function testMultiLineLf(): void
     {
         $this->check(["abc\nef"], ["abc", "ef"]);
     }
 
-    public function testMultiLineCrLf()
+    public function testMultiLineCrLf(): void
     {
         $this->check(["abc\r\nef"], ["abc", "ef"]);
     }
 
-    public function testMultiLineEmptyNewlineStart()
+    public function testMultiLineEmptyNewlineStart(): void
     {
         $this->check(["\r\nabc\r\nef\r\n"], ["", "abc", "ef"]);
     }
 
-    public function testMultiLineEmptyNewlineEnd()
+    public function testMultiLineEmptyNewlineEnd(): void
     {
         $this->check(["abc\r\nef\r\n"], ["abc", "ef"]);
     }
 
-    public function testMultiLineEmptyNewlineMiddle()
+    public function testMultiLineEmptyNewlineMiddle(): void
     {
         $this->check(["abc\r\n\r\nef\r\n"], ["abc", "", "ef"]);
     }
 
-    public function testEmpty()
+    public function testEmpty(): void
     {
         $this->check([], []);
     }
 
-    public function testEmptyCrLf()
+    public function testEmptyCrLf(): void
     {
         $this->check(["\r\n"], [""]);
     }
 
-    public function testEmptyCr()
+    public function testEmptyCr(): void
     {
         $this->check(["\r"], [""]);
     }
 
-    public function testMultiLineSlow()
+    public function testMultiLineSlow(): void
     {
         $this->check(["a", "bc", "\r", "\n\r\nef\r", "\n"], ["abc", "", "ef"]);
     }
 
-    public function testClearBuffer()
+    public function testClearBuffer(): void
     {
         $inputStream = new PipelineStream(Pipeline\fromIterable(["a\nb\nc"]));
 
@@ -71,7 +71,7 @@ class LineReaderTest extends AsyncTestCase
         self::assertNull($reader->readLine());
     }
 
-    public function testCustomDelimiter()
+    public function testCustomDelimiter(): void
     {
         $inputStream = new PipelineStream(Pipeline\fromIterable(["a|b|c", "|", "||d|e|f"]));
 
@@ -86,7 +86,7 @@ class LineReaderTest extends AsyncTestCase
         self::assertSame("", $reader->getBuffer());
     }
 
-    public function testLineFeedDelimiter()
+    public function testLineFeedDelimiter(): void
     {
         $inputStream = new PipelineStream(Pipeline\fromIterable(["a\r\n", "b\r\n", "c\r\n"]));
 
@@ -101,7 +101,7 @@ class LineReaderTest extends AsyncTestCase
         self::assertSame("", $reader->getBuffer());
     }
 
-    private function check(array $chunks, array $expectedLines)
+    private function check(array $chunks, array $expectedLines): void
     {
         $inputStream = new PipelineStream(Pipeline\fromIterable($chunks));
 

@@ -27,16 +27,18 @@
     ],
     "require": {
         "php": ">=8",
-        "amphp/amp": "^3-dev"
+        "amphp/amp": "dev-v3-revolt"
     },
     "require-dev": {
-        "amphp/phpunit-util": "^2-dev",
+        "amphp/phpunit-util": "dev-v2-revolt",
         "phpunit/phpunit": "^9",
         "friendsofphp/php-cs-fixer": "^2.3",
         "amphp/php-cs-fixer-config": "dev-master",
         "psalm/phar": "^3.11.4",
         "jetbrains/phpstorm-stubs": "^2019.3"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Amp\\ByteStream\\": "lib"
@@ -58,7 +60,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/amphp/green-thread"
+            "url": "git@github.com:revolt-php/event-loop.git"
         }
     ]
 }

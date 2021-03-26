@@ -3,11 +3,9 @@
 namespace Amp\ByteStream;
 
 use Amp\AsyncGenerator;
-use Amp\Iterator;
-use Amp\Loop;
 use Amp\Pipeline;
-use Amp\Producer;
 use Amp\Promise;
+use Revolt\EventLoop\Loop;
 use function Amp\async;
 
 // @codeCoverageIgnoreStart
@@ -18,11 +16,11 @@ if (\strlen('…') !== 3) {
 } // @codeCoverageIgnoreEnd
 
 if (!\defined('STDOUT')) {
-    \define('STDOUT', \fopen('php://stdout', 'w'));
+    \define('STDOUT', \fopen('php://stdout', 'wb'));
 }
 
 if (!\defined('STDERR')) {
-    \define('STDERR', \fopen('php://stderr', 'w'));
+    \define('STDERR', \fopen('php://stderr', 'wb'));
 }
 
 /**
@@ -170,14 +168,10 @@ function parseLineDelimitedJson(InputStream $stream, bool $assoc = false, int $d
                 continue;
             }
 
-            /** @noinspection PhpComposerExtensionStubsInspection */
             $data = \json_decode($line, $assoc, $depth, $options);
-            /** @noinspection PhpComposerExtensionStubsInspection */
             $error = \json_last_error();
 
-            /** @noinspection PhpComposerExtensionStubsInspection */
             if ($error !== \JSON_ERROR_NONE) {
-                /** @noinspection PhpComposerExtensionStubsInspection */
                 throw new StreamException('Failed to parse JSON: ' . \json_last_error_msg(), $error);
             }
 

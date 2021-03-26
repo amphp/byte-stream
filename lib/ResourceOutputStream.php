@@ -3,7 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Deferred;
-use Amp\Loop;
+use Revolt\EventLoop\Loop;
 use function Amp\await;
 
 /**
@@ -11,8 +11,8 @@ use function Amp\await;
  */
 final class ResourceOutputStream implements OutputStream
 {
-    const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
-    const LARGE_CHUNK_SIZE = 128 * 1024;
+    private const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
+    private const LARGE_CHUNK_SIZE = 128 * 1024;
 
     /** @var resource|null */
     private $resource;
@@ -41,7 +41,7 @@ final class ResourceOutputStream implements OutputStream
 
         $meta = \stream_get_meta_data($stream);
 
-        if (\strpos($meta["mode"], "r") !== false && \strpos($meta["mode"], "+") === false) {
+        if (\str_contains($meta["mode"], "r") && !\str_contains($meta["mode"], "+")) {
             throw new \Error("Expected a writable stream");
         }
 
@@ -182,7 +182,7 @@ final class ResourceOutputStream implements OutputStream
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
 
-            if ($meta && \strpos($meta["mode"], "+") !== false) {
+            if ($meta && \str_contains($meta["mode"], "+")) {
                 @\stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
             } else {
                 /** @psalm-suppress InvalidPropertyAssignmentValue psalm reports this as closed-resource */

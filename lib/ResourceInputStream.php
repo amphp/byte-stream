@@ -3,7 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Deferred;
-use Amp\Loop;
+use Revolt\EventLoop\Loop;
 use function Amp\await;
 
 /**
@@ -11,7 +11,7 @@ use function Amp\await;
  */
 final class ResourceInputStream implements InputStream
 {
-    const DEFAULT_CHUNK_SIZE = 8192;
+    public const DEFAULT_CHUNK_SIZE = 8192;
 
     /** @var resource|null */
     private $resource;
@@ -23,8 +23,6 @@ final class ResourceInputStream implements InputStream
     private bool $readable = true;
 
     private int $chunkSize;
-
-    private bool $useSingleRead;
 
     /**
      * @param resource $stream Stream resource.
@@ -40,9 +38,8 @@ final class ResourceInputStream implements InputStream
 
         $meta = \stream_get_meta_data($stream);
         $useSingleRead = $meta["stream_type"] === "udp_socket" || $meta["stream_type"] === "STDIO";
-        $this->useSingleRead = $useSingleRead;
 
-        if (\strpos($meta["mode"], "r") === false && \strpos($meta["mode"], "+") === false) {
+        if (!\str_contains($meta["mode"], "r") && !\str_contains($meta["mode"], "+")) {
             throw new \Error("Expected a readable stream");
         }
 
@@ -67,7 +64,10 @@ final class ResourceInputStream implements InputStream
                 $data = @\stream_get_contents($stream, $chunkSize);
             }
 
-            \assert($data !== false, "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to.");
+            \assert(
+                $data !== false,
+                "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to."
+            );
 
             // Error suppression, because pthreads does crazy things with resources,
             // which might be closed during two operations.
@@ -111,6 +111,7 @@ final class ResourceInputStream implements InputStream
 
         Loop::enable($this->watcher);
         $this->deferred = new Deferred;
+
         return await($this->deferred->promise());
     }
 
@@ -119,7 +120,7 @@ final class ResourceInputStream implements InputStream
      */
     public function close(): void
     {
-        if ($this->resource &&  \get_resource_type($this->resource) === 'stream') {
+        if ($this->resource && \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
 
@@ -132,23 +133,6 @@ final class ResourceInputStream implements InputStream
         }
 
         $this->free();
-    }
-
-    /**
-     * Nulls reference to resource, marks stream unreadable, and succeeds any pending read with null.
-     */
-    private function free(): void
-    {
-        $this->readable = false;
-        $this->resource = null;
-
-        if ($this->deferred !== null) {
-            $deferred = $this->deferred;
-            $this->deferred = null;
-            $deferred->resolve();
-        }
-
-        Loop::cancel($this->watcher);
     }
 
     /**
@@ -197,5 +181,22 @@ final class ResourceInputStream implements InputStream
         if ($this->resource !== null) {
             $this->free();
         }
+    }
+
+    /**
+     * Nulls reference to resource, marks stream unreadable, and succeeds any pending read with null.
+     */
+    private function free(): void
+    {
+        $this->readable = false;
+        $this->resource = null;
+
+        if ($this->deferred !== null) {
+            $deferred = $this->deferred;
+            $this->deferred = null;
+            $deferred->resolve();
+        }
+
+        Loop::cancel($this->watcher);
     }
 }

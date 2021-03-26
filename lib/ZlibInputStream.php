@@ -77,16 +77,6 @@ final class ZlibInputStream implements InputStream
     }
 
     /**
-     * @internal
-     * @return void
-     */
-    private function close(): void
-    {
-        $this->resource = null;
-        $this->source = null;
-    }
-
-    /**
      * Gets the used compression encoding.
      *
      * @return int Encoding specified on construction time.
@@ -95,6 +85,7 @@ final class ZlibInputStream implements InputStream
     {
         return $this->encoding;
     }
+
     /**
      * Gets the used compression options.
      *
@@ -103,5 +94,15 @@ final class ZlibInputStream implements InputStream
     public function getOptions(): array
     {
         return $this->options;
+    }
+
+    /**
+     * @return void
+     * @internal
+     */
+    private function close(): void
+    {
+        $this->resource = null;
+        $this->source = null;
     }
 }

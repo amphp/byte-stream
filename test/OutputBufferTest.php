@@ -9,25 +9,25 @@ use function Amp\await;
 
 class OutputBufferTest extends AsyncTestCase
 {
-    public function testWrite()
+    public function testWrite(): void
     {
         $output = new OutputBuffer();
         $output->write('foo');
         $output->end();
 
-        $this->assertSame('foo', await($output));
+        self::assertSame('foo', await($output));
     }
 
-    public function testEnd()
+    public function testEnd(): void
     {
         $output = new OutputBuffer();
         $output->write('foo');
         $output->end('bar');
 
-        $this->assertSame('foobar', await($output));
+        self::assertSame('foobar', await($output));
     }
 
-    public function testThrowsOnWritingToClosedBuffer()
+    public function testThrowsOnWritingToClosedBuffer(): void
     {
         $this->expectException(ClosedException::class);
 
@@ -36,7 +36,7 @@ class OutputBufferTest extends AsyncTestCase
         $output->write('bar');
     }
 
-    public function testThrowsOnEndingToClosedBuffer()
+    public function testThrowsOnEndingToClosedBuffer(): void
     {
         $this->expectException(ClosedException::class);
 

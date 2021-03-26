@@ -14,7 +14,7 @@ use function Amp\ByteStream\parseLineDelimitedJson;
 
 class ParseLineDelimitedJsonTest extends AsyncTestCase
 {
-    public function test()
+    public function test(): void
     {
         $result = Pipeline\toArray(parseLineDelimitedJson(new InMemoryStream(\implode("\n", [
             \json_encode(['foo' => "\nbar\r\n"]),
@@ -27,7 +27,7 @@ class ParseLineDelimitedJsonTest extends AsyncTestCase
         ], $result);
     }
 
-    public function testInvalidJson()
+    public function testInvalidJson(): void
     {
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Failed to parse JSON');

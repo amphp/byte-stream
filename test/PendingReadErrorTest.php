@@ -7,8 +7,8 @@ use PHPUnit\Framework\TestCase;
 
 class PendingReadErrorTest extends TestCase
 {
-    public function testDefaultErrorCode()
+    public function testDefaultErrorCode(): void
     {
-        $this->assertSame(0, (new PendingReadError)->getCode());
+        self::assertSame(0, (new PendingReadError)->getCode());
     }
 }

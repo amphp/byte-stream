@@ -19,7 +19,7 @@ class Base64EncodingOutputStreamTest extends AsyncTestCase
         $stream->write('bar');
         $stream->end();
 
-        $this->assertSame('Zm9vLmJhcg==', await($buffer));
+        self::assertSame('Zm9vLmJhcg==', await($buffer));
     }
 
     public function testEnd(): void
@@ -32,6 +32,6 @@ class Base64EncodingOutputStreamTest extends AsyncTestCase
         $stream->write('');
         $stream->end('bar');
 
-        $this->assertSame('Zm9vLmJhcg==', await($buffer));
+        self::assertSame('Zm9vLmJhcg==', await($buffer));
     }
 }

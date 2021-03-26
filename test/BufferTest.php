@@ -9,10 +9,10 @@ use function Amp\ByteStream\buffer;
 
 class BufferTest extends AsyncTestCase
 {
-    public function testBuffer()
+    public function testBuffer(): void
     {
         $stream = new PipelineStream(Pipeline\fromIterable(["abc", "def", "g"], 10));
 
-        $this->assertSame("abcdefg", buffer($stream));
+        self::assertSame("abcdefg", buffer($stream));
     }
 }

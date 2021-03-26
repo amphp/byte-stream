@@ -2,12 +2,12 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Pipeline;
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\Pipeline;
 
 class InputStreamChainTest extends AsyncTestCase
 {
-    public function test()
+    public function test(): void
     {
         $stream = new InputStreamChain(
             $this->createStream(["abc", "def", "hi"]),

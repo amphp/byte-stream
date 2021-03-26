@@ -2,10 +2,10 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\IteratorStream;
 use Amp\ByteStream\OutputBuffer;
-use Amp\Iterator;
+use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\Pipeline;
 use function Amp\await;
 use function Amp\ByteStream\pipe;
 
@@ -13,12 +13,12 @@ class PipeTest extends AsyncTestCase
 {
     public function testPipe()
     {
-        $stream = new IteratorStream(Iterator\fromIterable(["abc", "def"]));
+        $stream = new PipelineStream(Pipeline\fromIterable(["abc", "def"]));
         $buffer = new OutputBuffer;
 
-        $this->assertSame(6, await(pipe($stream, $buffer)));
+        self::assertSame(6, await(pipe($stream, $buffer)));
 
         $buffer->end();
-        $this->assertSame("abcdef", await($buffer));
+        self::assertSame("abcdef", await($buffer));
     }
 }

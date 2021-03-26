@@ -18,29 +18,21 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
 
     private InputStream $stream;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->source = new PipelineSource;
-        $this->stream = new Base64DecodingInputStream(new PipelineStream($this->source->pipe()));
-    }
-
     public function testRead(): void
     {
-        $promise = async(fn() => buffer($this->stream));
+        $promise = async(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('m9vLmJhcg=');
         $this->source->emit('=');
         $this->source->complete();
 
-        $this->assertSame('foo.bar', await($promise));
+        self::assertSame('foo.bar', await($promise));
     }
 
     public function testInvalidDataMissingPadding(): void
     {
-        $promise = async(fn() => buffer($this->stream));
+        $promise = async(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('m9vLmJhcg=');
@@ -50,12 +42,12 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Failed to read stream chunk due to invalid base64 data');
 
-        $this->assertSame('foo.bar', await($promise));
+        self::assertSame('foo.bar', await($promise));
     }
 
     public function testInvalidDataChar(): void
     {
-        $promise = async(fn() => buffer($this->stream));
+        $promise = async(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('!');
@@ -64,6 +56,14 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Failed to read stream chunk due to invalid base64 data');
 
-        $this->assertSame('foo.bar', await($promise));
+        self::assertSame('foo.bar', await($promise));
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->source = new PipelineSource;
+        $this->stream = new Base64DecodingInputStream(new PipelineStream($this->source->pipe()));
     }
 }

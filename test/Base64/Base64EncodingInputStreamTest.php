@@ -17,18 +17,9 @@ class Base64EncodingInputStreamTest extends AsyncTestCase
 
     private InputStream $stream;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->source = new PipelineSource;
-        $this->stream = new Base64EncodingInputStream(new PipelineStream($this->source->pipe()));
-    }
-
-
     public function testRead(): void
     {
-        $promise = async(fn() => buffer($this->stream));
+        $promise = async(fn () => buffer($this->stream));
 
         $this->source->emit('f');
         $this->source->emit('o');
@@ -40,5 +31,13 @@ class Base64EncodingInputStreamTest extends AsyncTestCase
         $this->source->complete();
 
         $this->assertSame('Zm9vLmJhcg==', await($promise));
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->source = new PipelineSource;
+        $this->stream = new Base64EncodingInputStream(new PipelineStream($this->source->pipe()));
     }
 }

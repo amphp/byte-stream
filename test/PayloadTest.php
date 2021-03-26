@@ -6,10 +6,10 @@ use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\Payload;
 use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\PipelineStream;
-use Amp\Loop;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\PipelineSource;
+use Revolt\EventLoop\Loop;
 use function Amp\async;
 use function Amp\await;
 
@@ -28,7 +28,7 @@ class PayloadTest extends AsyncTestCase
 
         $emitter->complete();
 
-        $this->assertSame(\implode($values), $stream->buffer());
+        self::assertSame(\implode($values), $stream->buffer());
     }
 
     public function testFullStreamConsumption()
@@ -51,8 +51,8 @@ class PayloadTest extends AsyncTestCase
             $buffer .= $chunk;
         }
 
-        $this->assertSame(\implode($values), $buffer);
-        $this->assertSame("", $stream->buffer());
+        self::assertSame(\implode($values), $buffer);
+        self::assertSame("", $stream->buffer());
     }
 
     public function testFastResolvingStream()
@@ -73,8 +73,8 @@ class PayloadTest extends AsyncTestCase
             $emitted[] = $chunk;
         }
 
-        $this->assertSame($values, $emitted);
-        $this->assertSame("", $stream->buffer());
+        self::assertSame($values, $emitted);
+        self::assertSame("", $stream->buffer());
     }
 
     public function testFastResolvingStreamBufferingOnly()
@@ -90,7 +90,7 @@ class PayloadTest extends AsyncTestCase
 
         $emitter->complete();
 
-        $this->assertSame(\implode($values), $stream->buffer());
+        self::assertSame(\implode($values), $stream->buffer());
     }
 
     public function testPartialStreamConsumption()
@@ -104,7 +104,7 @@ class PayloadTest extends AsyncTestCase
 
         $chunk = $stream->read();
 
-        $this->assertSame(\array_shift($values), $chunk);
+        self::assertSame(\array_shift($values), $chunk);
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -112,7 +112,7 @@ class PayloadTest extends AsyncTestCase
 
         $emitter->complete();
 
-        $this->assertSame(\implode($values), $stream->buffer());
+        self::assertSame(\implode($values), $stream->buffer());
     }
 
     public function testFailingStream()
@@ -130,12 +130,12 @@ class PayloadTest extends AsyncTestCase
 
         try {
             while (($chunk = $stream->read()) !== null) {
-                $this->assertSame($value, $chunk);
+                self::assertSame($value, $chunk);
             }
 
-            $this->fail("No exception has been thrown");
+            self::fail("No exception has been thrown");
         } catch (TestException $reason) {
-            $this->assertSame($exception, $reason);
+            self::assertSame($exception, $reason);
             $callable(); // <-- ensure this point is reached
         }
     }
@@ -148,7 +148,7 @@ class PayloadTest extends AsyncTestCase
         $emitter = new PipelineSource;
         $stream = new Payload(new PipelineStream($emitter->pipe()));
 
-        $readPromise = async(fn() => $stream->read());
+        $readPromise = async(fn () => $stream->read());
         $emitter->fail($exception);
 
         $callable = $this->createCallback(1);
@@ -156,9 +156,9 @@ class PayloadTest extends AsyncTestCase
         try {
             await($readPromise);
 
-            $this->fail("No exception has been thrown");
+            self::fail("No exception has been thrown");
         } catch (TestException $reason) {
-            $this->assertSame($exception, $reason);
+            self::assertSame($exception, $reason);
             $callable(); // <-- ensure this point is reached
         }
     }
@@ -169,7 +169,7 @@ class PayloadTest extends AsyncTestCase
         $emitter->complete();
         $stream = new Payload(new PipelineStream($emitter->pipe()));
 
-        $this->assertNull($stream->read());
+        self::assertNull($stream->read());
     }
 
     public function testEmptyStringStream()
@@ -183,7 +183,7 @@ class PayloadTest extends AsyncTestCase
 
         $emitter->complete();
 
-        $this->assertSame("", $stream->buffer());
+        self::assertSame("", $stream->buffer());
     }
 
     public function testReadAfterCompletion()
@@ -196,8 +196,8 @@ class PayloadTest extends AsyncTestCase
         $emitter->emit($value);
         $emitter->complete();
 
-        $this->assertSame($value, $stream->read());
-        $this->assertNull($stream->read());
+        self::assertSame($value, $stream->read());
+        self::assertNull($stream->read());
     }
 
     public function testPendingRead()
@@ -209,7 +209,7 @@ class PayloadTest extends AsyncTestCase
             $emitter->emit("test");
         });
 
-        $this->assertSame("test", $stream->read());
+        self::assertSame("test", $stream->read());
     }
 
     public function testPendingReadError()
@@ -238,7 +238,7 @@ class PayloadTest extends AsyncTestCase
     {
         $data = "test";
         $stream = new Payload(new InMemoryStream($data));
-        $this->assertSame($data, $stream->buffer());
-        $this->assertSame($data, $stream->buffer());
+        self::assertSame($data, $stream->buffer());
+        self::assertSame($data, $stream->buffer());
     }
 }

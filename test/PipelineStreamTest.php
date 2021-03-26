@@ -10,7 +10,7 @@ use Amp\PipelineSource;
 
 class PipelineStreamTest extends AsyncTestCase
 {
-    public function testReadIterator()
+    public function testReadIterator(): void
     {
         $values = ["abc", "def", "ghi"];
 
@@ -28,11 +28,11 @@ class PipelineStreamTest extends AsyncTestCase
             $buffer .= $chunk;
         }
 
-        $this->assertSame(\implode($values), $buffer);
-        $this->assertNull($stream->read());
+        self::assertSame(\implode($values), $buffer);
+        self::assertNull($stream->read());
     }
 
-    public function testFailingIterator()
+    public function testFailingIterator(): void
     {
         $exception = new TestException;
         $value = "abc";
@@ -47,17 +47,17 @@ class PipelineStreamTest extends AsyncTestCase
 
         try {
             while (($chunk = $stream->read()) !== null) {
-                $this->assertSame($value, $chunk);
+                self::assertSame($value, $chunk);
             }
 
-            $this->fail("No exception has been thrown");
+            self::fail("No exception has been thrown");
         } catch (TestException $reason) {
-            $this->assertSame($exception, $reason);
+            self::assertSame($exception, $reason);
             $callable(); // <-- ensure this point is reached
         }
     }
 
-    public function testThrowsOnNonStringIteration()
+    public function testThrowsOnNonStringIteration(): void
     {
         $this->expectException(StreamException::class);
 
@@ -71,7 +71,7 @@ class PipelineStreamTest extends AsyncTestCase
         $stream->read();
     }
 
-    public function testFailsAfterException()
+    public function testFailsAfterException(): void
     {
         $this->expectException(StreamException::class);
 

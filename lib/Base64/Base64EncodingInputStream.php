@@ -3,8 +3,6 @@
 namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\InputStream;
-use Amp\Promise;
-use function Amp\call;
 
 final class Base64EncodingInputStream implements InputStream
 {

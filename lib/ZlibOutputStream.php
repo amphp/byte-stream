@@ -84,16 +84,6 @@ final class ZlibOutputStream implements OutputStream
     }
 
     /**
-     * @internal
-     * @return void
-     */
-    private function close(): void
-    {
-        $this->resource = null;
-        $this->destination = null;
-    }
-
-    /**
      * Gets the used compression encoding.
      *
      * @return int Encoding specified on construction time.
@@ -111,5 +101,15 @@ final class ZlibOutputStream implements OutputStream
     public function getOptions(): array
     {
         return $this->options;
+    }
+
+    /**
+     * @return void
+     * @internal
+     */
+    private function close(): void
+    {
+        $this->resource = null;
+        $this->destination = null;
     }
 }
