@@ -8,14 +8,14 @@ use Amp\PHPUnit\AsyncTestCase;
 
 class ResourceOutputStreamTest extends AsyncTestCase
 {
-    public function testGetResource()
+    public function testGetResource(): void
     {
         $stream = new ResourceOutputStream(\STDOUT);
 
-        $this->assertSame(\STDOUT, $stream->getResource());
+        self::assertSame(\STDOUT, $stream->getResource());
     }
 
-    public function testNonStream()
+    public function testNonStream(): void
     {
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a valid stream");
@@ -23,7 +23,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
         new ResourceOutputStream(42);
     }
 
-    public function testNotWritable()
+    public function testNotWritable(): void
     {
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a writable stream");
@@ -31,28 +31,28 @@ class ResourceOutputStreamTest extends AsyncTestCase
         new ResourceOutputStream(\STDIN);
     }
 
-    public function testBrokenPipe()
+    public function testBrokenPipe(): ?\Generator
     {
         if (($sockets = @\stream_socket_pair(
             \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
             STREAM_SOCK_STREAM,
             STREAM_IPPROTO_IP
         )) === false) {
-            $this->fail("Failed to create socket pair.");
+            self::fail("Failed to create socket pair.");
         }
 
-        list($a, $b) = $sockets;
+        [$a, $b] = $sockets;
 
         $stream = new ResourceOutputStream($a);
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage("fwrite(): send of 6 bytes failed with errno=32 Broken pipe");
+        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
 
         yield $stream->write("foobar");
     }
 
-    public function testClosedRemoteSocket()
+    public function testClosedRemoteSocket(): ?\Generator
     {
         $server = \stream_socket_server("tcp://127.0.0.1:0");
         $address = \stream_socket_get_name($server, false);
@@ -64,7 +64,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage("fwrite(): send of 6 bytes failed with errno=32 Broken pipe");
+        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
 
         // The first write still succeeds somehow...
         yield $stream->write("foobar");

@@ -7,14 +7,14 @@ use Amp\PHPUnit\AsyncTestCase;
 
 class ResourceInputStreamTest extends AsyncTestCase
 {
-    public function testGetResource()
+    public function testGetResource(): void
     {
         $stream = new ResourceInputStream(\STDIN);
 
-        $this->assertSame(\STDIN, $stream->getResource());
+        self::assertSame(\STDIN, $stream->getResource());
     }
 
-    public function testNonStream()
+    public function testNonStream(): void
     {
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a valid stream");
@@ -22,7 +22,7 @@ class ResourceInputStreamTest extends AsyncTestCase
         new ResourceInputStream(42);
     }
 
-    public function testNotReadable()
+    public function testNotReadable(): void
     {
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a readable stream");
@@ -30,7 +30,7 @@ class ResourceInputStreamTest extends AsyncTestCase
         new ResourceInputStream(\STDOUT);
     }
 
-    public function testClosedRemoteSocketWithFork()
+    public function testClosedRemoteSocketWithFork(): ?\Generator
     {
         $server = \stream_socket_server("tcp://127.0.0.1:0");
         $address = \stream_socket_get_name($server, false);

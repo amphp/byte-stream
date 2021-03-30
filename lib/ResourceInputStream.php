@@ -167,7 +167,7 @@ final class ResourceInputStream implements InputStream
      */
     public function close()
     {
-        if ($this->resource) {
+        if (\is_resource($this->resource)) {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
 
