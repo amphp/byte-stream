@@ -2,10 +2,10 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
-use Amp\Promise;
+use Revolt\Future\Deferred;
+use Revolt\Future\Future;
 
-class OutputBuffer implements OutputStream, Promise
+class OutputBuffer implements OutputStream
 {
     /** @var Deferred */
     private Deferred $deferred;
@@ -39,12 +39,12 @@ class OutputBuffer implements OutputStream, Promise
         $this->contents .= $finalData;
         $this->closed = true;
 
-        $this->deferred->resolve($this->contents);
-        $this->contents = "";
+        $this->deferred->complete($this->contents);
+        $this->contents = '';
     }
 
-    public function onResolve(callable $onResolved): void
+    public function buffer(): Future
     {
-        $this->deferred->promise()->onResolve($onResolved);
+        return $this->deferred->getFuture();
     }
 }

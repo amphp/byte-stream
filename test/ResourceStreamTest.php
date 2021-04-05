@@ -8,9 +8,8 @@ use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
-use function Amp\async;
-use function Amp\await;
 use function Revolt\EventLoop\defer;
+use function Revolt\Future\spawn;
 
 class ResourceStreamTest extends AsyncTestCase
 {
@@ -76,12 +75,12 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat(".", self::LARGE_MESSAGE_SIZE);
 
-        $writePromise = async(fn () => $a->write($message));
+        $writeFuture = spawn(fn () => $a->write($message));
 
         $b->read();
         $b->close();
 
-        await($writePromise);
+        $writeFuture->join();
     }
 
     public function testThrowsOnExternallyShutdownStreamWithSmallPayloads(): void
@@ -95,13 +94,13 @@ class ResourceStreamTest extends AsyncTestCase
         $message = \str_repeat(".", 8192 /* default chunk size */);
 
         for ($i = 0; $i < 128; $i++) {
-            $writePromise = async(fn () => $a->write($message));
+            $writeFuture = spawn(fn () => $a->write($message));
         }
 
         $b->read();
         $b->close();
 
-        await($writePromise);
+        $writeFuture->join();
     }
 
     public function testThrowsOnCloseBeforeWritingComplete(): void
@@ -113,11 +112,11 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat(".", 8192 /* default chunk size */);
 
-        $writePromise = async(fn () => $a->write($message));
+        $writeFuture = spawn(fn () => $a->write($message));
 
         $a->close();
 
-        await($writePromise);
+        $writeFuture->join();
     }
 
     public function testThrowsOnStreamNotWritable(): void
@@ -162,8 +161,8 @@ class ResourceStreamTest extends AsyncTestCase
         /** @noinspection PhpUnusedLocalVariableInspection Required to keep reference */
         [$a, $b] = $this->getStreamPair();
 
-        async(fn () => $b->read()); // Will not resolve.
-        await(async(fn () => $b->read()));
+        spawn(fn () => $b->read()); // Will not resolve.
+        spawn(fn () => $b->read())->join();
     }
 
     public function testResolveSuccessOnClosedStream(): void

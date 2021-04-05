@@ -7,9 +7,8 @@ use Amp\ByteStream\InputStream;
 use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PipelineSource;
-use function Amp\async;
-use function Amp\await;
 use function Amp\ByteStream\buffer;
+use function Revolt\Future\spawn;
 
 class Base64EncodingInputStreamTest extends AsyncTestCase
 {
@@ -19,7 +18,7 @@ class Base64EncodingInputStreamTest extends AsyncTestCase
 
     public function testRead(): void
     {
-        $promise = async(fn () => buffer($this->stream));
+        $future = spawn(fn () => buffer($this->stream));
 
         $this->source->emit('f');
         $this->source->emit('o');
@@ -30,7 +29,7 @@ class Base64EncodingInputStreamTest extends AsyncTestCase
         $this->source->emit('r');
         $this->source->complete();
 
-        $this->assertSame('Zm9vLmJhcg==', await($promise));
+        self::assertSame('Zm9vLmJhcg==', $future->join());
     }
 
     protected function setUp(): void

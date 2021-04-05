@@ -6,7 +6,6 @@ use Amp\ByteStream\Base64\Base64DecodingOutputStream;
 use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
-use function Amp\await;
 
 class Base64DecodingOutputStreamTest extends AsyncTestCase
 {
@@ -20,7 +19,7 @@ class Base64DecodingOutputStreamTest extends AsyncTestCase
         $stream->write('vLmJhcg==');
         $stream->end();
 
-        self::assertSame('foo.bar', await($buffer));
+        self::assertSame('foo.bar', $buffer->buffer()->join());
     }
 
     public function testEnd(): void
@@ -32,7 +31,7 @@ class Base64DecodingOutputStreamTest extends AsyncTestCase
         $stream->write('');
         $stream->end('vLmJhcg==');
 
-        self::assertSame('foo.bar', await($buffer));
+        self::assertSame('foo.bar', $buffer->buffer()->join());
     }
 
     public function testInvalidDataMissingPadding(): void

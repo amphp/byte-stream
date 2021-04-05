@@ -61,6 +61,10 @@
         {
             "type": "vcs",
             "url": "git@github.com:revolt-php/event-loop.git"
+        },
+        {
+            "type": "vcs",
+            "url": "git@github.com:revolt-php/future.git"
         }
     ]
 }

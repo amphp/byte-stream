@@ -4,9 +4,9 @@ namespace Amp\ByteStream;
 
 use Amp\AsyncGenerator;
 use Amp\Pipeline;
-use Amp\Promise;
 use Revolt\EventLoop\Loop;
-use function Amp\async;
+use Revolt\Future\Future;
+use function Revolt\Future\spawn;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -27,11 +27,11 @@ if (!\defined('STDERR')) {
  * @param InputStream  $source
  * @param OutputStream $destination
  *
- * @return Promise<int> Resolves with the number of bytes written to the destination.
+ * @return Future<int> Resolves with the number of bytes written to the destination.
  */
-function pipe(InputStream $source, OutputStream $destination): Promise
+function pipe(InputStream $source, OutputStream $destination): Future
 {
-    return async(function () use ($source, $destination): int {
+    return spawn(function () use ($source, $destination): int {
         $written = 0;
 
         while (($chunk = $source->read()) !== null) {
@@ -51,7 +51,7 @@ function pipe(InputStream $source, OutputStream $destination): Promise
  */
 function buffer(InputStream $source): string
 {
-    $buffer = "";
+    $buffer = '';
 
     while (($chunk = $source->read()) !== null) {
         $buffer .= $chunk;

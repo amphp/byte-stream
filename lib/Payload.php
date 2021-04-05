@@ -2,11 +2,10 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
-use Amp\Promise;
-use function Amp\async;
-use function Amp\await;
+use Revolt\Future\Deferred;
+use Revolt\Future\Future;
 use function Revolt\EventLoop\defer;
+use function Revolt\Future\spawn;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
@@ -17,13 +16,10 @@ class Payload implements InputStream
 {
     private InputStream $stream;
 
-    private Promise $promise;
+    private Future $future;
 
-    private Promise $lastRead;
+    private Future $lastRead;
 
-    /**
-     * @param InputStream $stream
-     */
     public function __construct(InputStream $stream)
     {
         $this->stream = $stream;
@@ -31,7 +27,7 @@ class Payload implements InputStream
 
     public function __destruct()
     {
-        if (!isset($this->promise)) {
+        if (!isset($this->future)) {
             defer(fn () => $this->consume());
         }
     }
@@ -43,18 +39,18 @@ class Payload implements InputStream
      */
     final public function read(): ?string
     {
-        if (isset($this->promise)) {
+        if (isset($this->future)) {
             throw new \Error("Cannot stream message data once a buffered message has been requested");
         }
 
         $deferred = new Deferred;
-        $this->lastRead = $deferred->promise();
+        $this->lastRead = $deferred->getFuture();
 
         try {
             $chunk = $this->stream->read();
-            $deferred->resolve($chunk !== null);
+            $deferred->complete($chunk !== null);
         } catch (\Throwable $exception) {
-            $deferred->fail($exception);
+            $deferred->error($exception);
             throw $exception;
         }
 
@@ -68,13 +64,13 @@ class Payload implements InputStream
      */
     final public function buffer(): string
     {
-        if (isset($this->promise)) {
-            return await($this->promise);
+        if (isset($this->future)) {
+            return $this->future->join();
         }
 
-        return await($this->promise = async(function (): string {
+        return ($this->future = spawn(function (): string {
             $buffer = '';
-            if (isset($this->lastRead) && !await($this->lastRead)) {
+            if (isset($this->lastRead) && !$this->lastRead->join()) {
                 return $buffer;
             }
 
@@ -83,13 +79,13 @@ class Payload implements InputStream
             }
 
             return $buffer;
-        }));
+        }))->join();
     }
 
     private function consume(): void
     {
         try {
-            if (isset($this->lastRead) && !await($this->lastRead)) {
+            if (isset($this->lastRead) && !$this->lastRead->join()) {
                 return;
             }
 

@@ -5,7 +5,6 @@ namespace Amp\ByteStream\Test\Base64;
 use Amp\ByteStream\Base64\Base64EncodingOutputStream;
 use Amp\ByteStream\OutputBuffer;
 use Amp\PHPUnit\AsyncTestCase;
-use function Amp\await;
 
 class Base64EncodingOutputStreamTest extends AsyncTestCase
 {
@@ -19,7 +18,7 @@ class Base64EncodingOutputStreamTest extends AsyncTestCase
         $stream->write('bar');
         $stream->end();
 
-        self::assertSame('Zm9vLmJhcg==', await($buffer));
+        self::assertSame('Zm9vLmJhcg==', $buffer->buffer()->join());
     }
 
     public function testEnd(): void
@@ -32,6 +31,6 @@ class Base64EncodingOutputStreamTest extends AsyncTestCase
         $stream->write('');
         $stream->end('bar');
 
-        self::assertSame('Zm9vLmJhcg==', await($buffer));
+        self::assertSame('Zm9vLmJhcg==', $buffer->buffer()->join());
     }
 }

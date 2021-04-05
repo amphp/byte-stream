@@ -10,8 +10,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\PipelineSource;
 use Revolt\EventLoop\Loop;
-use function Amp\async;
-use function Amp\await;
+use function Revolt\Future\spawn;
 
 class PayloadTest extends AsyncTestCase
 {
@@ -124,7 +123,7 @@ class PayloadTest extends AsyncTestCase
         $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($value);
-        $emitter->fail($exception);
+        $emitter->error($exception);
 
         $callable = $this->createCallback(1);
 
@@ -148,13 +147,13 @@ class PayloadTest extends AsyncTestCase
         $emitter = new PipelineSource;
         $stream = new Payload(new PipelineStream($emitter->pipe()));
 
-        $readPromise = async(fn () => $stream->read());
-        $emitter->fail($exception);
+        $readFuture = spawn(fn () => $stream->read());
+        $emitter->error($exception);
 
         $callable = $this->createCallback(1);
 
         try {
-            await($readPromise);
+            $readFuture->join();
 
             self::fail("No exception has been thrown");
         } catch (TestException $reason) {
@@ -216,11 +215,11 @@ class PayloadTest extends AsyncTestCase
     {
         $emitter = new PipelineSource;
         $stream = new Payload(new PipelineStream($emitter->pipe()));
-        async(fn () => $stream->read());
+        spawn(fn () => $stream->read());
 
         $this->expectException(PendingReadError::class);
 
-        await(async(fn () => $stream->read()));
+        spawn(fn () => $stream->read())->join();
     }
 
     public function testReadAfterBuffer()

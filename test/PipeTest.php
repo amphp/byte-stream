@@ -6,7 +6,6 @@ use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
-use function Amp\await;
 use function Amp\ByteStream\pipe;
 
 class PipeTest extends AsyncTestCase
@@ -16,9 +15,9 @@ class PipeTest extends AsyncTestCase
         $stream = new PipelineStream(Pipeline\fromIterable(["abc", "def"]));
         $buffer = new OutputBuffer;
 
-        self::assertSame(6, await(pipe($stream, $buffer)));
+        self::assertSame(6, pipe($stream, $buffer)->join());
 
         $buffer->end();
-        self::assertSame("abcdef", await($buffer));
+        self::assertSame("abcdef", $buffer->buffer()->join());
     }
 }

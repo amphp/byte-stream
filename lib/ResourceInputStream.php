@@ -2,9 +2,8 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
 use Revolt\EventLoop\Loop;
-use function Amp\await;
+use Revolt\EventLoop\Suspension;
 
 /**
  * Input stream abstraction for PHP's stream resources.
@@ -18,7 +17,7 @@ final class ResourceInputStream implements InputStream
 
     private string $watcher;
 
-    private ?Deferred $deferred = null;
+    private ?Suspension $suspension = null;
 
     private bool $readable = true;
 
@@ -49,10 +48,10 @@ final class ResourceInputStream implements InputStream
         $this->resource = &$stream;
         $this->chunkSize = &$chunkSize;
 
-        $deferred = &$this->deferred;
+        $suspension = &$this->suspension;
         $readable = &$this->readable;
         $this->watcher = Loop::onReadable($this->resource, static function ($watcher) use (
-            &$deferred,
+            &$suspension,
             &$readable,
             &$stream,
             &$chunkSize,
@@ -81,11 +80,10 @@ final class ResourceInputStream implements InputStream
                 Loop::disable($watcher);
             }
 
-            $temp = $deferred;
-            $deferred = null;
+            \assert($suspension instanceof Suspension);
 
-            \assert($temp instanceof Deferred);
-            $temp->resolve($data);
+            $suspension->resume($data);
+            $suspension = null;
         });
 
         Loop::disable($this->watcher);
@@ -94,7 +92,7 @@ final class ResourceInputStream implements InputStream
     /** @inheritdoc */
     public function read(): ?string
     {
-        if ($this->deferred !== null) {
+        if ($this->suspension !== null) {
             throw new PendingReadError;
         }
 
@@ -110,9 +108,9 @@ final class ResourceInputStream implements InputStream
         }
 
         Loop::enable($this->watcher);
-        $this->deferred = new Deferred;
+        $this->suspension = Loop::createSuspension();
 
-        return await($this->deferred->promise());
+        return $this->suspension->suspend();
     }
 
     /**
@@ -120,11 +118,11 @@ final class ResourceInputStream implements InputStream
      */
     public function close(): void
     {
-        if ($this->resource && \get_resource_type($this->resource) === 'stream') {
+        if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
 
-            if ($meta && \strpos($meta["mode"], "+") !== false) {
+            if ($meta && \str_contains($meta["mode"], "+")) {
                 @\stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
             } else {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
@@ -191,10 +189,9 @@ final class ResourceInputStream implements InputStream
         $this->readable = false;
         $this->resource = null;
 
-        if ($this->deferred !== null) {
-            $deferred = $this->deferred;
-            $this->deferred = null;
-            $deferred->resolve();
+        if ($this->suspension !== null) {
+            $this->suspension->resume(null);
+            $this->suspension = null;
         }
 
         Loop::cancel($this->watcher);

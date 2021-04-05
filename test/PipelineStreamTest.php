@@ -41,7 +41,7 @@ class PipelineStreamTest extends AsyncTestCase
         $stream = new PipelineStream($source->pipe());
 
         $source->emit($value);
-        $source->fail($exception);
+        $source->error($exception);
 
         $callable = $this->createCallback(1);
 

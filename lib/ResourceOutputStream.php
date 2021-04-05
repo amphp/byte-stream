@@ -2,9 +2,8 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
 use Revolt\EventLoop\Loop;
-use function Amp\await;
+use Revolt\Future\Deferred;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -70,7 +69,7 @@ final class ResourceOutputStream implements OutputStream
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        $deferred?->resolve(0);
+                        $deferred?->complete(null);
                         continue;
                     }
 
@@ -125,17 +124,17 @@ final class ResourceOutputStream implements OutputStream
                         return;
                     }
 
-                    $deferred?->resolve($written + $previous);
+                    $deferred?->complete(null);
                 }
             } catch (\Throwable $exception) {
                 $resource = null;
                 $writable = false;
 
                 /** @psalm-suppress PossiblyUndefinedVariable */
-                $deferred?->fail($exception);
+                $deferred?->error($exception);
                 while (!$writes->isEmpty()) {
                     [, , $deferred] = $writes->shift();
-                    $deferred?->fail($exception);
+                    $deferred?->error($exception);
                 }
 
                 Loop::cancel($watcher);
@@ -178,7 +177,7 @@ final class ResourceOutputStream implements OutputStream
      */
     public function close(): void
     {
-        if ($this->resource && \get_resource_type($this->resource) === 'stream') {
+        if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
 
@@ -211,7 +210,11 @@ final class ResourceOutputStream implements OutputStream
         $this->free();
     }
 
-    private function send(string $data, bool $end = false): int
+    /**
+     * @throws ClosedException
+     * @throws StreamException
+     */
+    private function send(string $data, bool $end = false): void
     {
         if (!$this->writable) {
             throw new ClosedException("The stream is not writable");
@@ -229,7 +232,8 @@ final class ResourceOutputStream implements OutputStream
                 if ($end) {
                     $this->close();
                 }
-                return 0;
+
+                return;
             }
 
             if (!\is_resource($this->resource) || (($metaData = @\stream_get_meta_data($this->resource)) && $metaData['eof'])) {
@@ -264,7 +268,8 @@ final class ResourceOutputStream implements OutputStream
                 if ($end) {
                     $this->close();
                 }
-                return $written;
+
+                return;
             }
 
             $data = \substr($data, $written);
@@ -281,13 +286,11 @@ final class ResourceOutputStream implements OutputStream
 
         Loop::enable($this->watcher);
         $this->writes->push([$data, $written, $deferred = new Deferred]);
-        $bytes = await($deferred->promise());
+        $deferred->getFuture()->join();
 
         if ($end) {
             $this->close();
         }
-
-        return $bytes;
     }
 
     /**
@@ -308,7 +311,7 @@ final class ResourceOutputStream implements OutputStream
                 do {
                     /** @var Deferred|null $deferred */
                     [, , $deferred] = $this->writes->shift();
-                    $deferred?->fail($exception);
+                    $deferred?->error($exception);
                 } while (!$this->writes->isEmpty());
             });
         }
