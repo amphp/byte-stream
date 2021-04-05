@@ -5,16 +5,17 @@
 
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
-use Amp\Loop;
+use Revolt\EventLoop\Driver\StreamSelectDriver;
+use Revolt\EventLoop\Loop;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-Loop::set(new Loop\NativeDriver());
+Loop::setDriver(new StreamSelectDriver);
 
 $args = \getopt('i:o:t:');
 $if = $args['i'] ?? '/dev/zero';
 $of = $args['o'] ?? '/dev/null';
-$t  = (int) ($args['t'] ?? 30);
+$t = (int) ($args['t'] ?? 30);
 
 \assert(\is_string($if) && \is_string($of));
 
@@ -23,8 +24,8 @@ $if = \preg_replace('(^/dev/fd/)', 'php://fd/', $if);
 $of = \preg_replace('(^/dev/fd/)', 'php://fd/', $of);
 
 $stderr = new ResourceOutputStream(STDERR);
-$in = new ResourceInputStream(\fopen($if, 'r'), 65536 /* Default size used by React to allow comparisons */);
-$out = new ResourceOutputStream(\fopen($of, 'w'));
+$in = new ResourceInputStream(\fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
+$out = new ResourceOutputStream(\fopen($of, 'wb'));
 
 if (\extension_loaded('xdebug')) {
     $stderr->write('NOTICE: The "xdebug" extension is loaded, this has a major impact on performance.' . PHP_EOL);
@@ -38,16 +39,16 @@ try {
     $stderr->write("NOTICE: Assertions are enabled, this has a major impact on performance." . PHP_EOL);
 }
 
-$stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...'. PHP_EOL);
+$stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...' . PHP_EOL);
 
 Loop::delay($t * 1000, [$in, "close"]);
 
 $start = \microtime(true);
-
 $bytes = 0;
 
 while (($chunk = $in->read()) !== null) {
-    $bytes += $out->write($chunk);
+    $out->write($chunk);
+    $bytes += \strlen($chunk);
 }
 
 $t = \microtime(true) - $start;
@@ -55,7 +56,7 @@ $t = \microtime(true) - $start;
 $resource = $out->getResource();
 \assert($resource !== null);
 
-$bytes = \ftell($resource);
+$bytesFormatted = \round($bytes / 1024 / 1024 / $t, 1);
 
-$stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . \round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
+$stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . $bytesFormatted . ' MiB/s' . PHP_EOL);
 $stderr->write('peak memory usage of ' . \round(\memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);
