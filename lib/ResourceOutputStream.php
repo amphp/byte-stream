@@ -73,10 +73,7 @@ final class ResourceOutputStream implements OutputStream
                         continue;
                     }
 
-                    if (!\is_resource($stream)
-                        || \get_resource_type($stream) !== 'stream'
-                        || (($metaData = @\stream_get_meta_data($stream)) && $metaData['eof'])
-                    ) {
+                    if (!\is_resource($stream)) {
                         throw new ClosedException("The stream was closed by the peer");
                     }
 
@@ -88,13 +85,7 @@ final class ResourceOutputStream implements OutputStream
                         $written = @\fwrite($stream, $data);
                     }
 
-                    \assert(
-                        $written !== false || \PHP_VERSION_ID >= 70400, // PHP 7.4+ returns false on EPIPE.
-                        "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the still referenced in the loop."
-                    );
-
-                    // PHP 7.4.0 and 7.4.1 may return false on EAGAIN.
-                    if ($written === false && \PHP_VERSION_ID >= 70402) {
+                    if ($written === false) {
                         $message = "Failed to write to stream";
                         if ($error = \error_get_last()) {
                             $message .= \sprintf("; %s", $error["message"]);
@@ -236,7 +227,7 @@ final class ResourceOutputStream implements OutputStream
                 return;
             }
 
-            if (!\is_resource($this->resource) || (($metaData = @\stream_get_meta_data($this->resource)) && $metaData['eof'])) {
+            if (!\is_resource($this->resource)) {
                 throw new ClosedException("The stream was closed by the peer");
             }
 
@@ -248,21 +239,13 @@ final class ResourceOutputStream implements OutputStream
                 $written = @\fwrite($this->resource, $data);
             }
 
-            \assert(
-                $written !== false || \PHP_VERSION_ID >= 70400, // PHP 7.4+ returns false on EPIPE.
-                "Trying to write on a previously fclose()'d resource. Do NOT manually fclose() resources the still referenced in the loop."
-            );
-
-            // PHP 7.4.0 and 7.4.1 may return false on EAGAIN.
-            if ($written === false && \PHP_VERSION_ID >= 70402) {
+            if ($written === false) {
                 $message = "Failed to write to stream";
                 if ($error = \error_get_last()) {
                     $message .= \sprintf("; %s", $error["message"]);
                 }
                 throw new StreamException($message);
             }
-
-            $written = (int) $written; // Cast potential false to 0.
 
             if ($length === $written) {
                 if ($end) {
@@ -286,7 +269,7 @@ final class ResourceOutputStream implements OutputStream
 
         Loop::enable($this->watcher);
         $this->writes->push([$data, $written, $suspension = Loop::createSuspension()]);
-        $bytes = $suspension->suspend();
+        $suspension->suspend();
 
         if ($end) {
             $this->close();
