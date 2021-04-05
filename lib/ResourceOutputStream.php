@@ -3,7 +3,7 @@
 namespace Amp\ByteStream;
 
 use Revolt\EventLoop\Loop;
-use Revolt\Future\Deferred;
+use Revolt\EventLoop\Suspension;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -64,12 +64,12 @@ final class ResourceOutputStream implements OutputStream
 
             try {
                 while (!$writes->isEmpty()) {
-                    /** @var Deferred|null $deferred */
-                    [$data, $previous, $deferred] = $writes->shift();
+                    /** @var Suspension|null $suspension */
+                    [$data, $previous, $suspension] = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        $deferred?->complete(null);
+                        $suspension?->resume(0);
                         continue;
                     }
 
@@ -112,7 +112,7 @@ final class ResourceOutputStream implements OutputStream
                             throw new StreamException($message);
                         }
 
-                        $writes->unshift([$data, $previous, $deferred]);
+                        $writes->unshift([$data, $previous, $suspension]);
                         return;
                     }
 
@@ -120,21 +120,21 @@ final class ResourceOutputStream implements OutputStream
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
-                        $writes->unshift([$data, $written + $previous, $deferred]);
+                        $writes->unshift([$data, $written + $previous, $suspension]);
                         return;
                     }
 
-                    $deferred?->complete(null);
+                    $suspension?->resume($written + $previous);
                 }
             } catch (\Throwable $exception) {
                 $resource = null;
                 $writable = false;
 
                 /** @psalm-suppress PossiblyUndefinedVariable */
-                $deferred?->error($exception);
+                $suspension?->throw($exception);
                 while (!$writes->isEmpty()) {
-                    [, , $deferred] = $writes->shift();
-                    $deferred?->error($exception);
+                    [, , $suspension] = $writes->shift();
+                    $suspension?->throw($exception);
                 }
 
                 Loop::cancel($watcher);
@@ -285,8 +285,8 @@ final class ResourceOutputStream implements OutputStream
         }
 
         Loop::enable($this->watcher);
-        $this->writes->push([$data, $written, $deferred = new Deferred]);
-        $deferred->getFuture()->join();
+        $this->writes->push([$data, $written, $suspension = Loop::createSuspension()]);
+        $bytes = $suspension->suspend();
 
         if ($end) {
             $this->close();
@@ -309,9 +309,9 @@ final class ResourceOutputStream implements OutputStream
             Loop::defer(function (): void {
                 $exception = new ClosedException("The socket was closed before writing completed");
                 do {
-                    /** @var Deferred|null $deferred */
-                    [, , $deferred] = $this->writes->shift();
-                    $deferred?->error($exception);
+                    /** @var Suspension|null $suspension */
+                    [, , $suspension] = $this->writes->shift();
+                    $suspension?->throw($exception);
                 } while (!$this->writes->isEmpty());
             });
         }
