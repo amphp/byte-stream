@@ -23,8 +23,8 @@ $if = \preg_replace('(^/dev/fd/)', 'php://fd/', $if);
 $of = \preg_replace('(^/dev/fd/)', 'php://fd/', $of);
 
 $stderr = new ResourceOutputStream(STDERR);
-$in = new ResourceInputStream(\fopen($if, 'r'), 65536 /* Default size used by React to allow comparisons */);
-$out = new ResourceOutputStream(\fopen($of, 'w'));
+$in = new ResourceInputStream(\fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
+$out = new ResourceOutputStream(\fopen($of, 'wb'));
 
 if (\extension_loaded('xdebug')) {
     $stderr->write('NOTICE: The "xdebug" extension is loaded, this has a major impact on performance.' . PHP_EOL);
@@ -44,18 +44,17 @@ Loop::delay($t * 1000, [$in, "close"]);
 
 Loop::run(function () use ($stderr, $in, $out) {
     $start = \microtime(true);
+    $bytes = 0;
 
     while (($chunk = yield $in->read()) !== null) {
         yield $out->write($chunk);
+        $bytes += \strlen($chunk);
     }
 
     $t = \microtime(true) - $start;
 
-    $resource = $out->getResource();
-    \assert($resource !== null);
+    $bytesFormatted = \round($bytes / 1024 / 1024 / $t, 1);
 
-    $bytes = \ftell($resource);
-
-    $stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . \round($bytes / 1024 / 1024 / $t, 1) . ' MiB/s' . PHP_EOL);
+    $stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . $bytesFormatted . ' MiB/s' . PHP_EOL);
     $stderr->write('peak memory usage of ' . \round(\memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);
 });
