@@ -178,7 +178,7 @@ final class ResourceOutputStream implements OutputStream
      */
     public function close(): void
     {
-        if ($this->resource && \get_resource_type($this->resource) === 'stream') {
+        if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
             $meta = @\stream_get_meta_data($this->resource);
 

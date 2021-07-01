@@ -14,7 +14,7 @@ use function Amp\await;
 
 class ZlibOutputStreamTest extends AsyncTestCase
 {
-    public function testWrite()
+    public function testWrite(): void
     {
         $file1 = __DIR__ . "/fixtures/foobar.txt";
         $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
@@ -36,10 +36,10 @@ class ZlibOutputStreamTest extends AsyncTestCase
             $buffer .= $chunk;
         }
 
-        $this->assertSame(\file_get_contents($file1), $buffer);
+        self::assertSame(\file_get_contents($file1), $buffer);
     }
 
-    public function testThrowsOnWritingToClosedContext()
+    public function testThrowsOnWritingToClosedContext(): void
     {
         $this->expectException(ClosedException::class);
 
@@ -48,7 +48,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $gzStream->write("bar");
     }
 
-    public function testThrowsOnEndingToClosedContext()
+    public function testThrowsOnEndingToClosedContext(): void
     {
         $this->expectException(ClosedException::class);
 
@@ -57,14 +57,25 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $gzStream->end("bar");
     }
 
-    public function testGetEncoding()
+    public function testGetEncoding(): void
     {
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
 
-        $this->assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
+        self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
 
-    public function testGetOptions()
+    public function testInvalidEncoding(): void
+    {
+        if (\PHP_VERSION_ID < 80000) {
+            $this->expectException(StreamException::class);
+        } else {
+            $this->expectException(\ValueError::class);
+        }
+
+        new ZlibOutputStream(new OutputBuffer(), 1337);
+    }
+
+    public function testGetOptions(): void
     {
         $options = [
             "level" => -1,
@@ -75,6 +86,17 @@ class ZlibOutputStreamTest extends AsyncTestCase
 
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, $options);
 
-        $this->assertSame($options, $gzStream->getOptions());
+        self::assertSame($options, $gzStream->getOptions());
+    }
+
+    public function testInvalidOptions(): void
+    {
+        if (\PHP_VERSION_ID < 80000) {
+            $this->expectException(StreamException::class);
+        } else {
+            $this->expectException(\ValueError::class);
+        }
+
+        new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
     }
 }
