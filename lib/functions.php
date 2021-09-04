@@ -5,8 +5,8 @@ namespace Amp\ByteStream;
 use Amp\AsyncGenerator;
 use Amp\Pipeline;
 use Revolt\EventLoop\Loop;
-use Revolt\Future\Future;
-use function Revolt\Future\spawn;
+use Amp\Future;
+use function Amp\Future\spawn;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -68,16 +68,9 @@ function buffer(InputStream $source): string
  */
 function getInputBufferStream(): ResourceInputStream
 {
-    static $key = InputStream::class . '\\input';
-
-    $stream = Loop::getState($key);
-
-    if (!$stream) {
-        $stream = new ResourceInputStream(\fopen('php://input', 'rb'));
-        Loop::setState($key, $stream);
-    }
-
-    return $stream;
+    static $map;
+    $map ??= new \WeakMap();
+    return $map[Loop::getDriver()] ??= new ResourceInputStream(\fopen('php://input', 'rb'));
 }
 
 /**
@@ -87,16 +80,9 @@ function getInputBufferStream(): ResourceInputStream
  */
 function getOutputBufferStream(): ResourceOutputStream
 {
-    static $key = OutputStream::class . '\\output';
-
-    $stream = Loop::getState($key);
-
-    if (!$stream) {
-        $stream = new ResourceOutputStream(\fopen('php://output', 'wb'));
-        Loop::setState($key, $stream);
-    }
-
-    return $stream;
+    static $map;
+    $map ??= new \WeakMap();
+    return $map[Loop::getDriver()] ??= new ResourceOutputStream(\fopen('php://output', 'wb'));
 }
 
 /**
@@ -106,16 +92,9 @@ function getOutputBufferStream(): ResourceOutputStream
  */
 function getStdin(): ResourceInputStream
 {
-    static $key = InputStream::class . '\\stdin';
-
-    $stream = Loop::getState($key);
-
-    if (!$stream) {
-        $stream = new ResourceInputStream(\STDIN);
-        Loop::setState($key, $stream);
-    }
-
-    return $stream;
+    static $map;
+    $map ??= new \WeakMap();
+    return $map[Loop::getDriver()] ??= new ResourceInputStream(\STDIN);
 }
 
 /**
@@ -125,16 +104,9 @@ function getStdin(): ResourceInputStream
  */
 function getStdout(): ResourceOutputStream
 {
-    static $key = OutputStream::class . '\\stdout';
-
-    $stream = Loop::getState($key);
-
-    if (!$stream) {
-        $stream = new ResourceOutputStream(\STDOUT);
-        Loop::setState($key, $stream);
-    }
-
-    return $stream;
+    static $map;
+    $map ??= new \WeakMap();
+    return $map[Loop::getDriver()] ??= new ResourceOutputStream(\STDOUT);
 }
 
 /**
@@ -144,16 +116,9 @@ function getStdout(): ResourceOutputStream
  */
 function getStderr(): ResourceOutputStream
 {
-    static $key = OutputStream::class . '\\stderr';
-
-    $stream = Loop::getState($key);
-
-    if (!$stream) {
-        $stream = new ResourceOutputStream(\STDERR);
-        Loop::setState($key, $stream);
-    }
-
-    return $stream;
+    static $map;
+    $map ??= new \WeakMap();
+    return $map[Loop::getDriver()] ??= new ResourceOutputStream(\STDERR);
 }
 
 function parseLineDelimitedJson(InputStream $stream, bool $assoc = false, int $depth = 512, int $options = 0): Pipeline

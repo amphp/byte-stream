@@ -8,8 +8,8 @@ use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\Future\spawn;
 use function Revolt\EventLoop\defer;
-use function Revolt\Future\spawn;
 
 class ResourceStreamTest extends AsyncTestCase
 {
@@ -161,8 +161,12 @@ class ResourceStreamTest extends AsyncTestCase
         /** @noinspection PhpUnusedLocalVariableInspection Required to keep reference */
         [$a, $b] = $this->getStreamPair();
 
-        spawn(fn () => $b->read()); // Will not resolve.
-        spawn(fn () => $b->read())->join();
+//        try {
+            spawn(fn () => $b->read()); // Will not resolve.
+            spawn(fn () => $b->read())->join();
+//        } finally {
+//            $b->close();
+//        }
     }
 
     public function testResolveSuccessOnClosedStream(): void

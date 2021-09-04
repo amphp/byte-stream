@@ -16,27 +16,26 @@ class ZlibOutputStreamTest extends AsyncTestCase
 {
     public function testWrite(): void
     {
-        $file1 = __DIR__ . "/fixtures/foobar.txt";
-        $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
+        $file = __DIR__ . "/fixtures/foobar.txt";
 
         $bufferStream = new OutputBuffer();
         $outputStream = new ZlibOutputStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
-        $fileStream = new ResourceInputStream(\fopen($file1, 'rb'));
+        $fileStream = new ResourceInputStream(\fopen($file, 'rb'));
         while (($chunk = $fileStream->read()) !== null) {
             $outputStream->write($chunk);
         }
 
         $outputStream->end();
 
-        $inputStream = new ZlibInputStream(new InMemoryStream(await($bufferStream)), \ZLIB_ENCODING_GZIP);
+        $inputStream = new ZlibInputStream(new InMemoryStream($bufferStream->buffer()->join()), \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $inputStream->read()) !== null) {
             $buffer .= $chunk;
         }
 
-        self::assertStringEqualsFile($file1, $buffer);
+        self::assertStringEqualsFile($file, $buffer);
     }
 
     public function testThrowsOnWritingToClosedContext(): void

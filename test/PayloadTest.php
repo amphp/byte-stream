@@ -10,7 +10,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\PipelineSource;
 use Revolt\EventLoop\Loop;
-use function Revolt\Future\spawn;
+use function Amp\Future\spawn;
 
 class PayloadTest extends AsyncTestCase
 {
@@ -41,7 +41,7 @@ class PayloadTest extends AsyncTestCase
             $emitter->emit($value);
         }
 
-        Loop::delay(5, function () use ($emitter) {
+        Loop::delay(0.005, function () use ($emitter) {
             $emitter->complete();
         });
 

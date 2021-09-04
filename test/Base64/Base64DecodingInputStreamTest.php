@@ -8,8 +8,8 @@ use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PipelineSource;
+use function Amp\Future\spawn;
 use function Amp\ByteStream\buffer;
-use function Revolt\Future\spawn;
 
 class Base64DecodingInputStreamTest extends AsyncTestCase
 {

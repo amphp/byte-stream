@@ -2,8 +2,8 @@
 
 namespace Amp\ByteStream;
 
-use Revolt\Future\Deferred;
-use Revolt\Future\Future;
+use Amp\Deferred;
+use Amp\Future;
 
 class OutputBuffer implements OutputStream
 {

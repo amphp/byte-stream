@@ -20,6 +20,6 @@ class InputStreamChainTest extends AsyncTestCase
 
     private function createStream(array $chunks): InputStream
     {
-        return new PipelineStream(Pipeline\fromIterable($chunks, 1));
+        return new PipelineStream(Pipeline\fromIterable($chunks, 0.01));
     }
 }

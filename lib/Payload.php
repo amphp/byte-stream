@@ -2,10 +2,10 @@
 
 namespace Amp\ByteStream;
 
-use Revolt\Future\Deferred;
-use Revolt\Future\Future;
+use Amp\Deferred;
+use Amp\Future;
+use function Amp\Future\spawn;
 use function Revolt\EventLoop\defer;
-use function Revolt\Future\spawn;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
