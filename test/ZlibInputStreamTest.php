@@ -43,6 +43,17 @@ class ZlibInputStreamTest extends AsyncTestCase
         self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
 
+    public function testInvalidEncoding(): void
+    {
+        if (\PHP_VERSION_ID < 80000) {
+            $this->expectException(StreamException::class);
+        } else {
+            $this->expectException(\ValueError::class);
+        }
+
+        new ZlibInputStream(new InMemoryStream(""), 1337);
+    }
+
     public function testGetOptions(): void
     {
         $options = [

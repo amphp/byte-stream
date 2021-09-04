@@ -47,7 +47,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage("fwrite(): Send of 6 bytes failed with errno=32 Broken pipe");
+        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
 
         $stream->write("foobar");
     }
@@ -64,7 +64,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage("fwrite(): Send of 6 bytes failed with errno=32 Broken pipe");
+        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
 
         // The first write still succeeds somehow...
         $stream->write("foobar");

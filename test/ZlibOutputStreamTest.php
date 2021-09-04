@@ -6,9 +6,11 @@ use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\ResourceInputStream;
+use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\ByteStream\ZlibOutputStream;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\await;
 
 class ZlibOutputStreamTest extends AsyncTestCase
 {
@@ -27,7 +29,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
 
         $outputStream->end();
 
-        $inputStream = new ZlibInputStream(new InMemoryStream($bufferStream->buffer()->join()), \ZLIB_ENCODING_GZIP);
+        $inputStream = new ZlibInputStream(new InMemoryStream(await($bufferStream)), \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $inputStream->read()) !== null) {
@@ -62,6 +64,17 @@ class ZlibOutputStreamTest extends AsyncTestCase
         self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
 
+    public function testInvalidEncoding(): void
+    {
+        if (\PHP_VERSION_ID < 80000) {
+            $this->expectException(StreamException::class);
+        } else {
+            $this->expectException(\ValueError::class);
+        }
+
+        new ZlibOutputStream(new OutputBuffer(), 1337);
+    }
+
     public function testGetOptions(): void
     {
         $options = [
@@ -74,5 +87,16 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, $options);
 
         self::assertSame($options, $gzStream->getOptions());
+    }
+
+    public function testInvalidOptions(): void
+    {
+        if (\PHP_VERSION_ID < 80000) {
+            $this->expectException(StreamException::class);
+        } else {
+            $this->expectException(\ValueError::class);
+        }
+
+        new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
     }
 }
