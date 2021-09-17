@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\AsyncGenerator;
+use Amp\Pipeline\AsyncGenerator;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;

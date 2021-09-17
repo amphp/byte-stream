@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Pipeline;
+use Amp\Pipeline\Pipeline;
 
 final class PipelineStream implements InputStream
 {

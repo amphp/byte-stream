@@ -3,7 +3,6 @@
 namespace Amp\ByteStream;
 
 use Amp\Deferred;
-use Amp\Future;
 
 class OutputBuffer implements OutputStream
 {
@@ -43,8 +42,8 @@ class OutputBuffer implements OutputStream
         $this->contents = '';
     }
 
-    public function buffer(): Future
+    public function buffer(): string
     {
-        return $this->deferred->getFuture();
+        return $this->deferred->getFuture()->join();
     }
 }

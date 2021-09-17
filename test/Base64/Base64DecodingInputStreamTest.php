@@ -7,13 +7,13 @@ use Amp\ByteStream\InputStream;
 use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\PipelineSource;
+use Amp\Pipeline\Subject;
 use function Amp\Future\spawn;
 use function Amp\ByteStream\buffer;
 
 class Base64DecodingInputStreamTest extends AsyncTestCase
 {
-    private PipelineSource $source;
+    private Subject $source;
 
     private InputStream $stream;
 
@@ -62,7 +62,7 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
     {
         parent::setUp();
 
-        $this->source = new PipelineSource;
-        $this->stream = new Base64DecodingInputStream(new PipelineStream($this->source->pipe()));
+        $this->source = new Subject;
+        $this->stream = new Base64DecodingInputStream(new PipelineStream($this->source->asPipeline()));
     }
 }

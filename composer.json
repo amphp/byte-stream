@@ -27,7 +27,8 @@
     ],
     "require": {
         "php": ">=8",
-        "amphp/amp": "dev-v3-revolt"
+        "amphp/amp": "dev-v3-revolt",
+        "amphp/pipeline": "dev-master as 1.0"
     },
     "require-dev": {
         "amphp/phpunit-util": "dev-v2-revolt",

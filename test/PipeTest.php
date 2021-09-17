@@ -15,9 +15,9 @@ class PipeTest extends AsyncTestCase
         $stream = new PipelineStream(Pipeline\fromIterable(["abc", "def"]));
         $buffer = new OutputBuffer;
 
-        self::assertSame(6, pipe($stream, $buffer)->join());
+        self::assertSame(6, pipe($stream, $buffer));
 
         $buffer->end();
-        self::assertSame("abcdef", $buffer->buffer()->join());
+        self::assertSame("abcdef", $buffer->buffer());
     }
 }

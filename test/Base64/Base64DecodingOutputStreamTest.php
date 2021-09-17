@@ -19,7 +19,7 @@ class Base64DecodingOutputStreamTest extends AsyncTestCase
         $stream->write('vLmJhcg==');
         $stream->end();
 
-        self::assertSame('foo.bar', $buffer->buffer()->join());
+        self::assertSame('foo.bar', $buffer->buffer());
     }
 
     public function testEnd(): void
@@ -31,7 +31,7 @@ class Base64DecodingOutputStreamTest extends AsyncTestCase
         $stream->write('');
         $stream->end('vLmJhcg==');
 
-        self::assertSame('foo.bar', $buffer->buffer()->join());
+        self::assertSame('foo.bar', $buffer->buffer());
     }
 
     public function testInvalidDataMissingPadding(): void

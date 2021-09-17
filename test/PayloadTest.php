@@ -8,7 +8,7 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
-use Amp\PipelineSource;
+use Amp\Pipeline\Subject;
 use Revolt\EventLoop\Loop;
 use function Amp\Future\spawn;
 
@@ -18,8 +18,8 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -34,8 +34,8 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -58,8 +58,8 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -80,8 +80,8 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         foreach ($values as $value) {
             $emitter->emit($value);
@@ -96,8 +96,8 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $emitter->emit($values[0]);
 
@@ -119,8 +119,8 @@ class PayloadTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $emitter->emit($value);
         $emitter->error($exception);
@@ -144,8 +144,8 @@ class PayloadTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $readFuture = spawn(fn () => $stream->read());
         $emitter->error($exception);
@@ -164,9 +164,9 @@ class PayloadTest extends AsyncTestCase
 
     public function testEmptyStream()
     {
-        $emitter = new PipelineSource;
+        $emitter = new Subject;
         $emitter->complete();
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         self::assertNull($stream->read());
     }
@@ -175,8 +175,8 @@ class PayloadTest extends AsyncTestCase
     {
         $value = "";
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $emitter->emit($value);
 
@@ -189,8 +189,8 @@ class PayloadTest extends AsyncTestCase
     {
         $value = "abc";
 
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $emitter->emit($value);
         $emitter->complete();
@@ -201,8 +201,8 @@ class PayloadTest extends AsyncTestCase
 
     public function testPendingRead()
     {
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         Loop::delay(0, function () use ($emitter) {
             $emitter->emit("test");
@@ -213,8 +213,8 @@ class PayloadTest extends AsyncTestCase
 
     public function testPendingReadError()
     {
-        $emitter = new PipelineSource;
-        $stream = new Payload(new PipelineStream($emitter->pipe()));
+        $emitter = new Subject;
+        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
         spawn(fn () => $stream->read());
 
         $this->expectException(PendingReadError::class);

@@ -2,11 +2,9 @@
 
 namespace Amp\ByteStream;
 
-use Amp\AsyncGenerator;
-use Amp\Pipeline;
+use Amp\Pipeline\AsyncGenerator;
+use Amp\Pipeline\Pipeline;
 use Revolt\EventLoop\Loop;
-use Amp\Future;
-use function Amp\Future\spawn;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -27,21 +25,19 @@ if (!\defined('STDERR')) {
  * @param InputStream  $source
  * @param OutputStream $destination
  *
- * @return Future<int> Resolves with the number of bytes written to the destination.
+ * @return int The number of bytes written to the destination.
  */
-function pipe(InputStream $source, OutputStream $destination): Future
+function pipe(InputStream $source, OutputStream $destination): int
 {
-    return spawn(function () use ($source, $destination): int {
-        $written = 0;
+    $written = 0;
 
-        while (($chunk = $source->read()) !== null) {
-            $written += \strlen($chunk);
-            $destination->write($chunk);
-            $chunk = null; // free memory
-        }
+    while (($chunk = $source->read()) !== null) {
+        $written += \strlen($chunk);
+        $destination->write($chunk);
+        $chunk = null; // free memory
+    }
 
-        return $written;
-    });
+    return $written;
 }
 
 /**

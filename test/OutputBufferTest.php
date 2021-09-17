@@ -14,7 +14,7 @@ class OutputBufferTest extends AsyncTestCase
         $output->write('foo');
         $output->end();
 
-        self::assertSame('foo', $output->buffer()->join());
+        self::assertSame('foo', $output->buffer());
     }
 
     public function testEnd(): void
@@ -23,7 +23,7 @@ class OutputBufferTest extends AsyncTestCase
         $output->write('foo');
         $output->end('bar');
 
-        self::assertSame('foobar', $output->buffer()->join());
+        self::assertSame('foobar', $output->buffer());
     }
 
     public function testThrowsOnWritingToClosedBuffer(): void
