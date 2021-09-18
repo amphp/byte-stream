@@ -22,7 +22,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
 
         $fileStream = new ResourceInputStream(\fopen($file, 'rb'));
         while (($chunk = $fileStream->read()) !== null) {
-            $outputStream->write($chunk);
+            $outputStream->write($chunk)->join();
         }
 
         $outputStream->end();

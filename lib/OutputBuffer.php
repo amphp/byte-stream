@@ -3,6 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Deferred;
+use Amp\Future;
 
 class OutputBuffer implements OutputStream
 {
@@ -20,19 +21,20 @@ class OutputBuffer implements OutputStream
         $this->deferred = new Deferred;
     }
 
-    public function write(string $data): void
+    public function write(string $data): Future
     {
         if ($this->closed) {
-            throw new ClosedException("The stream has already been closed.");
+            return Future::error(new ClosedException("The stream has already been closed"));
         }
 
         $this->contents .= $data;
+        return Future::complete(null);
     }
 
-    public function end(string $finalData = ""): void
+    public function end(string $finalData = ""): Future
     {
         if ($this->closed) {
-            throw new ClosedException("The stream has already been closed.");
+            return Future::error(new ClosedException("The stream has already been closed"));
         }
 
         $this->contents .= $finalData;
@@ -40,6 +42,7 @@ class OutputBuffer implements OutputStream
 
         $this->deferred->complete($this->contents);
         $this->contents = '';
+        return Future::complete(null);
     }
 
     public function buffer(): string

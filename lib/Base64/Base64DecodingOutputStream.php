@@ -4,6 +4,7 @@ namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\OutputStream;
 use Amp\ByteStream\StreamException;
+use Amp\Future;
 
 final class Base64DecodingOutputStream implements OutputStream
 {
@@ -21,7 +22,7 @@ final class Base64DecodingOutputStream implements OutputStream
         $this->destination = $destination;
     }
 
-    public function write(string $data): void
+    public function write(string $data): Future
     {
         $this->buffer .= $data;
 
@@ -34,10 +35,10 @@ final class Base64DecodingOutputStream implements OutputStream
         $this->offset += $length - $length % 4;
         $this->buffer = \substr($this->buffer, $length - $length % 4);
 
-        $this->destination->write($chunk);
+        return $this->destination->write($chunk);
     }
 
-    public function end(string $finalData = ""): void
+    public function end(string $finalData = ""): Future
     {
         $this->offset += \strlen($this->buffer);
 
@@ -48,6 +49,6 @@ final class Base64DecodingOutputStream implements OutputStream
 
         $this->buffer = '';
 
-        $this->destination->end($chunk);
+        return $this->destination->end($chunk);
     }
 }

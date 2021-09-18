@@ -2,6 +2,8 @@
 
 namespace Amp\ByteStream;
 
+use Amp\Future;
+
 /**
  * An `OutputStream` allows writing data in chunks. Writers can wait on the returned promises to feel the backpressure.
  */
@@ -12,12 +14,12 @@ interface OutputStream
      *
      * @param string $data Bytes to write.
      *
-     * @return void Returns once the data has been successfully written to the stream.
+     * @return Future<null> Completes once the data has been successfully written to the stream.
      *
-     * @throws ClosedException If the stream has already been closed.
-     * @throws StreamException If writing to the stream fails.
+     * @error ClosedException If the stream has already been closed.
+     * @error StreamException If writing to the stream fails.
      */
-    public function write(string $data): void;
+    public function write(string $data): Future;
 
     /**
      * Marks the stream as no longer writable. Optionally writes a final data chunk before. Note that this is not the
@@ -26,10 +28,10 @@ interface OutputStream
      *
      * @param string $finalData Bytes to write.
      *
-     * @return void Returns once the data has been successfully written to the stream.
+     * @return Future<null> Completes once the data has been successfully written to the stream.
      *
-     * @throws ClosedException If the stream has already been closed.
-     * @throws StreamException If writing to the stream fails.
+     * @error ClosedException If the stream has already been closed.
+     * @error StreamException If writing to the stream fails.
      */
-    public function end(string $finalData = ""): void;
+    public function end(string $finalData = ""): Future;
 }

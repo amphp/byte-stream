@@ -2,6 +2,8 @@
 
 namespace Amp\ByteStream;
 
+use Amp\Future;
+
 /**
  * Allows compression of output streams using Zlib.
  */
@@ -38,10 +40,10 @@ final class ZlibOutputStream implements OutputStream
     }
 
     /** @inheritdoc */
-    public function write(string $data): void
+    public function write(string $data): Future
     {
         if ($this->resource === null) {
-            throw new ClosedException("The stream has already been closed");
+            return Future::error(new ClosedException("The stream has already been closed"));
         }
 
         \assert($this->destination !== null);
@@ -49,11 +51,11 @@ final class ZlibOutputStream implements OutputStream
         $compressed = \deflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
 
         if ($compressed === false) {
-            throw new StreamException("Failed adding data to deflate context");
+            return Future::error(new StreamException("Failed adding data to deflate context"));
         }
 
         try {
-            $this->destination->write($compressed);
+            return $this->destination->write($compressed);
         } catch (\Throwable $e) {
             $this->close();
             throw $e;
@@ -61,10 +63,10 @@ final class ZlibOutputStream implements OutputStream
     }
 
     /** @inheritdoc */
-    public function end(string $finalData = ""): void
+    public function end(string $finalData = ""): Future
     {
         if ($this->resource === null) {
-            throw new ClosedException("The stream has already been closed");
+            return Future::error(new ClosedException("The stream has already been closed"));
         }
 
         \assert($this->destination !== null);
@@ -72,11 +74,11 @@ final class ZlibOutputStream implements OutputStream
         $compressed = \deflate_add($this->resource, $finalData, \ZLIB_FINISH);
 
         if ($compressed === false) {
-            throw new StreamException("Failed adding data to deflate context");
+            return Future::error(new StreamException("Failed adding data to deflate context"));
         }
 
         try {
-            $this->destination->end($compressed);
+            return $this->destination->end($compressed);
         } catch (\Throwable $e) {
             $this->close();
             throw $e;

@@ -3,6 +3,7 @@
 namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\OutputStream;
+use Amp\Future;
 
 final class Base64EncodingOutputStream implements OutputStream
 {
@@ -17,7 +18,7 @@ final class Base64EncodingOutputStream implements OutputStream
         $this->destination = $destination;
     }
 
-    public function write(string $data): void
+    public function write(string $data): Future
     {
         $this->buffer .= $data;
 
@@ -25,14 +26,14 @@ final class Base64EncodingOutputStream implements OutputStream
         $chunk = \base64_encode(\substr($this->buffer, 0, $length - $length % 3));
         $this->buffer = \substr($this->buffer, $length - $length % 3);
 
-        $this->destination->write($chunk);
+        return $this->destination->write($chunk);
     }
 
-    public function end(string $finalData = ""): void
+    public function end(string $finalData = ""): Future
     {
         $chunk = \base64_encode($this->buffer . $finalData);
         $this->buffer = '';
 
-        $this->destination->end($chunk);
+        return $this->destination->end($chunk);
     }
 }
