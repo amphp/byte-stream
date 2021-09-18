@@ -66,7 +66,7 @@ final class ResourceOutputStream implements OutputStream
             try {
                 while (!$writes->isEmpty()) {
                     /** @var Deferred|null $deferred */
-                    [$data, $previous, $deferred] = $writes->shift();
+                    [$data, $previous, $deferred, $end] = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
@@ -104,7 +104,8 @@ final class ResourceOutputStream implements OutputStream
                             throw new StreamException($message);
                         }
 
-                        $writes->unshift([$data, $previous, $deferred]);
+                        $writes->unshift([$data, $previous, $deferred, $end]);
+                        $end = false;
                         return;
                     }
 
@@ -112,7 +113,8 @@ final class ResourceOutputStream implements OutputStream
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
-                        $writes->unshift([$data, $written + $previous, $deferred]);
+                        $writes->unshift([$data, $written + $previous, $deferred, $end]);
+                        $end = false;
                         return;
                     }
 
@@ -120,6 +122,7 @@ final class ResourceOutputStream implements OutputStream
                 }
             } catch (\Throwable $exception) {
                 $writable = false;
+                $end = true;
 
                 /** @psalm-suppress PossiblyUndefinedVariable */
                 $deferred?->error($exception);
@@ -134,7 +137,7 @@ final class ResourceOutputStream implements OutputStream
                     Loop::disable($watcher);
                 }
 
-                if (!$writable && \is_resource($resource)) {
+                if ($end && \is_resource($resource)) {
                     $meta = @\stream_get_meta_data($resource);
                     if ($meta && \str_contains($meta["mode"], "+")) {
                         @\stream_socket_shutdown($resource, \STREAM_SHUT_WR);
@@ -143,7 +146,6 @@ final class ResourceOutputStream implements OutputStream
                     }
                     $resource = null;
                 }
-
             }
         });
 
@@ -267,13 +269,13 @@ final class ResourceOutputStream implements OutputStream
             $chunks = \str_split($data, self::LARGE_CHUNK_SIZE);
             $data = \array_pop($chunks);
             foreach ($chunks as $chunk) {
-                $this->writes->push([$chunk, $written, null]);
+                $this->writes->push([$chunk, $written, null, false]);
                 $written += self::LARGE_CHUNK_SIZE;
             }
         }
 
         Loop::enable($this->watcher);
-        $this->writes->push([$data, $written, $deferred = new Deferred]);
+        $this->writes->push([$data, $written, $deferred = new Deferred, $end]);
         return $deferred->getFuture();
     }
 

@@ -33,7 +33,7 @@ function pipe(InputStream $source, OutputStream $destination): int
 
     while (($chunk = $source->read()) !== null) {
         $written += \strlen($chunk);
-        $destination->write($chunk);
+        $destination->write($chunk)->join();
         $chunk = null; // free memory
     }
 
