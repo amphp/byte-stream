@@ -134,7 +134,7 @@ final class ResourceOutputStream implements OutputStream
                     Loop::disable($watcher);
                 }
 
-                if (!$writable) {
+                if (!$writable && \is_resource($resource)) {
                     $meta = @\stream_get_meta_data($resource);
                     if ($meta && \str_contains($meta["mode"], "+")) {
                         @\stream_socket_shutdown($resource, \STREAM_SHUT_WR);
