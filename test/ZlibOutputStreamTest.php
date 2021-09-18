@@ -42,8 +42,8 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
-        $gzStream->end("foo");
-        $gzStream->write("bar");
+        $gzStream->end("foo")->join();
+        $gzStream->write("bar")->join();
     }
 
     public function testThrowsOnEndingToClosedContext(): void
@@ -51,8 +51,8 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
-        $gzStream->end("foo");
-        $gzStream->end("bar");
+        $gzStream->end("foo")->join();
+        $gzStream->end("bar")->join();
     }
 
     public function testGetEncoding(): void

@@ -9,12 +9,6 @@ use Amp\Future;
  */
 final class ZlibOutputStream implements OutputStream
 {
-    private ?OutputStream $destination;
-
-    private int $encoding;
-
-    private array $options;
-
     /** @var resource|null */
     private $resource;
 
@@ -27,11 +21,11 @@ final class ZlibOutputStream implements OutputStream
      *
      * @see http://php.net/manual/en/function.deflate-init.php
      */
-    public function __construct(OutputStream $destination, int $encoding, array $options = [])
-    {
-        $this->destination = $destination;
-        $this->encoding = $encoding;
-        $this->options = $options;
+    public function __construct(
+        private OutputStream $destination,
+        private int $encoding,
+        private array $options = []
+    ) {
         $this->resource = @\deflate_init($encoding, $options);
 
         if ($this->resource === false) {
@@ -54,12 +48,7 @@ final class ZlibOutputStream implements OutputStream
             return Future::error(new StreamException("Failed adding data to deflate context"));
         }
 
-        try {
-            return $this->destination->write($compressed);
-        } catch (\Throwable $e) {
-            $this->close();
-            throw $e;
-        }
+        return $this->destination->write($compressed);
     }
 
     /** @inheritdoc */
@@ -77,12 +66,9 @@ final class ZlibOutputStream implements OutputStream
             return Future::error(new StreamException("Failed adding data to deflate context"));
         }
 
-        try {
-            return $this->destination->end($compressed);
-        } catch (\Throwable $e) {
-            $this->close();
-            throw $e;
-        }
+        $this->resource = null;
+
+        return $this->destination->end($compressed);
     }
 
     /**
@@ -103,15 +89,5 @@ final class ZlibOutputStream implements OutputStream
     public function getOptions(): array
     {
         return $this->options;
-    }
-
-    /**
-     * @return void
-     * @internal
-     */
-    private function close(): void
-    {
-        $this->resource = null;
-        $this->destination = null;
     }
 }

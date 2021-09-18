@@ -7,12 +7,6 @@ namespace Amp\ByteStream;
  */
 final class ZlibInputStream implements InputStream
 {
-    private ?InputStream $source;
-
-    private int $encoding;
-
-    private array $options;
-
     /** @var resource|null */
     private $resource;
 
@@ -26,11 +20,11 @@ final class ZlibInputStream implements InputStream
      *
      * @see http://php.net/manual/en/function.inflate-init.php
      */
-    public function __construct(InputStream $source, int $encoding, array $options = [])
-    {
-        $this->source = $source;
-        $this->encoding = $encoding;
-        $this->options = $options;
+    public function __construct(
+        private InputStream $source,
+        private int $encoding,
+        private array $options = [],
+    ) {
         $this->resource = @\inflate_init($encoding, $options);
 
         if ($this->resource === false) {
@@ -44,8 +38,6 @@ final class ZlibInputStream implements InputStream
         if ($this->resource === null) {
             return null;
         }
-
-        \assert($this->source !== null);
 
         $data = $this->source->read();
 
@@ -103,6 +95,5 @@ final class ZlibInputStream implements InputStream
     private function close(): void
     {
         $this->resource = null;
-        $this->source = null;
     }
 }

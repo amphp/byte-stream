@@ -5,6 +5,7 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\Pipeline\delay;
 
 class ResourceOutputStreamTest extends AsyncTestCase
 {
@@ -68,6 +69,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
 
         // The first write still succeeds somehow...
         $stream->write("foobar")->join();
+        delay(0.1); // Provide some time for the OS to mark the socket is closed.
         $stream->write("foobar")->join();
     }
 }
