@@ -13,10 +13,10 @@ class Base64EncodingOutputStreamTest extends AsyncTestCase
         $buffer = new OutputBuffer;
         $stream = new Base64EncodingOutputStream($buffer);
 
-        $stream->write('foo')->join();
-        $stream->write('.')->join();
-        $stream->write('bar')->join();
-        $stream->end()->join();
+        $stream->write('foo')->await();
+        $stream->write('.')->await();
+        $stream->write('bar')->await();
+        $stream->end()->await();
 
         self::assertSame('Zm9vLmJhcg==', $buffer->buffer());
     }
@@ -26,10 +26,10 @@ class Base64EncodingOutputStreamTest extends AsyncTestCase
         $buffer = new OutputBuffer;
         $stream = new Base64EncodingOutputStream($buffer);
 
-        $stream->write('foo')->join();
-        $stream->write('.')->join();
-        $stream->write('')->join();
-        $stream->end('bar')->join();
+        $stream->write('foo')->await();
+        $stream->write('.')->await();
+        $stream->write('')->await();
+        $stream->end('bar')->await();
 
         self::assertSame('Zm9vLmJhcg==', $buffer->buffer());
     }

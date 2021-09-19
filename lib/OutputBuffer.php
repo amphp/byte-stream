@@ -47,6 +47,6 @@ class OutputBuffer implements OutputStream
 
     public function buffer(): string
     {
-        return $this->deferred->getFuture()->join();
+        return $this->deferred->getFuture()->await();
     }
 }

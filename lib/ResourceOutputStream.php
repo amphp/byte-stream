@@ -292,14 +292,12 @@ final class ResourceOutputStream implements OutputStream
         $this->writable = false;
 
         if (!$this->writes->isEmpty()) {
-            Loop::defer(function (): void {
-                $exception = new ClosedException("The socket was closed before writing completed");
-                do {
-                    /** @var Deferred|null $deferred */
-                    [, , $deferred] = $this->writes->shift();
-                    $deferred?->error($exception);
-                } while (!$this->writes->isEmpty());
-            });
+            $exception = new ClosedException("The socket was closed before writing completed");
+            do {
+                /** @var Deferred|null $deferred */
+                [, , $deferred] = $this->writes->shift();
+                $deferred?->error($exception);
+            } while (!$this->writes->isEmpty());
         }
 
         Loop::cancel($this->watcher);

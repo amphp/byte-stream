@@ -4,8 +4,8 @@ namespace Amp\ByteStream;
 
 use Amp\Deferred;
 use Amp\Future;
-use function Amp\Future\spawn;
-use function Revolt\EventLoop\defer;
+use function Amp\coroutine;
+use function Revolt\EventLoop\queue;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
@@ -28,7 +28,7 @@ class Payload implements InputStream
     public function __destruct()
     {
         if (!isset($this->future)) {
-            defer(fn () => $this->consume());
+            queue(fn () => $this->consume());
         }
     }
 
@@ -45,6 +45,7 @@ class Payload implements InputStream
 
         $deferred = new Deferred;
         $this->lastRead = $deferred->getFuture();
+        $this->lastRead->ignore();
 
         try {
             $chunk = $this->stream->read();
@@ -65,12 +66,12 @@ class Payload implements InputStream
     final public function buffer(): string
     {
         if (isset($this->future)) {
-            return $this->future->join();
+            return $this->future->await();
         }
 
-        return ($this->future = spawn(function (): string {
+        return ($this->future = coroutine(function (): string {
             $buffer = '';
-            if (isset($this->lastRead) && !$this->lastRead->join()) {
+            if (isset($this->lastRead) && !$this->lastRead->await()) {
                 return $buffer;
             }
 
@@ -79,13 +80,13 @@ class Payload implements InputStream
             }
 
             return $buffer;
-        }))->join();
+        }))->await();
     }
 
     private function consume(): void
     {
         try {
-            if (isset($this->lastRead) && !$this->lastRead->join()) {
+            if (isset($this->lastRead) && !$this->lastRead->await()) {
                 return;
             }
 

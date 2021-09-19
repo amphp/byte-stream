@@ -22,7 +22,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
 
         $fileStream = new ResourceInputStream(\fopen($file, 'rb'));
         while (($chunk = $fileStream->read()) !== null) {
-            $outputStream->write($chunk)->join();
+            $outputStream->write($chunk)->await();
         }
 
         $outputStream->end();
@@ -42,8 +42,8 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
-        $gzStream->end("foo")->join();
-        $gzStream->write("bar")->join();
+        $gzStream->end("foo")->await();
+        $gzStream->write("bar")->await();
     }
 
     public function testThrowsOnEndingToClosedContext(): void
@@ -51,8 +51,8 @@ class ZlibOutputStreamTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $gzStream = new ZlibOutputStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
-        $gzStream->end("foo")->join();
-        $gzStream->end("bar")->join();
+        $gzStream->end("foo")->await();
+        $gzStream->end("bar")->await();
     }
 
     public function testGetEncoding(): void

@@ -8,7 +8,7 @@ use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Subject;
-use function Amp\Future\spawn;
+use function Amp\coroutine;
 use function Amp\ByteStream\buffer;
 
 class Base64DecodingInputStreamTest extends AsyncTestCase
@@ -19,19 +19,19 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
 
     public function testRead(): void
     {
-        $future = spawn(fn () => buffer($this->stream));
+        $future = coroutine(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('m9vLmJhcg=');
         $this->source->emit('=');
         $this->source->complete();
 
-        self::assertSame('foo.bar', $future->join());
+        self::assertSame('foo.bar', $future->await());
     }
 
     public function testInvalidDataMissingPadding(): void
     {
-        $future = spawn(fn () => buffer($this->stream));
+        $future = coroutine(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('m9vLmJhcg=');
@@ -41,12 +41,12 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Failed to read stream chunk due to invalid base64 data');
 
-        self::assertSame('foo.bar', $future->join());
+        self::assertSame('foo.bar', $future->await());
     }
 
     public function testInvalidDataChar(): void
     {
-        $future = spawn(fn () => buffer($this->stream));
+        $future = coroutine(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('!');
@@ -55,7 +55,7 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage('Failed to read stream chunk due to invalid base64 data');
 
-        self::assertSame('foo.bar', $future->join());
+        self::assertSame('foo.bar', $future->await());
     }
 
     protected function setUp(): void
