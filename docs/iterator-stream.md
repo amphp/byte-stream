@@ -10,5 +10,5 @@ $inputStream = new IteratorStream(new Producer(function (callable $emit) {
         yield new Delayed(1000);
         yield $emit(".");
     }
-});
+}));
 ```
