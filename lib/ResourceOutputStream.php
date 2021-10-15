@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\Deferred;
 use Amp\Future;
-use Revolt\EventLoop\Loop;
+use Revolt\EventLoop;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -55,7 +55,7 @@ final class ResourceOutputStream implements OutputStream
         $writable = &$this->writable;
         $resource = &$this->resource;
 
-        $this->watcher = Loop::onWritable($stream, static function ($watcher, $stream) use (
+        $this->watcher = EventLoop::onWritable($stream, static function ($watcher, $stream) use (
             $writes,
             &$chunkSize,
             &$writable,
@@ -131,10 +131,10 @@ final class ResourceOutputStream implements OutputStream
                     $deferred?->error($exception);
                 }
 
-                Loop::cancel($watcher);
+                EventLoop::cancel($watcher);
             } finally {
                 if ($writes->isEmpty()) {
-                    Loop::disable($watcher);
+                    EventLoop::disable($watcher);
                 }
 
                 if ($end && \is_resource($resource)) {
@@ -149,7 +149,7 @@ final class ResourceOutputStream implements OutputStream
             }
         });
 
-        Loop::disable($this->watcher);
+        EventLoop::disable($this->watcher);
     }
 
     /**
@@ -274,7 +274,7 @@ final class ResourceOutputStream implements OutputStream
             }
         }
 
-        Loop::enable($this->watcher);
+        EventLoop::enable($this->watcher);
         $this->writes->push([$data, $written, $deferred = new Deferred, $end]);
         return $deferred->getFuture();
     }
@@ -300,6 +300,6 @@ final class ResourceOutputStream implements OutputStream
             } while (!$this->writes->isEmpty());
         }
 
-        Loop::cancel($this->watcher);
+        EventLoop::cancel($this->watcher);
     }
 }

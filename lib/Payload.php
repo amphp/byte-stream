@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\Deferred;
 use Amp\Future;
 use function Amp\coroutine;
-use function Revolt\EventLoop\queue;
+use function Revolt\launch;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
@@ -27,8 +27,10 @@ class Payload implements InputStream
 
     public function __destruct()
     {
-        if (!isset($this->future)) {
-            queue(fn () => $this->consume());
+        if (!isset($this->future) && isset($this->lastRead)) {
+            $stream = $this->stream;
+            $lastRead = $this->lastRead;
+            launch(static fn () => self::consume($stream, $lastRead));
         }
     }
 
@@ -83,14 +85,14 @@ class Payload implements InputStream
         }))->await();
     }
 
-    private function consume(): void
+    private static function consume(InputStream $stream, Future $lastRead): void
     {
         try {
-            if (isset($this->lastRead) && !$this->lastRead->await()) {
+            if (!$lastRead->await()) {
                 return;
             }
 
-            while (null !== $this->stream->read()) {
+            while (null !== $stream->read()) {
                 // Discard unread bytes from message.
             }
         } catch (\Throwable $exception) {

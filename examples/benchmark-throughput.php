@@ -5,12 +5,12 @@
 
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
+use Revolt\EventLoop;
 use Revolt\EventLoop\Driver\StreamSelectDriver;
-use Revolt\EventLoop\Loop;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-Loop::setDriver(new StreamSelectDriver);
+EventLoop::setDriver(new StreamSelectDriver);
 
 $args = \getopt('i:o:t:');
 $if = $args['i'] ?? '/dev/zero';
@@ -41,7 +41,7 @@ try {
 
 $stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...' . PHP_EOL);
 
-Loop::delay($t * 1000, [$in, "close"]);
+EventLoop::delay($t * 1000, [$in, "close"]);
 
 $start = \microtime(true);
 $bytes = 0;

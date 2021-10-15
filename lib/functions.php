@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\Pipeline\AsyncGenerator;
 use Amp\Pipeline\Pipeline;
-use Revolt\EventLoop\Loop;
+use Revolt\EventLoop;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -66,7 +66,7 @@ function getInputBufferStream(): ResourceInputStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[Loop::getDriver()] ??= new ResourceInputStream(\fopen('php://input', 'rb'));
+    return $map[EventLoop::getDriver()] ??= new ResourceInputStream(\fopen('php://input', 'rb'));
 }
 
 /**
@@ -78,7 +78,7 @@ function getOutputBufferStream(): ResourceOutputStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[Loop::getDriver()] ??= new ResourceOutputStream(\fopen('php://output', 'wb'));
+    return $map[EventLoop::getDriver()] ??= new ResourceOutputStream(\fopen('php://output', 'wb'));
 }
 
 /**
@@ -90,7 +90,7 @@ function getStdin(): ResourceInputStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[Loop::getDriver()] ??= new ResourceInputStream(\STDIN);
+    return $map[EventLoop::getDriver()] ??= new ResourceInputStream(\STDIN);
 }
 
 /**
@@ -102,7 +102,7 @@ function getStdout(): ResourceOutputStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[Loop::getDriver()] ??= new ResourceOutputStream(\STDOUT);
+    return $map[EventLoop::getDriver()] ??= new ResourceOutputStream(\STDOUT);
 }
 
 /**
@@ -114,7 +114,7 @@ function getStderr(): ResourceOutputStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[Loop::getDriver()] ??= new ResourceOutputStream(\STDERR);
+    return $map[EventLoop::getDriver()] ??= new ResourceOutputStream(\STDERR);
 }
 
 function parseLineDelimitedJson(InputStream $stream, bool $assoc = false, int $depth = 512, int $options = 0): Pipeline

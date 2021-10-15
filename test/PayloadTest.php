@@ -9,7 +9,7 @@ use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\Pipeline\Subject;
-use Revolt\EventLoop\Loop;
+use Revolt\EventLoop;
 use function Amp\coroutine;
 
 class PayloadTest extends AsyncTestCase
@@ -41,7 +41,7 @@ class PayloadTest extends AsyncTestCase
             $emitter->emit($value)->ignore();
         }
 
-        Loop::delay(0.005, function () use ($emitter) {
+        EventLoop::delay(0.005, function () use ($emitter) {
             $emitter->complete();
         });
 
@@ -204,7 +204,7 @@ class PayloadTest extends AsyncTestCase
         $emitter = new Subject;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
-        Loop::delay(0, function () use ($emitter) {
+        EventLoop::delay(0, function () use ($emitter) {
             $emitter->emit("test")->ignore();
         });
 

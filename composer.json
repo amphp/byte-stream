@@ -27,11 +27,11 @@
     ],
     "require": {
         "php": ">=8",
-        "amphp/amp": "dev-v3-revolt",
-        "amphp/pipeline": "dev-master as 1.0"
+        "amphp/amp": "v3.x-dev",
+        "amphp/pipeline": "v1.x-dev"
     },
     "require-dev": {
-        "amphp/phpunit-util": "dev-v2-revolt",
+        "amphp/phpunit-util": "v2.x-dev",
         "phpunit/phpunit": "^9",
         "friendsofphp/php-cs-fixer": "^2.3",
         "amphp/php-cs-fixer-config": "dev-master",

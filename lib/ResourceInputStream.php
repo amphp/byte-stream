@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Revolt\EventLoop\Loop;
+use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
 /**
@@ -50,7 +50,7 @@ final class ResourceInputStream implements InputStream
 
         $suspension = &$this->suspension;
         $readable = &$this->readable;
-        $this->watcher = Loop::onReadable($this->resource, static function ($watcher) use (
+        $this->watcher = EventLoop::onReadable($this->resource, static function ($watcher) use (
             &$suspension,
             &$readable,
             &$stream,
@@ -75,9 +75,9 @@ final class ResourceInputStream implements InputStream
                 $readable = false;
                 $stream = null;
                 $data = null; // Stream closed, resolve read with null.
-                Loop::cancel($watcher);
+                EventLoop::cancel($watcher);
             } else {
-                Loop::disable($watcher);
+                EventLoop::disable($watcher);
             }
 
             \assert($suspension instanceof Suspension);
@@ -86,7 +86,7 @@ final class ResourceInputStream implements InputStream
             $suspension = null;
         });
 
-        Loop::disable($this->watcher);
+        EventLoop::disable($this->watcher);
     }
 
     /** @inheritdoc */
@@ -107,8 +107,8 @@ final class ResourceInputStream implements InputStream
             return null;
         }
 
-        Loop::enable($this->watcher);
-        $this->suspension = Loop::createSuspension();
+        EventLoop::enable($this->watcher);
+        $this->suspension = EventLoop::createSuspension();
 
         return $this->suspension->suspend();
     }
@@ -149,7 +149,7 @@ final class ResourceInputStream implements InputStream
     /**
      * References the read watcher, so the loop keeps running in case there's an active read.
      *
-     * @see Loop::reference()
+     * @see EventLoop::reference()
      */
     public function reference(): void
     {
@@ -157,13 +157,13 @@ final class ResourceInputStream implements InputStream
             throw new \Error("Resource has already been freed");
         }
 
-        Loop::reference($this->watcher);
+        EventLoop::reference($this->watcher);
     }
 
     /**
      * Unreferences the read watcher, so the loop doesn't keep running even if there are active reads.
      *
-     * @see Loop::unreference()
+     * @see EventLoop::unreference()
      */
     public function unreference(): void
     {
@@ -171,7 +171,7 @@ final class ResourceInputStream implements InputStream
             throw new \Error("Resource has already been freed");
         }
 
-        Loop::unreference($this->watcher);
+        EventLoop::unreference($this->watcher);
     }
 
     public function __destruct()
@@ -194,6 +194,6 @@ final class ResourceInputStream implements InputStream
             $this->suspension = null;
         }
 
-        Loop::cancel($this->watcher);
+        EventLoop::cancel($this->watcher);
     }
 }
