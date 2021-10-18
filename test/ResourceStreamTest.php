@@ -10,9 +10,9 @@ use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\Future;
 use Amp\PHPUnit\AsyncTestCase;
+use Revolt\EventLoop;
 use function Amp\coroutine;
 use function Amp\ByteStream\pipe;
-use function Revolt\launch;
 
 class ResourceStreamTest extends AsyncTestCase
 {
@@ -53,7 +53,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", 8192 /* default chunk size */);
 
-        launch(function () use (&$i, $a, $message): void {
+        EventLoop::queue(function () use (&$i, $a, $message): void {
             for ($i = 0; $i < 128; $i++) {
                 $a->write($message)->await();
             }
@@ -232,7 +232,7 @@ class ResourceStreamTest extends AsyncTestCase
     {
         $middle = \tempnam(\sys_get_temp_dir(), 'byte-stream-middle-');
 
-        launch(function () use ($middle): void {
+        EventLoop::queue(function () use ($middle): void {
             pipe(
                 new InMemoryStream(\file_get_contents(__FILE__)),
                 $destination = new ResourceOutputStream(\fopen($middle, 'wb'))
