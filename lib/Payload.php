@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream;
 
+use Amp\CancellationToken;
 use Amp\Deferred;
 use Amp\Future;
 use Revolt\EventLoop;
@@ -42,7 +43,7 @@ class Payload implements InputStream
      *
      * @throws \Error If a buffered message was requested by calling buffer().
      */
-    final public function read(): ?string
+    final public function read(?CancellationToken $token = null): ?string
     {
         if (isset($this->future)) {
             throw new \Error("Cannot stream message data once a buffered message has been requested");
@@ -54,7 +55,7 @@ class Payload implements InputStream
             $this->lastRead->ignore();
 
             try {
-                $chunk = $this->stream->read();
+                $chunk = $this->stream->read($token);
                 $deferred->complete($chunk !== null);
             } catch (\Throwable $exception) {
                 $deferred->error($exception);
@@ -74,10 +75,10 @@ class Payload implements InputStream
      *
      * @return string The entire message contents.
      */
-    final public function buffer(): string
+    final public function buffer(?CancellationToken $token = null): string
     {
         if (isset($this->future)) {
-            return $this->future->await();
+            return $this->future->await($token);
         }
 
         if ($this->stream instanceof InputStream) {
@@ -94,7 +95,7 @@ class Payload implements InputStream
                 return $buffer;
             });
 
-            return $this->future->await();
+            return $this->future->await($token);
         }
 
         $payload = $this->stream ?? '';

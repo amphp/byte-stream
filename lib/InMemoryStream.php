@@ -2,6 +2,8 @@
 
 namespace Amp\ByteStream;
 
+use Amp\CancellationToken;
+
 /**
  * Input stream with a single already known data chunk.
  */
@@ -22,7 +24,7 @@ final class InMemoryStream implements InputStream
      *
      * @return string|null Returns the full contents or `null` if the stream has closed / already been consumed.
      */
-    public function read(): ?string
+    public function read(?CancellationToken $token = null): ?string
     {
         if ($this->contents === null) {
             return null;

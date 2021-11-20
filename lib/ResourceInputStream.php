@@ -2,6 +2,8 @@
 
 namespace Amp\ByteStream;
 
+use Amp\CancellationToken;
+use Amp\CancelledException;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
@@ -22,6 +24,8 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
     private bool $readable = true;
 
     private int $chunkSize;
+
+    private \Closure $cancel;
 
     /**
      * @param resource $stream Stream resource.
@@ -86,11 +90,18 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
             $suspension = null;
         });
 
+        $watcher = &$this->watcher;
+        $this->cancel = static function (CancelledException $exception) use (&$suspension, $watcher): void {
+            $suspension?->throw($exception);
+            $suspension = null;
+            EventLoop::disable($watcher);
+        };
+
         EventLoop::disable($this->watcher);
     }
 
     /** @inheritdoc */
-    public function read(): ?string
+    public function read(?CancellationToken $token = null): ?string
     {
         if ($this->suspension !== null) {
             throw new PendingReadError;
@@ -110,7 +121,13 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
         EventLoop::enable($this->watcher);
         $this->suspension = EventLoop::createSuspension();
 
-        return $this->suspension->suspend();
+        $id = $token?->subscribe($this->cancel);
+
+        try {
+            return $this->suspension->suspend();
+        } finally {
+            $token?->unsubscribe($id);
+        }
     }
 
     /**
@@ -190,7 +207,7 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
         $this->resource = null;
 
         if ($this->suspension !== null) {
-            $this->suspension->resume(null);
+            $this->suspension->resume();
             $this->suspension = null;
         }
 

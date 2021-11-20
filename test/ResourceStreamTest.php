@@ -8,10 +8,13 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
+use Amp\CancellationTokenSource;
+use Amp\CancelledException;
 use Amp\Future;
 use Amp\PHPUnit\AsyncTestCase;
 use Revolt\EventLoop;
 use function Amp\ByteStream\pipe;
+use function Amp\delay;
 use function Amp\launch;
 
 class ResourceStreamTest extends AsyncTestCase
@@ -263,5 +266,38 @@ class ResourceStreamTest extends AsyncTestCase
 
         $b->setChunkSize(3);
         self::assertSame('oo', $b->read());
+    }
+
+    public function testCancellationBeforeRead(): void
+    {
+        [$a, $b] = $this->getStreamPair();
+
+        $tokenSource = new CancellationTokenSource();
+
+        $future = launch(fn() => $b->read($tokenSource->getToken()));
+
+        $tokenSource->cancel();
+
+        $a->write('foo')->await();
+
+        $this->expectException(CancelledException::class);
+        $future->await();
+    }
+
+    public function testCancellationAfterRead(): void
+    {
+        [$a, $b] = $this->getStreamPair();
+
+        $tokenSource = new CancellationTokenSource();
+
+        $future = launch(fn() => $b->read($tokenSource->getToken()));
+
+        $a->write('foo')->await();
+
+        delay(0); // Tick event loop to invoke read watcher.
+
+        $tokenSource->cancel();
+
+        self::assertSame('foo', $future->await());
     }
 }

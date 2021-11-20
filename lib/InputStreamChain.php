@@ -2,6 +2,8 @@
 
 namespace Amp\ByteStream;
 
+use Amp\CancellationToken;
+
 final class InputStreamChain implements InputStream
 {
     /** @var InputStream[] */
@@ -15,7 +17,7 @@ final class InputStreamChain implements InputStream
     }
 
     /** @inheritDoc */
-    public function read(): ?string
+    public function read(?CancellationToken $token = null): ?string
     {
         if ($this->reading) {
             throw new PendingReadError;
@@ -29,7 +31,7 @@ final class InputStreamChain implements InputStream
 
         try {
             while ($this->streams) {
-                $chunk = $this->streams[0]->read();
+                $chunk = $this->streams[0]->read($token);
                 if ($chunk === null) {
                     \array_shift($this->streams);
                     continue;

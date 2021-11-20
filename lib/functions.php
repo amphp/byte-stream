@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream;
 
+use Amp\CancellationToken;
 use Amp\Pipeline\AsyncGenerator;
 use Amp\Pipeline\Pipeline;
 use Revolt\EventLoop;
@@ -27,14 +28,15 @@ if (!\defined('STDERR')) {
  *
  * @return int The number of bytes written to the destination.
  */
-function pipe(InputStream $source, OutputStream $destination): int
+function pipe(InputStream $source, OutputStream $destination, ?CancellationToken $token = null): int
 {
     $written = 0;
 
-    while (($chunk = $source->read()) !== null) {
+    while (($chunk = $source->read($token)) !== null) {
         $written += \strlen($chunk);
-        $destination->write($chunk)->await();
+        $future = $destination->write($chunk);
         $chunk = null; // free memory
+        $future->await($token);
     }
 
     return $written;
