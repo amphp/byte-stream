@@ -244,4 +244,17 @@ class PayloadTest extends AsyncTestCase
         self::assertSame($data, $stream->buffer());
         self::assertSame($data, $stream->buffer());
     }
+
+    public function testStringAsStream()
+    {
+        $data = "test";
+        $stream = new Payload($data);
+        self::assertSame($data, $stream->read());
+        self::assertNull($stream->read());
+        self::assertSame('', $stream->buffer());
+
+        $stream = new Payload($data);
+        self::assertSame($data, $stream->buffer());
+        self::assertSame($data, $stream->buffer());
+    }
 }

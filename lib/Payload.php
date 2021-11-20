@@ -14,15 +14,18 @@ use function Amp\launch;
  */
 class Payload implements InputStream
 {
-    private InputStream $stream;
+    private InputStream|string|null $stream;
 
     private Future $future;
 
     private Future $lastRead;
 
-    public function __construct(InputStream $stream)
+    public function __construct(InputStream|string $stream)
     {
-        $this->stream = $stream;
+        $this->stream = match (true) {
+            $stream instanceof InMemoryStream => $stream->read(),
+            default => $stream,
+        };
     }
 
     public function __destruct()
@@ -45,18 +48,24 @@ class Payload implements InputStream
             throw new \Error("Cannot stream message data once a buffered message has been requested");
         }
 
-        $deferred = new Deferred;
-        $this->lastRead = $deferred->getFuture();
-        $this->lastRead->ignore();
+        if ($this->stream instanceof InputStream) {
+            $deferred = new Deferred;
+            $this->lastRead = $deferred->getFuture();
+            $this->lastRead->ignore();
 
-        try {
-            $chunk = $this->stream->read();
-            $deferred->complete($chunk !== null);
-        } catch (\Throwable $exception) {
-            $deferred->error($exception);
-            throw $exception;
+            try {
+                $chunk = $this->stream->read();
+                $deferred->complete($chunk !== null);
+            } catch (\Throwable $exception) {
+                $deferred->error($exception);
+                throw $exception;
+            }
+
+            return $chunk;
         }
 
+        $chunk = $this->stream;
+        $this->stream = null;
         return $chunk;
     }
 
@@ -71,18 +80,27 @@ class Payload implements InputStream
             return $this->future->await();
         }
 
-        return ($this->future = launch(function (): string {
-            $buffer = '';
-            if (isset($this->lastRead) && !$this->lastRead->await()) {
+        if ($this->stream instanceof InputStream) {
+            $this->future = launch(function (): string {
+                $buffer = '';
+                if (isset($this->lastRead) && !$this->lastRead->await()) {
+                    return $buffer;
+                }
+
+                while (null !== $chunk = $this->stream->read()) {
+                    $buffer .= $chunk;
+                }
+
                 return $buffer;
-            }
+            });
 
-            while (null !== $chunk = $this->stream->read()) {
-                $buffer .= $chunk;
-            }
+            return $this->future->await();
+        }
 
-            return $buffer;
-        }))->await();
+        $payload = $this->stream ?? '';
+        $this->future = Future::complete($payload);
+        $this->stream = null;
+        return $payload;
     }
 
     private static function consume(InputStream $stream, Future $lastRead): void
