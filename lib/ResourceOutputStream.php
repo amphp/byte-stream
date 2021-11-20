@@ -9,7 +9,7 @@ use Revolt\EventLoop;
 /**
  * Output stream abstraction for PHP's stream resources.
  */
-final class ResourceOutputStream implements OutputStream
+final class ResourceOutputStream implements OutputStream, ClosableStream
 {
     private const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
     private const LARGE_CHUNK_SIZE = 128 * 1024;
@@ -95,7 +95,7 @@ final class ResourceOutputStream implements OutputStream
                     }
 
                     // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
-                    if ($written === 0 || $written === false) {
+                    if ($written === 0) {
                         if ($emptyWrites++ > self::MAX_CONSECUTIVE_EMPTY_WRITES) {
                             $message = "Failed to write to stream after multiple attempts";
                             if ($error = \error_get_last()) {

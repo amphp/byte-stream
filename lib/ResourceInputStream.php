@@ -8,7 +8,7 @@ use Revolt\EventLoop\Suspension;
 /**
  * Input stream abstraction for PHP's stream resources.
  */
-final class ResourceInputStream implements InputStream
+final class ResourceInputStream implements InputStream, ClosableStream, ReferencedStream
 {
     public const DEFAULT_CHUNK_SIZE = 8192;
 
