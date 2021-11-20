@@ -7,19 +7,19 @@ use Amp\ByteStream\InputStream;
 use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline\Subject;
-use function Amp\coroutine;
+use Amp\Pipeline\Emitter;
 use function Amp\ByteStream\buffer;
+use function Amp\launch;
 
 class Base64DecodingInputStreamTest extends AsyncTestCase
 {
-    private Subject $source;
+    private Emitter $source;
 
     private InputStream $stream;
 
     public function testRead(): void
     {
-        $future = coroutine(fn () => buffer($this->stream));
+        $future = launch(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('m9vLmJhcg=');
@@ -31,7 +31,7 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
 
     public function testInvalidDataMissingPadding(): void
     {
-        $future = coroutine(fn () => buffer($this->stream));
+        $future = launch(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('m9vLmJhcg=');
@@ -46,7 +46,7 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
 
     public function testInvalidDataChar(): void
     {
-        $future = coroutine(fn () => buffer($this->stream));
+        $future = launch(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('!');
@@ -62,7 +62,7 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
     {
         parent::setUp();
 
-        $this->source = new Subject;
+        $this->source = new Emitter;
         $this->stream = new Base64DecodingInputStream(new PipelineStream($this->source->asPipeline()));
     }
 }

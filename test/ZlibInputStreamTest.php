@@ -2,12 +2,12 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\Pipeline\AsyncGenerator;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibInputStream;
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\Pipeline\AsyncGenerator;
 
 class ZlibInputStreamTest extends AsyncTestCase
 {

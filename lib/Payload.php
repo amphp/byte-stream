@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\Deferred;
 use Amp\Future;
 use Revolt\EventLoop;
-use function Amp\coroutine;
+use function Amp\launch;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
@@ -71,7 +71,7 @@ class Payload implements InputStream
             return $this->future->await();
         }
 
-        return ($this->future = coroutine(function (): string {
+        return ($this->future = launch(function (): string {
             $buffer = '';
             if (isset($this->lastRead) && !$this->lastRead->await()) {
                 return $buffer;

@@ -8,9 +8,9 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
-use Amp\Pipeline\Subject;
+use Amp\Pipeline\Emitter;
 use Revolt\EventLoop;
-use function Amp\coroutine;
+use function Amp\launch;
 
 class PayloadTest extends AsyncTestCase
 {
@@ -18,7 +18,7 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         foreach ($values as $value) {
@@ -34,7 +34,7 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         foreach ($values as $value) {
@@ -58,7 +58,7 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         foreach ($values as $value) {
@@ -80,7 +80,7 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         foreach ($values as $value) {
@@ -96,7 +96,7 @@ class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $emitter->emit($values[0])->ignore();
@@ -119,7 +119,7 @@ class PayloadTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $emitter->emit($value)->ignore();
@@ -144,10 +144,10 @@ class PayloadTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
-        $readFuture = coroutine(fn () => $stream->read());
+        $readFuture = launch(fn () => $stream->read());
         $emitter->error($exception);
 
         $callable = $this->createCallback(1);
@@ -164,7 +164,7 @@ class PayloadTest extends AsyncTestCase
 
     public function testEmptyStream()
     {
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $emitter->complete();
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
@@ -175,7 +175,7 @@ class PayloadTest extends AsyncTestCase
     {
         $value = "";
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $emitter->emit($value)->ignore();
@@ -189,7 +189,7 @@ class PayloadTest extends AsyncTestCase
     {
         $value = "abc";
 
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         $emitter->emit($value)->ignore();
@@ -201,7 +201,7 @@ class PayloadTest extends AsyncTestCase
 
     public function testPendingRead()
     {
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
         EventLoop::delay(0, function () use ($emitter) {
@@ -213,14 +213,14 @@ class PayloadTest extends AsyncTestCase
 
     public function testPendingReadError()
     {
-        $emitter = new Subject;
+        $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
-        coroutine(fn () => $stream->read());
+        launch(fn () => $stream->read());
 
         $this->expectException(PendingReadError::class);
 
         try {
-            coroutine(fn () => $stream->read())->await();
+            launch(fn () => $stream->read())->await();
         } finally {
             $emitter->complete();
         }

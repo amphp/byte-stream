@@ -11,8 +11,8 @@ use Amp\ByteStream\StreamException;
 use Amp\Future;
 use Amp\PHPUnit\AsyncTestCase;
 use Revolt\EventLoop;
-use function Amp\coroutine;
 use function Amp\ByteStream\pipe;
+use function Amp\launch;
 
 class ResourceStreamTest extends AsyncTestCase
 {
@@ -167,8 +167,8 @@ class ResourceStreamTest extends AsyncTestCase
         /** @noinspection PhpUnusedLocalVariableInspection Required to keep reference */
         [$a, $b] = $this->getStreamPair();
 
-        coroutine(fn () => $b->read())->ignore(); // Will not resolve.
-        coroutine(fn () => $b->read())->await();
+        launch(fn () => $b->read())->ignore(); // Will not resolve.
+        launch(fn () => $b->read())->await();
     }
 
     public function testResolveSuccessOnClosedStream(): void

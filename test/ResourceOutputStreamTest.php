@@ -5,7 +5,7 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
-use function Amp\Pipeline\delay;
+use function Amp\delay;
 
 class ResourceOutputStreamTest extends AsyncTestCase
 {

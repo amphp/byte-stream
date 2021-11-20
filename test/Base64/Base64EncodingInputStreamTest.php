@@ -6,19 +6,19 @@ use Amp\ByteStream\Base64\Base64EncodingInputStream;
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline\Subject;
-use function Amp\coroutine;
+use Amp\Pipeline\Emitter;
 use function Amp\ByteStream\buffer;
+use function Amp\launch;
 
 class Base64EncodingInputStreamTest extends AsyncTestCase
 {
-    private Subject $source;
+    private Emitter $source;
 
     private InputStream $stream;
 
     public function testRead(): void
     {
-        $future = coroutine(fn () => buffer($this->stream));
+        $future = launch(fn () => buffer($this->stream));
 
         $this->source->emit('f');
         $this->source->emit('o');
@@ -36,7 +36,7 @@ class Base64EncodingInputStreamTest extends AsyncTestCase
     {
         parent::setUp();
 
-        $this->source = new Subject;
+        $this->source = new Emitter;
         $this->stream = new Base64EncodingInputStream(new PipelineStream($this->source->asPipeline()));
     }
 }

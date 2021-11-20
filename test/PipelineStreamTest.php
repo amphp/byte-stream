@@ -6,7 +6,7 @@ use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
-use Amp\Pipeline\Subject;
+use Amp\Pipeline\Emitter;
 
 class PipelineStreamTest extends AsyncTestCase
 {
@@ -14,7 +14,7 @@ class PipelineStreamTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $source = new Subject;
+        $source = new Emitter;
         $stream = new PipelineStream($source->asPipeline());
 
         foreach ($values as $value) {
@@ -37,7 +37,7 @@ class PipelineStreamTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $source = new Subject;
+        $source = new Emitter;
         $stream = new PipelineStream($source->asPipeline());
 
         $source->emit($value);
@@ -63,7 +63,7 @@ class PipelineStreamTest extends AsyncTestCase
 
         $value = 42;
 
-        $source = new Subject;
+        $source = new Emitter;
         $stream = new PipelineStream($source->asPipeline());
 
         $source->emit($value);
@@ -77,7 +77,7 @@ class PipelineStreamTest extends AsyncTestCase
 
         $value = 42;
 
-        $source = new Subject;
+        $source = new Emitter;
         $stream = new PipelineStream($source->asPipeline());
 
         $source->emit($value);
