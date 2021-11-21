@@ -171,7 +171,7 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
     public function reference(): void
     {
         if (!$this->resource) {
-            throw new \Error("Resource has already been freed");
+            return;
         }
 
         EventLoop::reference($this->watcher);
@@ -185,7 +185,7 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
     public function unreference(): void
     {
         if (!$this->resource) {
-            throw new \Error("Resource has already been freed");
+            return;
         }
 
         EventLoop::unreference($this->watcher);

@@ -141,26 +141,26 @@ class ResourceStreamTest extends AsyncTestCase
         $a->write($message)->await();
     }
 
-    public function testThrowsOnReferencingClosedStream(): void
+    public function testReferencingClosedStream(): void
     {
-        $this->expectException(\Error::class);
-
         [, $b] = $this->getStreamPair();
 
         $b->close();
 
         $b->reference();
+
+        self::assertNull($b->read());
     }
 
-    public function testThrowsOnUnreferencingClosedStream(): void
+    public function testUnreferencingClosedStream(): void
     {
-        $this->expectException(\Error::class);
-
         [, $b] = $this->getStreamPair();
 
         $b->close();
 
         $b->unreference();
+
+        self::assertNull($b->read());
     }
 
     public function testThrowsOnPendingRead(): void
