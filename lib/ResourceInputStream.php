@@ -150,6 +150,11 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
         $this->free();
     }
 
+    public function isClosed(): bool
+    {
+        return $this->resource === null;
+    }
+
     /**
      * @return resource|null The stream resource or null if the stream has closed.
      */

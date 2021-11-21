@@ -194,6 +194,11 @@ final class ResourceOutputStream implements OutputStream, ClosableStream
         $this->free();
     }
 
+    public function isClosed(): bool
+    {
+        return $this->resource === null;
+    }
+
     /**
      * @return resource|null Stream resource or null if end() has been called or the stream closed.
      */
