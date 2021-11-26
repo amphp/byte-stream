@@ -1,8 +1,8 @@
-examples export-ignore
-test export-ignore
-/.* export-ignore
-phpunit.xml.dist export-ignore
-psalm.xml export-ignore
-docs export-ignore
+/.*                 export-ignore  # Ignore all dotted files as mostly they are configs for other tools
+examples            export-ignore
+test                export-ignore
+phpunit.xml.dist    export-ignore
+psalm.xml           export-ignore
+docs                export-ignore
 infection.json.dist export-ignore
-README.md export-ignore
+README.md           export-ignore
