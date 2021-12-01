@@ -71,6 +71,11 @@ final class ZlibOutputStream implements OutputStream
         return $this->destination->end($compressed);
     }
 
+    public function isWritable(): bool
+    {
+        return $this->resource !== null;
+    }
+
     /**
      * Gets the used compression encoding.
      *

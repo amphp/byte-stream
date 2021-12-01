@@ -51,4 +51,9 @@ final class Base64DecodingOutputStream implements OutputStream
 
         return $this->destination->end($chunk);
     }
+
+    public function isWritable(): bool
+    {
+        return $this->destination->isWritable();
+    }
 }

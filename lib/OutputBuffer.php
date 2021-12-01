@@ -45,6 +45,11 @@ class OutputBuffer implements OutputStream
         return Future::complete(null);
     }
 
+    public function isWritable(): bool
+    {
+        return !$this->closed;
+    }
+
     public function buffer(): string
     {
         return $this->deferred->getFuture()->await();

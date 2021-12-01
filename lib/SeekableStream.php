@@ -37,4 +37,9 @@ interface SeekableStream
      * @return bool
      */
     public function atEnd(): bool;
+
+    /**
+     * @return bool Seeking may become unavailable if the underlying source is closed or lost.
+     */
+    public function isSeekable(): bool;
 }

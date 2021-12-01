@@ -70,6 +70,11 @@ final class ZlibInputStream implements InputStream
         return $decompressed;
     }
 
+    public function isReadable(): bool
+    {
+        return $this->resource !== null;
+    }
+
     /**
      * Gets the used compression encoding.
      *

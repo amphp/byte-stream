@@ -34,4 +34,9 @@ interface OutputStream
      * @error StreamException If writing to the stream fails.
      */
     public function end(string $finalData = ""): Future;
+
+    /**
+     * @return bool A stream may no longer be writable if it is closed or ended using {@see end()}.
+     */
+    public function isWritable(): bool;
 }

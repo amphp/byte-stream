@@ -35,4 +35,9 @@ final class InMemoryStream implements InputStream
 
         return $contents;
     }
+
+    public function isReadable(): bool
+    {
+        return $this->contents !== null;
+    }
 }

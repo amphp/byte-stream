@@ -70,6 +70,13 @@ class Payload implements InputStream
         return $chunk;
     }
 
+    final public function isReadable(): bool
+    {
+        return $this->stream instanceof InputStream
+            ? $this->stream->isReadable()
+            : $this->stream !== null;
+    }
+
     /**
      * Buffers the entire message and resolves the returned promise then.
      *

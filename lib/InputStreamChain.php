@@ -45,4 +45,9 @@ final class InputStreamChain implements InputStream
             $this->reading = false;
         }
     }
+
+    public function isReadable(): bool
+    {
+        return !empty($this->streams);
+    }
 }

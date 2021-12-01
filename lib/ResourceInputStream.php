@@ -130,6 +130,11 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
         }
     }
 
+    public function isReadable(): bool
+    {
+        return $this->readable;
+    }
+
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
      */

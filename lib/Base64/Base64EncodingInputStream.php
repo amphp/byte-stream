@@ -40,4 +40,9 @@ final class Base64EncodingInputStream implements InputStream
 
         return $chunk;
     }
+
+    public function isReadable(): bool
+    {
+        return $this->source->isReadable();
+    }
 }

@@ -174,6 +174,11 @@ final class ResourceOutputStream implements OutputStream, ClosableStream
         return $this->send($finalData, true);
     }
 
+    public function isWritable(): bool
+    {
+        return $this->writable;
+    }
+
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
      */

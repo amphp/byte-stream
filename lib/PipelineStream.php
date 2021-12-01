@@ -57,4 +57,9 @@ final class PipelineStream implements InputStream
             $this->pending = false;
         }
     }
+
+    public function isReadable(): bool
+    {
+        return !$this->pipeline->isComplete();
+    }
 }

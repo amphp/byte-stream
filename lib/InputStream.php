@@ -34,4 +34,9 @@ interface InputStream
      * @throws PendingReadError Thrown if another read operation is still pending.
      */
     public function read(?CancellationToken $token = null): ?string;
+
+    /**
+     * @return bool A stream may become unreadable if the underlying source is closed or lost.
+     */
+    public function isReadable(): bool;
 }
