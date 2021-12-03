@@ -1,6 +1,6 @@
 {
     "name": "amphp/byte-stream",
-    "homepage": "http://amphp.org/byte-stream",
+    "homepage": "https://amphp.org/byte-stream",
     "description": "A stream abstraction to make working with non-blocking I/O simple.",
     "support": {
         "issues": "https://github.com/amphp/byte-stream/issues",
