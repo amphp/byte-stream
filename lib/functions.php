@@ -3,7 +3,9 @@
 namespace Amp\ByteStream;
 
 use Amp\CancellationToken;
+use Amp\Future;
 use Amp\Pipeline\AsyncGenerator;
+use Amp\Pipeline\Emitter;
 use Amp\Pipeline\Pipeline;
 use Revolt\EventLoop;
 
@@ -40,6 +42,49 @@ function pipe(InputStream $source, OutputStream $destination, ?CancellationToken
     }
 
     return $written;
+}
+
+/**
+ * Create a local stream pair where data written to the OutputStream is immediately available on the InputStream.
+ * Primarily useful for testing mocks.
+ *
+ * @return array{InputStream, OutputStream}
+ */
+function createStreamPair(): array
+{
+    $emitter = new Emitter();
+
+    return [
+        new PipelineStream($emitter->asPipeline()),
+        new class ($emitter) implements OutputStream {
+            public function __construct(
+                private Emitter $emitter
+            ) {
+            }
+
+            public function write(string $data): Future
+            {
+                if ($this->emitter->isComplete()) {
+                    return Future::error(new ClosedException('The stream is no longer writable'));
+                }
+                return $this->emitter->emit($data);
+            }
+
+            public function end(string $finalData = ""): Future
+            {
+                $future = $this->write($finalData);
+                if (!$this->emitter->isComplete()) {
+                    $this->emitter->complete();
+                }
+                return $future;
+            }
+
+            public function isWritable(): bool
+            {
+                return !$this->emitter->isComplete();
+            }
+        }
+    ];
 }
 
 /**
