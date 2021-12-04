@@ -9,7 +9,7 @@ use Revolt\EventLoop;
 /**
  * Output stream abstraction for PHP's stream resources.
  */
-final class WritableResourceStream implements WritableStream, ClosableStream
+final class WritableResourceStream implements WritableStream, ClosableStream, ResourceStream
 {
     private const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
     private const LARGE_CHUNK_SIZE = 128 * 1024;
@@ -287,6 +287,34 @@ final class WritableResourceStream implements WritableStream, ClosableStream
         EventLoop::enable($this->watcher);
         $this->writes->push([$data, $written, $deferredFuture = new DeferredFuture, $end]);
         return $deferredFuture->getFuture();
+    }
+
+    /**
+     * References the writable watcher, so the loop keeps running in case there's a pending write.
+     *
+     * @see EventLoop::reference()
+     */
+    public function reference(): void
+    {
+        if (!$this->resource) {
+            return;
+        }
+
+        EventLoop::reference($this->watcher);
+    }
+
+    /**
+     * Unreferences the writable watcher, so the loop doesn't keep running even if there are pending writes.
+     *
+     * @see EventLoop::unreference()
+     */
+    public function unreference(): void
+    {
+        if (!$this->resource) {
+            return;
+        }
+
+        EventLoop::unreference($this->watcher);
     }
 
     /**

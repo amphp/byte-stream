@@ -10,7 +10,7 @@ use Revolt\EventLoop\Suspension;
 /**
  * Input stream abstraction for PHP's stream resources.
  */
-final class ReadableResourceStream implements ReadableStream, ClosableStream, ReferencedStream
+final class ReadableResourceStream implements ReadableStream, ClosableStream, ResourceStream
 {
     public const DEFAULT_CHUNK_SIZE = 8192;
 
@@ -174,7 +174,7 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
     }
 
     /**
-     * References the read watcher, so the loop keeps running in case there's an active read.
+     * References the readable watcher, so the loop keeps running in case there's an active read.
      *
      * @see EventLoop::reference()
      */
@@ -188,7 +188,7 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
     }
 
     /**
-     * Unreferences the read watcher, so the loop doesn't keep running even if there are active reads.
+     * Unreferences the readable watcher, so the loop doesn't keep running even if there are active reads.
      *
      * @see EventLoop::unreference()
      */
