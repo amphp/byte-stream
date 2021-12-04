@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\CancellationToken;
+use Amp\Cancellation;
 
 /**
  * Allows decompression of input streams using Zlib.
@@ -35,13 +35,13 @@ final class ZlibInputStream implements InputStream
     }
 
     /** @inheritdoc */
-    public function read(?CancellationToken $token = null): ?string
+    public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->resource === null) {
             return null;
         }
 
-        $data = $this->source->read($token);
+        $data = $this->source->read($cancellation);
 
         // Needs a double guard, as stream might have been closed while reading
         /** @psalm-suppress ParadoxicalCondition */

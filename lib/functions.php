@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\CancellationToken;
+use Amp\Cancellation;
 use Amp\Future;
 use Amp\Pipeline\AsyncGenerator;
 use Amp\Pipeline\Emitter;
@@ -30,15 +30,15 @@ if (!\defined('STDERR')) {
  *
  * @return int The number of bytes written to the destination.
  */
-function pipe(InputStream $source, OutputStream $destination, ?CancellationToken $token = null): int
+function pipe(InputStream $source, OutputStream $destination, ?Cancellation $cancellation = null): int
 {
     $written = 0;
 
-    while (($chunk = $source->read($token)) !== null) {
+    while (($chunk = $source->read($cancellation)) !== null) {
         $written += \strlen($chunk);
         $future = $destination->write($chunk);
         $chunk = null; // free memory
-        $future->await($token);
+        $future->await($cancellation);
     }
 
     return $written;

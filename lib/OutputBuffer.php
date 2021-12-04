@@ -2,23 +2,20 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
+use Amp\DeferredFuture;
 use Amp\Future;
 
 class OutputBuffer implements OutputStream
 {
-    /** @var Deferred */
-    private Deferred $deferred;
+    private DeferredFuture $deferredFuture;
 
-    /** @var string */
     private string $contents = '';
 
-    /** @var bool */
     private bool $closed = false;
 
     public function __construct()
     {
-        $this->deferred = new Deferred;
+        $this->deferredFuture = new DeferredFuture;
     }
 
     public function write(string $data): Future
@@ -28,7 +25,7 @@ class OutputBuffer implements OutputStream
         }
 
         $this->contents .= $data;
-        return Future::complete(null);
+        return Future::complete();
     }
 
     public function end(string $finalData = ""): Future
@@ -40,7 +37,7 @@ class OutputBuffer implements OutputStream
         $this->contents .= $finalData;
         $this->closed = true;
 
-        $this->deferred->complete($this->contents);
+        $this->deferredFuture->complete($this->contents);
         $this->contents = '';
         return Future::complete(null);
     }
@@ -52,6 +49,6 @@ class OutputBuffer implements OutputStream
 
     public function buffer(): string
     {
-        return $this->deferred->getFuture()->await();
+        return $this->deferredFuture->getFuture()->await();
     }
 }

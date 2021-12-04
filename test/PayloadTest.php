@@ -10,7 +10,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\Pipeline\Emitter;
 use Revolt\EventLoop;
-use function Amp\launch;
+use function Amp\async;
 
 class PayloadTest extends AsyncTestCase
 {
@@ -147,7 +147,7 @@ class PayloadTest extends AsyncTestCase
         $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
 
-        $readFuture = launch(fn () => $stream->read());
+        $readFuture = async(fn () => $stream->read());
         $emitter->error($exception);
 
         $callable = $this->createCallback(1);
@@ -215,12 +215,12 @@ class PayloadTest extends AsyncTestCase
     {
         $emitter = new Emitter;
         $stream = new Payload(new PipelineStream($emitter->asPipeline()));
-        launch(fn () => $stream->read());
+        async(fn () => $stream->read());
 
         $this->expectException(PendingReadError::class);
 
         try {
-            launch(fn () => $stream->read())->await();
+            async(fn () => $stream->read())->await();
         } finally {
             $emitter->complete();
         }

@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\CancellationToken;
+use Amp\Cancellation;
 use Amp\CancelledException;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
@@ -101,7 +101,7 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
     }
 
     /** @inheritdoc */
-    public function read(?CancellationToken $token = null): ?string
+    public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->suspension !== null) {
             throw new PendingReadError;
@@ -121,12 +121,12 @@ final class ResourceInputStream implements InputStream, ClosableStream, Referenc
         EventLoop::enable($this->watcher);
         $this->suspension = EventLoop::createSuspension();
 
-        $id = $token?->subscribe($this->cancel);
+        $id = $cancellation?->subscribe($this->cancel);
 
         try {
             return $this->suspension->suspend();
         } finally {
-            $token?->unsubscribe($id);
+            $cancellation?->unsubscribe($id);
         }
     }
 

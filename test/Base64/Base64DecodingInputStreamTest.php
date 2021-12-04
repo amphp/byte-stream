@@ -8,8 +8,8 @@ use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Emitter;
+use function Amp\async;
 use function Amp\ByteStream\buffer;
-use function Amp\launch;
 
 class Base64DecodingInputStreamTest extends AsyncTestCase
 {
@@ -19,7 +19,7 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
 
     public function testRead(): void
     {
-        $future = launch(fn () => buffer($this->stream));
+        $future = async(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('m9vLmJhcg=');
@@ -31,7 +31,7 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
 
     public function testInvalidDataMissingPadding(): void
     {
-        $future = launch(fn () => buffer($this->stream));
+        $future = async(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('m9vLmJhcg=');
@@ -46,7 +46,7 @@ class Base64DecodingInputStreamTest extends AsyncTestCase
 
     public function testInvalidDataChar(): void
     {
-        $future = launch(fn () => buffer($this->stream));
+        $future = async(fn () => buffer($this->stream));
 
         $this->source->emit('Z');
         $this->source->emit('!');

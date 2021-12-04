@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Deferred;
+use Amp\DeferredFuture;
 use Amp\Future;
 use Revolt\EventLoop;
 
@@ -20,7 +20,7 @@ final class ResourceOutputStream implements OutputStream, ClosableStream
     /** @var string */
     private string $watcher;
 
-    /** @var \SplQueue<array{string, int, Deferred, bool}> */
+    /** @var \SplQueue<array{string, int, DeferredFuture, bool}> */
     private \SplQueue $writes;
 
     /** @var bool */
@@ -65,12 +65,12 @@ final class ResourceOutputStream implements OutputStream, ClosableStream
 
             try {
                 while (!$writes->isEmpty()) {
-                    /** @var Deferred|null $deferred */
-                    [$data, $previous, $deferred, $end] = $writes->shift();
+                    /** @var DeferredFuture|null $deferredFuture */
+                    [$data, $previous, $deferredFuture, $end] = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        $deferred?->complete(null);
+                        $deferredFuture?->complete(null);
                         continue;
                     }
 
@@ -104,7 +104,7 @@ final class ResourceOutputStream implements OutputStream, ClosableStream
                             throw new StreamException($message);
                         }
 
-                        $writes->unshift([$data, $previous, $deferred, $end]);
+                        $writes->unshift([$data, $previous, $deferredFuture, $end]);
                         $end = false;
                         return;
                     }
@@ -113,22 +113,22 @@ final class ResourceOutputStream implements OutputStream, ClosableStream
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
-                        $writes->unshift([$data, $written + $previous, $deferred, $end]);
+                        $writes->unshift([$data, $written + $previous, $deferredFuture, $end]);
                         $end = false;
                         return;
                     }
 
-                    $deferred?->complete(null);
+                    $deferredFuture?->complete(null);
                 }
             } catch (\Throwable $exception) {
                 $writable = false;
                 $end = true;
 
                 /** @psalm-suppress PossiblyUndefinedVariable */
-                $deferred?->error($exception);
+                $deferredFuture?->error($exception);
                 while (!$writes->isEmpty()) {
-                    [, , $deferred] = $writes->shift();
-                    $deferred?->error($exception);
+                    [, , $deferredFuture] = $writes->shift();
+                    $deferredFuture?->error($exception);
                 }
 
                 EventLoop::cancel($watcher);
@@ -285,8 +285,8 @@ final class ResourceOutputStream implements OutputStream, ClosableStream
         }
 
         EventLoop::enable($this->watcher);
-        $this->writes->push([$data, $written, $deferred = new Deferred, $end]);
-        return $deferred->getFuture();
+        $this->writes->push([$data, $written, $deferredFuture = new DeferredFuture, $end]);
+        return $deferredFuture->getFuture();
     }
 
     /**
@@ -304,9 +304,9 @@ final class ResourceOutputStream implements OutputStream, ClosableStream
         if (!$this->writes->isEmpty()) {
             $exception = new ClosedException("The socket was closed before writing completed");
             do {
-                /** @var Deferred|null $deferred */
-                [, , $deferred] = $this->writes->shift();
-                $deferred?->error($exception);
+                /** @var DeferredFuture|null $deferredFuture */
+                [, , $deferredFuture] = $this->writes->shift();
+                $deferredFuture?->error($exception);
             } while (!$this->writes->isEmpty());
         }
 

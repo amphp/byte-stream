@@ -3,7 +3,7 @@
 namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\InputStream;
-use Amp\CancellationToken;
+use Amp\Cancellation;
 
 final class Base64EncodingInputStream implements InputStream
 {
@@ -18,9 +18,9 @@ final class Base64EncodingInputStream implements InputStream
         $this->source = $source;
     }
 
-    public function read(?CancellationToken $token = null): ?string
+    public function read(?Cancellation $cancellation = null): ?string
     {
-        $chunk = $this->source->read($token);
+        $chunk = $this->source->read($cancellation);
         if ($chunk === null) {
             if ($this->buffer === null) {
                 return null;

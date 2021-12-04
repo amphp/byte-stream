@@ -7,8 +7,8 @@ use Amp\ByteStream\InputStream;
 use Amp\ByteStream\PipelineStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Emitter;
+use function Amp\async;
 use function Amp\ByteStream\buffer;
-use function Amp\launch;
 
 class Base64EncodingInputStreamTest extends AsyncTestCase
 {
@@ -18,7 +18,7 @@ class Base64EncodingInputStreamTest extends AsyncTestCase
 
     public function testRead(): void
     {
-        $future = launch(fn () => buffer($this->stream));
+        $future = async(fn () => buffer($this->stream));
 
         $this->source->emit('f');
         $this->source->emit('o');

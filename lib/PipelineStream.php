@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\CancellationToken;
+use Amp\Cancellation;
 use Amp\Pipeline\Pipeline;
 
 final class PipelineStream implements InputStream
@@ -23,7 +23,7 @@ final class PipelineStream implements InputStream
     }
 
     /** @inheritdoc */
-    public function read(?CancellationToken $token = null): ?string
+    public function read(?Cancellation $cancellation = null): ?string
     {
         if (isset($this->exception)) {
             throw $this->exception;
@@ -36,7 +36,7 @@ final class PipelineStream implements InputStream
         $this->pending = true;
 
         try {
-            if (null === $chunk = $this->pipeline->continue($token)) {
+            if (null === $chunk = $this->pipeline->continue($cancellation)) {
                 return null;
             }
 

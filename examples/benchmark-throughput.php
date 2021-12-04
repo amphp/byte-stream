@@ -41,7 +41,7 @@ try {
 
 $stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...' . PHP_EOL);
 
-EventLoop::delay($t, [$in, "close"]);
+EventLoop::delay($t, fn () => $in->close());
 
 $start = \microtime(true);
 $bytes = 0;

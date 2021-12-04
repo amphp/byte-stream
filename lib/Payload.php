@@ -2,11 +2,11 @@
 
 namespace Amp\ByteStream;
 
-use Amp\CancellationToken;
-use Amp\Deferred;
+use Amp\Cancellation;
+use Amp\DeferredFuture;
 use Amp\Future;
 use Revolt\EventLoop;
-use function Amp\launch;
+use function Amp\async;
 
 /**
  * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
@@ -43,22 +43,22 @@ class Payload implements InputStream
      *
      * @throws \Error If a buffered message was requested by calling buffer().
      */
-    final public function read(?CancellationToken $token = null): ?string
+    final public function read(?Cancellation $cancellation = null): ?string
     {
         if (isset($this->future)) {
             throw new \Error("Cannot stream message data once a buffered message has been requested");
         }
 
         if ($this->stream instanceof InputStream) {
-            $deferred = new Deferred;
-            $this->lastRead = $deferred->getFuture();
+            $deferredFuture = new DeferredFuture;
+            $this->lastRead = $deferredFuture->getFuture();
             $this->lastRead->ignore();
 
             try {
-                $chunk = $this->stream->read($token);
-                $deferred->complete($chunk !== null);
+                $chunk = $this->stream->read($cancellation);
+                $deferredFuture->complete($chunk !== null);
             } catch (\Throwable $exception) {
-                $deferred->error($exception);
+                $deferredFuture->error($exception);
                 throw $exception;
             }
 
@@ -82,14 +82,14 @@ class Payload implements InputStream
      *
      * @return string The entire message contents.
      */
-    final public function buffer(?CancellationToken $token = null): string
+    final public function buffer(?Cancellation $cancellation = null): string
     {
         if (isset($this->future)) {
-            return $this->future->await($token);
+            return $this->future->await($cancellation);
         }
 
         if ($this->stream instanceof InputStream) {
-            $this->future = launch(function (): string {
+            $this->future = async(function (): string {
                 $buffer = '';
                 if (isset($this->lastRead) && !$this->lastRead->await()) {
                     return $buffer;
@@ -102,7 +102,7 @@ class Payload implements InputStream
                 return $buffer;
             });
 
-            return $this->future->await($token);
+            return $this->future->await($cancellation);
         }
 
         $payload = $this->stream ?? '';
@@ -121,7 +121,7 @@ class Payload implements InputStream
             while (null !== $stream->read()) {
                 // Discard unread bytes from message.
             }
-        } catch (\Throwable $exception) {
+        } catch (\Throwable) {
             // If exception is thrown here the stream completed anyway.
         }
     }

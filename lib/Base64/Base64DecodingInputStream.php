@@ -4,7 +4,7 @@ namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\InputStream;
 use Amp\ByteStream\StreamException;
-use Amp\CancellationToken;
+use Amp\Cancellation;
 
 final class Base64DecodingInputStream implements InputStream
 {
@@ -17,13 +17,13 @@ final class Base64DecodingInputStream implements InputStream
         $this->source = $source;
     }
 
-    public function read(?CancellationToken $token = null): ?string
+    public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->source === null) {
             throw new StreamException('Failed to read stream chunk due to invalid base64 data');
         }
 
-        $chunk = $this->source->read($token);
+        $chunk = $this->source->read($cancellation);
         if ($chunk === null) {
             if ($this->buffer === '') {
                 return null;

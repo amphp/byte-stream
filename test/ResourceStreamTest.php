@@ -8,14 +8,14 @@ use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ResourceInputStream;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
-use Amp\CancellationTokenSource;
+use Amp\DeferredCancellation;
 use Amp\CancelledException;
 use Amp\Future;
 use Amp\PHPUnit\AsyncTestCase;
 use Revolt\EventLoop;
+use function Amp\async;
 use function Amp\ByteStream\pipe;
 use function Amp\delay;
-use function Amp\launch;
 
 class ResourceStreamTest extends AsyncTestCase
 {
@@ -170,8 +170,8 @@ class ResourceStreamTest extends AsyncTestCase
         /** @noinspection PhpUnusedLocalVariableInspection Required to keep reference */
         [$a, $b] = $this->getStreamPair();
 
-        launch(fn () => $b->read())->ignore(); // Will not resolve.
-        launch(fn () => $b->read())->await();
+        async(fn () => $b->read())->ignore(); // Will not resolve.
+        async(fn () => $b->read())->await();
     }
 
     public function testResolveSuccessOnClosedStream(): void
@@ -272,11 +272,11 @@ class ResourceStreamTest extends AsyncTestCase
     {
         [$a, $b] = $this->getStreamPair();
 
-        $tokenSource = new CancellationTokenSource();
+        $cancellationSource = new DeferredCancellation();
 
-        $future = launch(fn() => $b->read($tokenSource->getToken()));
+        $future = async(fn() => $b->read($cancellationSource->getCancellation()));
 
-        $tokenSource->cancel();
+        $cancellationSource->cancel();
 
         $a->write('foo')->await();
 
@@ -288,15 +288,15 @@ class ResourceStreamTest extends AsyncTestCase
     {
         [$a, $b] = $this->getStreamPair();
 
-        $tokenSource = new CancellationTokenSource();
+        $cancellationSource = new DeferredCancellation();
 
-        $future = launch(fn() => $b->read($tokenSource->getToken()));
+        $future = async(fn() => $b->read($cancellationSource->getCancellation()));
 
         $a->write('foo')->await();
 
         delay(0); // Tick event loop to invoke read watcher.
 
-        $tokenSource->cancel();
+        $cancellationSource->cancel();
 
         self::assertSame('foo', $future->await());
     }
