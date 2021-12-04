@@ -4,14 +4,14 @@ namespace Amp\ByteStream;
 
 use Amp\Cancellation;
 
-final class InputStreamChain implements InputStream
+final class ReadableStreamChain implements ReadableStream
 {
-    /** @var InputStream[] */
+    /** @var ReadableStream[] */
     private array $streams;
 
     private bool $reading = false;
 
-    public function __construct(InputStream ...$streams)
+    public function __construct(ReadableStream ...$streams)
     {
         $this->streams = $streams;
     }

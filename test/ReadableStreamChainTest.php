@@ -5,11 +5,11 @@ namespace Amp\ByteStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
 
-class InputStreamChainTest extends AsyncTestCase
+class ReadableStreamChainTest extends AsyncTestCase
 {
     public function test(): void
     {
-        $stream = new InputStreamChain(
+        $stream = new ReadableStreamChain(
             $this->createStream(["abc", "def", "hi"]),
             new InMemoryStream,
             $this->createStream(["kak"])
@@ -18,8 +18,8 @@ class InputStreamChainTest extends AsyncTestCase
         self::assertSame("abcdefhikak", buffer($stream));
     }
 
-    private function createStream(array $chunks): InputStream
+    private function createStream(array $chunks): ReadableStream
     {
-        return new PipelineStream(Pipeline\fromIterable($chunks, 0.01));
+        return new PipelineStream(Pipeline\fromIterable($chunks)->pipe(Pipeline\postpone(0.01)));
     }
 }

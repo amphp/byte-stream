@@ -2,16 +2,16 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\ResourceOutputStream;
+use Amp\ByteStream\WritableResourceStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use function Amp\delay;
 
-class ResourceOutputStreamTest extends AsyncTestCase
+class WritableResourceStreamTest extends AsyncTestCase
 {
     public function testGetResource(): void
     {
-        $stream = new ResourceOutputStream(\STDOUT);
+        $stream = new WritableResourceStream(\STDOUT);
 
         self::assertSame(\STDOUT, $stream->getResource());
     }
@@ -21,7 +21,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a valid stream");
 
-        new ResourceOutputStream(42);
+        new WritableResourceStream(42);
     }
 
     public function testNotWritable(): void
@@ -29,7 +29,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a writable stream");
 
-        new ResourceOutputStream(\STDIN);
+        new WritableResourceStream(\STDIN);
     }
 
     public function testBrokenPipe(): void
@@ -44,7 +44,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
 
         [$a, $b] = $sockets;
 
-        $stream = new ResourceOutputStream($a);
+        $stream = new WritableResourceStream($a);
         \fclose($b);
 
         $this->expectException(StreamException::class);
@@ -61,7 +61,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
         $a = \stream_socket_client("tcp://" . $address);
         $b = \stream_socket_accept($server);
 
-        $stream = new ResourceOutputStream($a);
+        $stream = new WritableResourceStream($a);
         \fclose($b);
 
         $this->expectException(StreamException::class);

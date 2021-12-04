@@ -7,13 +7,13 @@ use Amp\Future;
 /**
  * Allows compression of output streams using Zlib.
  */
-final class ZlibOutputStream implements OutputStream
+final class ZlibWritableStream implements WritableStream
 {
     /** @var resource|null */
     private $resource;
 
     /**
-     * @param OutputStream $destination Output stream to write the compressed data to.
+     * @param WritableStream $destination Output stream to write the compressed data to.
      * @param int          $encoding Compression encoding to use, see `deflate_init()`.
      * @param array        $options Compression options to use, see `deflate_init()`.
      *
@@ -22,7 +22,7 @@ final class ZlibOutputStream implements OutputStream
      * @see http://php.net/manual/en/function.deflate-init.php
      */
     public function __construct(
-        private OutputStream $destination,
+        private WritableStream $destination,
         private int $encoding,
         private array $options = []
     ) {

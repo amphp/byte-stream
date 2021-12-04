@@ -2,17 +2,17 @@
 
 namespace Amp\ByteStream\Base64;
 
-use Amp\ByteStream\InputStream;
+use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
 
-final class Base64DecodingInputStream implements InputStream
+final class Base64DecodingReadableStream implements ReadableStream
 {
-    private ?InputStream $source;
+    private ?ReadableStream $source;
 
     private string $buffer = '';
 
-    public function __construct(InputStream $source)
+    public function __construct(ReadableStream $source)
     {
         $this->source = $source;
     }

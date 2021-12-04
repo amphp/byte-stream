@@ -2,18 +2,18 @@
 
 namespace Amp\ByteStream\Base64;
 
-use Amp\ByteStream\InputStream;
+use Amp\ByteStream\ReadableStream;
 use Amp\Cancellation;
 
-final class Base64EncodingInputStream implements InputStream
+final class Base64EncodingReadableStream implements ReadableStream
 {
-    /** @var InputStream */
-    private InputStream $source;
+    /** @var ReadableStream */
+    private ReadableStream $source;
 
     /** @var string|null */
     private ?string $buffer = '';
 
-    public function __construct(InputStream $source)
+    public function __construct(ReadableStream $source)
     {
         $this->source = $source;
     }

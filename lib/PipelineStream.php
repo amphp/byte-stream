@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 use Amp\Pipeline\Pipeline;
 
-final class PipelineStream implements InputStream
+final class PipelineStream implements ReadableStream
 {
     /** @var Pipeline<string> */
     private Pipeline $pipeline;

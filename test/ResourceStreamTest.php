@@ -5,8 +5,8 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\PendingReadError;
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
+use Amp\ByteStream\ReadableResourceStream;
+use Amp\ByteStream\WritableResourceStream;
 use Amp\ByteStream\StreamException;
 use Amp\DeferredCancellation;
 use Amp\CancelledException;
@@ -23,13 +23,13 @@ class ResourceStreamTest extends AsyncTestCase
 
     public function getStreamPair(
         $outputChunkSize = null,
-        $inputChunkSize = ResourceInputStream::DEFAULT_CHUNK_SIZE
+        $inputChunkSize = ReadableResourceStream::DEFAULT_CHUNK_SIZE
     ): array {
         $domain = \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX;
         [$left, $right] = @\stream_socket_pair($domain, \STREAM_SOCK_STREAM, \STREAM_IPPROTO_IP);
 
-        $a = new ResourceOutputStream($left, $outputChunkSize);
-        $b = new ResourceInputStream($right, $inputChunkSize);
+        $a = new WritableResourceStream($left, $outputChunkSize);
+        $b = new ReadableResourceStream($right, $inputChunkSize);
 
         return [$a, $b];
     }
@@ -238,13 +238,13 @@ class ResourceStreamTest extends AsyncTestCase
         EventLoop::queue(function () use ($middle): void {
             pipe(
                 new InMemoryStream(\file_get_contents(__FILE__)),
-                $destination = new ResourceOutputStream(\fopen($middle, 'wb'))
+                $destination = new WritableResourceStream(\fopen($middle, 'wb'))
             );
 
             $destination->close();
         });
 
-        $middleReadStream = new ResourceInputStream(\fopen($middle, 'rb'));
+        $middleReadStream = new ReadableResourceStream(\fopen($middle, 'rb'));
         $buffer = '';
 
         while (\strlen($buffer) < \filesize(__FILE__)) {

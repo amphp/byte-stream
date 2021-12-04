@@ -2,18 +2,18 @@
 
 namespace Amp\ByteStream\Base64;
 
-use Amp\ByteStream\OutputStream;
+use Amp\ByteStream\WritableStream;
 use Amp\Future;
 
-final class Base64EncodingOutputStream implements OutputStream
+final class Base64EncodingWritableStream implements WritableStream
 {
-    /** @var OutputStream */
-    private OutputStream $destination;
+    /** @var WritableStream */
+    private WritableStream $destination;
 
     /** @var string */
     private string $buffer = '';
 
-    public function __construct(OutputStream $destination)
+    public function __construct(WritableStream $destination)
     {
         $this->destination = $destination;
     }

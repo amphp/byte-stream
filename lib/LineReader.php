@@ -10,9 +10,9 @@ final class LineReader
 
     private string $buffer = "";
 
-    private InputStream $source;
+    private ReadableStream $source;
 
-    public function __construct(InputStream $inputStream, string $delimiter = null)
+    public function __construct(ReadableStream $inputStream, ?string $delimiter = null)
     {
         $this->source = $inputStream;
         $this->delimiter = $delimiter ?? "\n";

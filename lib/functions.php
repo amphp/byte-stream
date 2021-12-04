@@ -25,12 +25,13 @@ if (!\defined('STDERR')) {
 }
 
 /**
- * @param InputStream  $source
- * @param OutputStream $destination
+ * @param ReadableStream $source
+ * @param WritableStream $destination
+ * @param Cancellation|null $cancellation
  *
  * @return int The number of bytes written to the destination.
  */
-function pipe(InputStream $source, OutputStream $destination, ?Cancellation $cancellation = null): int
+function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation $cancellation = null): int
 {
     $written = 0;
 
@@ -48,7 +49,7 @@ function pipe(InputStream $source, OutputStream $destination, ?Cancellation $can
  * Create a local stream pair where data written to the OutputStream is immediately available on the InputStream.
  * Primarily useful for testing mocks.
  *
- * @return array{InputStream, OutputStream}
+ * @return array{ReadableStream, WritableStream}
  */
 function createStreamPair(): array
 {
@@ -56,7 +57,7 @@ function createStreamPair(): array
 
     return [
         new PipelineStream($emitter->asPipeline()),
-        new class ($emitter) implements OutputStream {
+        new class ($emitter) implements WritableStream {
             public function __construct(
                 private Emitter $emitter
             ) {
@@ -88,11 +89,11 @@ function createStreamPair(): array
 }
 
 /**
- * @param InputStream $source
+ * @param ReadableStream $source
  *
  * @return string Entire contents of the InputStream.
  */
-function buffer(InputStream $source): string
+function buffer(ReadableStream $source): string
 {
     $buffer = '';
 
@@ -107,66 +108,70 @@ function buffer(InputStream $source): string
 /**
  * The php://input input buffer stream for the process associated with the currently active event loop.
  *
- * @return ResourceInputStream
+ * @return ReadableResourceStream
  */
-function getInputBufferStream(): ResourceInputStream
+function getInputBufferStream(): ReadableResourceStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[EventLoop::getDriver()] ??= new ResourceInputStream(\fopen('php://input', 'rb'));
+    return $map[EventLoop::getDriver()] ??= new ReadableResourceStream(\fopen('php://input', 'rb'));
 }
 
 /**
  * The php://output output buffer stream for the process associated with the currently active event loop.
  *
- * @return ResourceOutputStream
+ * @return WritableResourceStream
  */
-function getOutputBufferStream(): ResourceOutputStream
+function getOutputBufferStream(): WritableResourceStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[EventLoop::getDriver()] ??= new ResourceOutputStream(\fopen('php://output', 'wb'));
+    return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\fopen('php://output', 'wb'));
 }
 
 /**
  * The STDIN stream for the process associated with the currently active event loop.
  *
- * @return ResourceInputStream
+ * @return ReadableResourceStream
  */
-function getStdin(): ResourceInputStream
+function getStdin(): ReadableResourceStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[EventLoop::getDriver()] ??= new ResourceInputStream(\STDIN);
+    return $map[EventLoop::getDriver()] ??= new ReadableResourceStream(\STDIN);
 }
 
 /**
  * The STDOUT stream for the process associated with the currently active event loop.
  *
- * @return ResourceOutputStream
+ * @return WritableResourceStream
  */
-function getStdout(): ResourceOutputStream
+function getStdout(): WritableResourceStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[EventLoop::getDriver()] ??= new ResourceOutputStream(\STDOUT);
+    return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\STDOUT);
 }
 
 /**
  * The STDERR stream for the process associated with the currently active event loop.
  *
- * @return ResourceOutputStream
+ * @return WritableResourceStream
  */
-function getStderr(): ResourceOutputStream
+function getStderr(): WritableResourceStream
 {
     static $map;
     $map ??= new \WeakMap();
-    return $map[EventLoop::getDriver()] ??= new ResourceOutputStream(\STDERR);
+    return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\STDERR);
 }
 
-function parseLineDelimitedJson(InputStream $stream, bool $assoc = false, int $depth = 512, int $options = 0): Pipeline
-{
-    return new AsyncGenerator(static function () use ($stream, $assoc, $depth, $options): \Generator {
+function parseLineDelimitedJson(
+    ReadableStream $stream,
+    bool $associative = false,
+    int $depth = 512,
+    int $options = 0
+): Pipeline {
+    return new AsyncGenerator(static function () use ($stream, $associative, $depth, $options): \Generator {
         $reader = new LineReader($stream);
 
         while (null !== $line = $reader->readLine()) {
@@ -176,11 +181,11 @@ function parseLineDelimitedJson(InputStream $stream, bool $assoc = false, int $d
                 continue;
             }
 
-            $data = \json_decode($line, $assoc, $depth, $options);
+            $data = \json_decode($line, $associative, $depth, $options);
             $error = \json_last_error();
 
             if ($error !== \JSON_ERROR_NONE) {
-                throw new StreamException('Failed to parse JSON: ' . \json_last_error_msg(), $error);
+                throw new \JsonException('Failed to parse JSON: ' . \json_last_error_msg(), $error);
             }
 
             yield $data;

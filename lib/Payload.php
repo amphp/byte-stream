@@ -13,15 +13,15 @@ use function Amp\async;
  * be buffered and accessed in its entirety by calling buffer(). Once buffering is requested through buffer(), the
  * stream cannot be read in chunks. On destruct any remaining data is read from the InputStream given to this class.
  */
-class Payload implements InputStream
+class Payload implements ReadableStream
 {
-    private InputStream|string|null $stream;
+    private ReadableStream|string|null $stream;
 
     private Future $future;
 
     private Future $lastRead;
 
-    public function __construct(InputStream|string $stream)
+    public function __construct(ReadableStream|string $stream)
     {
         $this->stream = match (true) {
             $stream instanceof InMemoryStream => $stream->read(),
@@ -49,7 +49,7 @@ class Payload implements InputStream
             throw new \Error("Cannot stream message data once a buffered message has been requested");
         }
 
-        if ($this->stream instanceof InputStream) {
+        if ($this->stream instanceof ReadableStream) {
             $deferredFuture = new DeferredFuture;
             $this->lastRead = $deferredFuture->getFuture();
             $this->lastRead->ignore();
@@ -72,7 +72,7 @@ class Payload implements InputStream
 
     final public function isReadable(): bool
     {
-        return $this->stream instanceof InputStream
+        return $this->stream instanceof ReadableStream
             ? $this->stream->isReadable()
             : $this->stream !== null;
     }
@@ -88,7 +88,7 @@ class Payload implements InputStream
             return $this->future->await($cancellation);
         }
 
-        if ($this->stream instanceof InputStream) {
+        if ($this->stream instanceof ReadableStream) {
             $this->future = async(function (): string {
                 $buffer = '';
                 if (isset($this->lastRead) && !$this->lastRead->await()) {
@@ -111,7 +111,7 @@ class Payload implements InputStream
         return $payload;
     }
 
-    private static function consume(InputStream $stream, Future $lastRead): void
+    private static function consume(ReadableStream $stream, Future $lastRead): void
     {
         try {
             if (!$lastRead->await()) {

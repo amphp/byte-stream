@@ -7,13 +7,13 @@ use Amp\Cancellation;
 /**
  * Allows decompression of input streams using Zlib.
  */
-final class ZlibInputStream implements InputStream
+final class ZlibReadableStream implements ReadableStream
 {
     /** @var resource|null */
     private $resource;
 
     /**
-     * @param InputStream $source Input stream to read compressed data from.
+     * @param ReadableStream $source Input stream to read compressed data from.
      * @param int         $encoding Compression algorithm used, see `inflate_init()`.
      * @param array       $options Algorithm options, see `inflate_init()`.
      *
@@ -23,7 +23,7 @@ final class ZlibInputStream implements InputStream
      * @see http://php.net/manual/en/function.inflate-init.php
      */
     public function __construct(
-        private InputStream $source,
+        private ReadableStream $source,
         private int $encoding,
         private array $options = [],
     ) {

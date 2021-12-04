@@ -5,7 +5,7 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\PipelineStream;
 use Amp\ByteStream\StreamException;
-use Amp\ByteStream\ZlibInputStream;
+use Amp\ByteStream\ZlibReadableStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\AsyncGenerator;
 
@@ -25,7 +25,7 @@ class ZlibInputStreamTest extends AsyncTestCase
             }
         }));
 
-        $gzStream = new ZlibInputStream($stream, \ZLIB_ENCODING_GZIP);
+        $gzStream = new ZlibReadableStream($stream, \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $gzStream->read()) !== null) {
@@ -38,7 +38,7 @@ class ZlibInputStreamTest extends AsyncTestCase
 
     public function testGetEncoding(): void
     {
-        $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
+        $gzStream = new ZlibReadableStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
 
         self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
@@ -51,7 +51,7 @@ class ZlibInputStreamTest extends AsyncTestCase
             $this->expectException(\ValueError::class);
         }
 
-        new ZlibInputStream(new InMemoryStream(""), 1337);
+        new ZlibReadableStream(new InMemoryStream(""), 1337);
     }
 
     public function testGetOptions(): void
@@ -63,7 +63,7 @@ class ZlibInputStreamTest extends AsyncTestCase
             "strategy" => \ZLIB_DEFAULT_STRATEGY,
         ];
 
-        $gzStream = new ZlibInputStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP, $options);
+        $gzStream = new ZlibReadableStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP, $options);
 
         self::assertSame($options, $gzStream->getOptions());
     }
@@ -72,7 +72,7 @@ class ZlibInputStreamTest extends AsyncTestCase
     {
         $this->expectException(StreamException::class);
 
-        $gzStream = new ZlibInputStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
+        $gzStream = new ZlibReadableStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
 
         $gzStream->read();
     }

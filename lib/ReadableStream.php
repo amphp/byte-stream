@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 
 /**
- * An `InputStream` allows reading byte streams in chunks.
+ * A `ReadableStream` allows reading byte streams in chunks.
  *
  * **Example**
  *
@@ -21,7 +21,7 @@ use Amp\Cancellation;
  * }
  * ```
  */
-interface InputStream
+interface ReadableStream
 {
     /**
      * Reads data from the stream.

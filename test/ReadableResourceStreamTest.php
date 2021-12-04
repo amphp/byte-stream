@@ -2,14 +2,14 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\ResourceInputStream;
+use Amp\ByteStream\ReadableResourceStream;
 use Amp\PHPUnit\AsyncTestCase;
 
-class ResourceInputStreamTest extends AsyncTestCase
+class ReadableResourceStreamTest extends AsyncTestCase
 {
     public function testGetResource(): void
     {
-        $stream = new ResourceInputStream(\STDIN);
+        $stream = new ReadableResourceStream(\STDIN);
 
         self::assertSame(\STDIN, $stream->getResource());
     }
@@ -19,7 +19,7 @@ class ResourceInputStreamTest extends AsyncTestCase
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a valid stream");
 
-        new ResourceInputStream(42);
+        new ReadableResourceStream(42);
     }
 
     public function testNotReadable(): void
@@ -27,7 +27,7 @@ class ResourceInputStreamTest extends AsyncTestCase
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a readable stream");
 
-        new ResourceInputStream(\STDOUT);
+        new ReadableResourceStream(\STDOUT);
     }
 
     public function testClosedRemoteSocketWithFork(): void
@@ -46,7 +46,7 @@ class ResourceInputStreamTest extends AsyncTestCase
             ['pipe', 'w'],
         ], $pipes);
 
-        $stream = new ResourceInputStream($a);
+        $stream = new ReadableResourceStream($a);
         \stream_socket_shutdown($b, \STREAM_SHUT_RDWR);
         \fclose($b);
 

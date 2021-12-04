@@ -9,7 +9,7 @@ use Revolt\EventLoop;
 /**
  * Output stream abstraction for PHP's stream resources.
  */
-final class ResourceOutputStream implements OutputStream, ClosableStream
+final class WritableResourceStream implements WritableStream, ClosableStream
 {
     private const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
     private const LARGE_CHUNK_SIZE = 128 * 1024;

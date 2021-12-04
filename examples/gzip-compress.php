@@ -1,15 +1,15 @@
 <?php
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
-use Amp\ByteStream\ZlibOutputStream;
+use Amp\ByteStream\ReadableResourceStream;
+use Amp\ByteStream\WritableResourceStream;
+use Amp\ByteStream\ZlibWritableStream;
 
 require __DIR__ . "/../vendor/autoload.php";
 
-$stdin = new ResourceInputStream(STDIN);
-$stdout = new ResourceOutputStream(STDOUT);
+$stdin = new ReadableResourceStream(STDIN);
+$stdout = new WritableResourceStream(STDOUT);
 
-$gzout = new ZlibOutputStream($stdout, ZLIB_ENCODING_GZIP);
+$gzout = new ZlibWritableStream($stdout, ZLIB_ENCODING_GZIP);
 
 while (($chunk = $stdin->read()) !== null) {
     $gzout->write($chunk);

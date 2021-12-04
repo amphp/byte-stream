@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\DeferredFuture;
 use Amp\Future;
 
-class OutputBuffer implements OutputStream
+class OutputBuffer implements WritableStream
 {
     private DeferredFuture $deferredFuture;
 

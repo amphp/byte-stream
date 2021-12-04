@@ -7,7 +7,7 @@ use Amp\Cancellation;
 /**
  * Input stream with a single already known data chunk.
  */
-final class InMemoryStream implements InputStream
+final class InMemoryStream implements ReadableStream
 {
     private ?string $contents;
 

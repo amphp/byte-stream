@@ -3,8 +3,8 @@
 // Adopted from ReactPHP's stream package
 // https://github.com/reactphp/stream/blob/b996af99fd1169ff74e93ef69c1513b7d0db19d0/examples/benchmark-throughput.php
 
-use Amp\ByteStream\ResourceInputStream;
-use Amp\ByteStream\ResourceOutputStream;
+use Amp\ByteStream\ReadableResourceStream;
+use Amp\ByteStream\WritableResourceStream;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Driver\StreamSelectDriver;
 
@@ -23,9 +23,9 @@ $t = (int) ($args['t'] ?? 30);
 $if = \preg_replace('(^/dev/fd/)', 'php://fd/', $if);
 $of = \preg_replace('(^/dev/fd/)', 'php://fd/', $of);
 
-$stderr = new ResourceOutputStream(STDERR);
-$in = new ResourceInputStream(\fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
-$out = new ResourceOutputStream(\fopen($of, 'wb'));
+$stderr = new WritableResourceStream(STDERR);
+$in = new ReadableResourceStream(\fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
+$out = new WritableResourceStream(\fopen($of, 'wb'));
 
 if (\extension_loaded('xdebug')) {
     $stderr->write('NOTICE: The "xdebug" extension is loaded, this has a major impact on performance.' . PHP_EOL);

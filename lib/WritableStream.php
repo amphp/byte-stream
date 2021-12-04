@@ -5,9 +5,9 @@ namespace Amp\ByteStream;
 use Amp\Future;
 
 /**
- * An `OutputStream` allows writing data in chunks. Writers can wait on the returned promises to feel the backpressure.
+ * A `WritableStream` allows writing data in chunks. Writers can wait on the returned promises to feel the backpressure.
  */
-interface OutputStream
+interface WritableStream
 {
     /**
      * Writes data to the stream.

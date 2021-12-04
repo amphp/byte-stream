@@ -2,14 +2,14 @@
 
 namespace Amp\ByteStream\Base64;
 
-use Amp\ByteStream\OutputStream;
+use Amp\ByteStream\WritableStream;
 use Amp\ByteStream\StreamException;
 use Amp\Future;
 
-final class Base64DecodingOutputStream implements OutputStream
+final class Base64DecodingWritableStream implements WritableStream
 {
-    /** @var OutputStream */
-    private OutputStream $destination;
+    /** @var WritableStream */
+    private WritableStream $destination;
 
     /** @var string */
     private string $buffer = '';
@@ -17,7 +17,7 @@ final class Base64DecodingOutputStream implements OutputStream
     /** @var int */
     private int $offset = 0;
 
-    public function __construct(OutputStream $destination)
+    public function __construct(WritableStream $destination)
     {
         $this->destination = $destination;
     }
