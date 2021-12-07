@@ -2,20 +2,20 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\PipelineStream;
+use Amp\ByteStream\IterableStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\Pipeline\Emitter;
 
-class PipelineStreamTest extends AsyncTestCase
+class IterableStreamTest extends AsyncTestCase
 {
     public function testReadIterator(): void
     {
         $values = ["abc", "def", "ghi"];
 
         $source = new Emitter;
-        $stream = new PipelineStream($source->pipe());
+        $stream = new IterableStream($source->pipe());
 
         foreach ($values as $value) {
             $source->emit($value);
@@ -38,7 +38,7 @@ class PipelineStreamTest extends AsyncTestCase
         $value = "abc";
 
         $source = new Emitter;
-        $stream = new PipelineStream($source->pipe());
+        $stream = new IterableStream($source->pipe());
 
         $source->emit($value);
         $source->error($exception);
@@ -64,7 +64,7 @@ class PipelineStreamTest extends AsyncTestCase
         $value = 42;
 
         $source = new Emitter;
-        $stream = new PipelineStream($source->pipe());
+        $stream = new IterableStream($source->pipe());
 
         $source->emit($value);
 
@@ -78,7 +78,7 @@ class PipelineStreamTest extends AsyncTestCase
         $value = 42;
 
         $source = new Emitter;
-        $stream = new PipelineStream($source->pipe());
+        $stream = new IterableStream($source->pipe());
 
         $source->emit($value);
 

@@ -3,7 +3,7 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\OutputBuffer;
-use Amp\ByteStream\PipelineStream;
+use Amp\ByteStream\IterableStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
 use function Amp\ByteStream\pipe;
@@ -12,7 +12,7 @@ class PipeTest extends AsyncTestCase
 {
     public function testPipe()
     {
-        $stream = new PipelineStream(Pipeline\fromIterable(["abc", "def"]));
+        $stream = new IterableStream(Pipeline\fromIterable(["abc", "def"]));
         $buffer = new OutputBuffer;
 
         self::assertSame(6, pipe($stream, $buffer));

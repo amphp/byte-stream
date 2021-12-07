@@ -4,8 +4,9 @@ namespace Amp\ByteStream;
 
 use Amp\Cancellation;
 use Amp\Pipeline\Pipeline;
+use function Amp\Pipeline\fromIterable;
 
-final class PipelineStream implements ReadableStream
+final class IterableStream implements ReadableStream
 {
     /** @var Pipeline<string> */
     private Pipeline $pipeline;
@@ -15,11 +16,11 @@ final class PipelineStream implements ReadableStream
     private bool $pending = false;
 
     /**
-     * @psalm-param Pipeline<string> $pipeline
+     * @param iterable<string> $iterable
      */
-    public function __construct(Pipeline $pipeline)
+    public function __construct(iterable $iterable)
     {
-        $this->pipeline = $pipeline;
+        $this->pipeline = $iterable instanceof Pipeline ? $iterable : fromIterable($iterable);
     }
 
     /** @inheritdoc */

@@ -3,7 +3,7 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\PipelineStream;
+use Amp\ByteStream\IterableStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\ZlibReadableStream;
 use Amp\PHPUnit\AsyncTestCase;
@@ -16,7 +16,7 @@ class ZlibInputStreamTest extends AsyncTestCase
         $file1 = __DIR__ . "/fixtures/foobar.txt";
         $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
 
-        $stream = new PipelineStream(new AsyncGenerator(function () use ($file2) {
+        $stream = new IterableStream(new AsyncGenerator(function () use ($file2) {
             $content = \file_get_contents($file2);
 
             while (\strlen($content)) {

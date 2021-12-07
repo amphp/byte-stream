@@ -6,7 +6,6 @@ use Amp\Cancellation;
 use Amp\Future;
 use Amp\Pipeline\AsyncGenerator;
 use Amp\Pipeline\Emitter;
-use Amp\Pipeline\Pipeline;
 use Revolt\EventLoop;
 
 // @codeCoverageIgnoreStart
@@ -56,7 +55,7 @@ function createStreamPair(): array
     $emitter = new Emitter();
 
     return [
-        new PipelineStream($emitter->pipe()),
+        new IterableStream($emitter->pipe()),
         new class ($emitter) implements WritableStream {
             public function __construct(
                 private Emitter $emitter
@@ -165,12 +164,15 @@ function getStderr(): WritableResourceStream
     return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\STDERR);
 }
 
+/**
+ * @return \Traversable<int, mixed> Traversable of decoded JSON
+ */
 function parseLineDelimitedJson(
     ReadableStream $stream,
     bool $associative = false,
     int $depth = 512,
     int $options = 0
-): Pipeline {
+): \Traversable {
     return new AsyncGenerator(static function () use ($stream, $associative, $depth, $options): \Generator {
         $reader = new LineReader($stream);
 

@@ -2,16 +2,15 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\PipelineStream;
+use Amp\ByteStream\IterableStream;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline;
 use function Amp\ByteStream\buffer;
 
 class BufferTest extends AsyncTestCase
 {
     public function testBuffer(): void
     {
-        $stream = new PipelineStream(Pipeline\fromIterable(["abc", "def", "g"], 0.01));
+        $stream = new IterableStream(["abc", "def", "g"]);
 
         self::assertSame("abcdefg", buffer($stream));
     }

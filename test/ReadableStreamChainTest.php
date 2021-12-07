@@ -20,6 +20,6 @@ class ReadableStreamChainTest extends AsyncTestCase
 
     private function createStream(array $chunks): ReadableStream
     {
-        return new PipelineStream(Pipeline\fromIterable($chunks)->pipe(Pipeline\postpone(0.01)));
+        return new IterableStream(Pipeline\fromIterable($chunks)->pipe(Pipeline\postpone(0.01)));
     }
 }

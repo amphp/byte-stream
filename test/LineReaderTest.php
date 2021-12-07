@@ -59,7 +59,7 @@ class LineReaderTest extends AsyncTestCase
 
     public function testClearBuffer(): void
     {
-        $inputStream = new PipelineStream(Pipeline\fromIterable(["a\nb\nc"]));
+        $inputStream = new IterableStream(Pipeline\fromIterable(["a\nb\nc"]));
 
         $reader = new LineReader($inputStream);
         self::assertSame("a", $reader->readLine());
@@ -73,7 +73,7 @@ class LineReaderTest extends AsyncTestCase
 
     public function testCustomDelimiter(): void
     {
-        $inputStream = new PipelineStream(Pipeline\fromIterable(["a|b|c", "|", "||d|e|f"]));
+        $inputStream = new IterableStream(Pipeline\fromIterable(["a|b|c", "|", "||d|e|f"]));
 
         $reader = new LineReader($inputStream, "|");
         $lines = [];
@@ -88,7 +88,7 @@ class LineReaderTest extends AsyncTestCase
 
     public function testLineFeedDelimiter(): void
     {
-        $inputStream = new PipelineStream(Pipeline\fromIterable(["a\r\n", "b\r\n", "c\r\n"]));
+        $inputStream = new IterableStream(Pipeline\fromIterable(["a\r\n", "b\r\n", "c\r\n"]));
 
         $reader = new LineReader($inputStream, "\n");
         $lines = [];
@@ -103,7 +103,7 @@ class LineReaderTest extends AsyncTestCase
 
     private function check(array $chunks, array $expectedLines): void
     {
-        $inputStream = new PipelineStream(Pipeline\fromIterable($chunks));
+        $inputStream = new IterableStream(Pipeline\fromIterable($chunks));
 
         $reader = new LineReader($inputStream);
         $lines = [];
