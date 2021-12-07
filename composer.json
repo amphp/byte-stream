@@ -1,10 +1,9 @@
 {
     "name": "amphp/byte-stream",
-    "homepage": "http://amphp.org/byte-stream",
+    "homepage": "https://amphp.org/byte-stream",
     "description": "A stream abstraction to make working with non-blocking I/O simple.",
     "support": {
-        "issues": "https://github.com/amphp/byte-stream/issues",
-        "irc": "irc://irc.freenode.org/amphp"
+        "issues": "https://github.com/amphp/byte-stream/issues"
     },
     "keywords": [
         "stream",
@@ -31,11 +30,11 @@
         "amphp/pipeline": "^1"
     },
     "require-dev": {
-        "amphp/phpunit-util": "v2.x-dev",
+        "amphp/phpunit-util": "^3",
         "phpunit/phpunit": "^9",
-        "friendsofphp/php-cs-fixer": "^2.3",
+        "friendsofphp/php-cs-fixer": "^2.19",
         "amphp/php-cs-fixer-config": "dev-master",
-        "psalm/phar": "^4.7",
+        "psalm/phar": "^4.15",
         "jetbrains/phpstorm-stubs": "^2019.3"
     },
     "minimum-stability": "beta",
