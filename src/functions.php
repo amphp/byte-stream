@@ -7,6 +7,8 @@ use Amp\Future;
 use Amp\Pipeline\AsyncGenerator;
 use Amp\Pipeline\Emitter;
 use Revolt\EventLoop;
+use function Amp\Pipeline\fromIterable;
+use function Amp\Pipeline\map;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -83,7 +85,7 @@ function createStreamPair(): array
             {
                 return !$this->emitter->isComplete();
             }
-        }
+        },
     ];
 }
 
@@ -175,18 +177,59 @@ function getStderr(): WritableResourceStream
 }
 
 /**
+ * Splits the stream into chunks based on a delimiter.
+ *
+ * @param ReadableStream $source
+ * @param string $delimiter
+ *
+ * @return \Traversable<string>
+ */
+function split(ReadableStream $source, string $delimiter): \Traversable
+{
+    return new AsyncGenerator(static function () use ($source, $delimiter): \Generator {
+        $buffer = '';
+
+        while (null !== $chunk = $source->read()) {
+            $buffer .= $chunk;
+
+            if (\str_contains($buffer, $delimiter)) {
+                $split = \explode($delimiter, $buffer);
+                $buffer = \array_pop($split);
+
+                yield from $split;
+            }
+        }
+
+        if ($buffer !== '') {
+            yield $buffer;
+        }
+    });
+}
+
+/**
+ * Splits the stream into lines.
+ *
+ * @param ReadableStream $source
+ *
+ * @return \Traversable<string>
+ */
+function splitLines(ReadableStream $source): \Traversable
+{
+    return fromIterable(split($source, "\n"))
+        ->pipe(map(fn ($line) => \rtrim($line, "\r")));
+}
+
+/**
  * @return \Traversable<int, mixed> Traversable of decoded JSON
  */
 function parseLineDelimitedJson(
-    ReadableStream $stream,
+    ReadableStream $source,
     bool $associative = false,
     int $depth = 512,
     int $options = 0
 ): \Traversable {
-    return new AsyncGenerator(static function () use ($stream, $associative, $depth, $options): \Generator {
-        $reader = new LineReader($stream);
-
-        while (null !== $line = $reader->readLine()) {
+    return new AsyncGenerator(static function () use ($source, $associative, $depth, $options): \Generator {
+        foreach (splitLines($source) as $line) {
             $line = \trim($line);
 
             if ($line === '') {
