@@ -8,7 +8,7 @@ use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
 /**
- * Input stream abstraction for PHP's stream resources.
+ * Readable stream abstraction for PHP's stream resources.
  */
 final class ReadableResourceStream implements ReadableStream, ClosableStream, ResourceStream
 {
@@ -17,7 +17,7 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
     /** @var resource|null */
     private $resource;
 
-    private string $watcher;
+    private string $callbackId;
 
     private ?Suspension $suspension = null;
 
@@ -54,7 +54,7 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
 
         $suspension = &$this->suspension;
         $readable = &$this->readable;
-        $this->watcher = EventLoop::onReadable($this->resource, static function ($watcher) use (
+        $this->callbackId = EventLoop::disable(EventLoop::onReadable($this->resource, static function ($callbackId) use (
             &$suspension,
             &$readable,
             &$stream,
@@ -79,25 +79,25 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
                 $readable = false;
                 $stream = null;
                 $data = null; // Stream closed, resolve read with null.
-                EventLoop::cancel($watcher);
+
+                EventLoop::cancel($callbackId);
             } else {
-                EventLoop::disable($watcher);
+                EventLoop::disable($callbackId);
             }
 
             \assert($suspension instanceof Suspension);
 
             $suspension->resume($data);
             $suspension = null;
-        });
+        }));
 
-        $watcher = &$this->watcher;
-        $this->cancel = static function (CancelledException $exception) use (&$suspension, $watcher): void {
+        $callbackId = &$this->callbackId;
+        $this->cancel = static function (CancelledException $exception) use (&$suspension, $callbackId): void {
             $suspension?->throw($exception);
             $suspension = null;
-            EventLoop::disable($watcher);
-        };
 
-        EventLoop::disable($this->watcher);
+            EventLoop::disable($callbackId);
+        };
     }
 
     public function read(?Cancellation $cancellation = null): ?string
@@ -107,17 +107,18 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
         }
 
         if (!$this->readable) {
-            return null; // Resolve with null on closed stream.
+            return null; // Return null on closed stream.
         }
 
         \assert($this->resource !== null);
 
         if (\feof($this->resource)) {
             $this->free();
+
             return null;
         }
 
-        EventLoop::enable($this->watcher);
+        EventLoop::enable($this->callbackId);
         $this->suspension = EventLoop::createSuspension();
 
         $id = $cancellation?->subscribe($this->cancel);
@@ -184,7 +185,7 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
             return;
         }
 
-        EventLoop::reference($this->watcher);
+        EventLoop::reference($this->callbackId);
     }
 
     /**
@@ -198,7 +199,7 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
             return;
         }
 
-        EventLoop::unreference($this->watcher);
+        EventLoop::unreference($this->callbackId);
     }
 
     public function __destruct()
@@ -221,6 +222,6 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
             $this->suspension = null;
         }
 
-        EventLoop::cancel($this->watcher);
+        EventLoop::cancel($this->callbackId);
     }
 }

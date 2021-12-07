@@ -10,10 +10,10 @@ use Amp\Cancellation;
  * **Example**
  *
  * ```php
- * function readAll(InputStream $in): string {
+ * function readAll(ReadableStream $source): string {
  *     $buffer = "";
  *
- *     while (($chunk = $in->read()) !== null) {
+ *     while (null !== $chunk = $source->read()) {
  *         $buffer .= $chunk;
  *     }
  *
