@@ -1,9 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\StreamException;
-use Amp\ByteStream\WritableResourceStream;
 use Amp\PHPUnit\AsyncTestCase;
 use function Amp\delay;
 

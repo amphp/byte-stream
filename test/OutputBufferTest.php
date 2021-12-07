@@ -1,9 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\ClosedException;
-use Amp\ByteStream\OutputBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
 class OutputBufferTest extends AsyncTestCase

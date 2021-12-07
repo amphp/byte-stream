@@ -1,8 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test\Base64;
+namespace Amp\ByteStream\Base64;
 
-use Amp\ByteStream\Base64\Base64EncodingReadableStream;
 use Amp\ByteStream\IterableStream;
 use Amp\ByteStream\ReadableStream;
 use Amp\PHPUnit\AsyncTestCase;

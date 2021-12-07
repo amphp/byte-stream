@@ -1,11 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\IterableStream;
-use Amp\ByteStream\Payload;
-use Amp\ByteStream\PendingReadError;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\Pipeline\Emitter;

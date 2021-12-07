@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
 use Amp\ByteStream;
 use Amp\PHPUnit\AsyncTestCase;

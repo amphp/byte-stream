@@ -49,7 +49,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Amp\\ByteStream\\Test\\": "test"
+            "Amp\\ByteStream\\": "test"
         }
     },
     "extra": {

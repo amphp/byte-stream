@@ -1,14 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\ClosedException;
-use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\OutputBuffer;
-use Amp\ByteStream\ReadableResourceStream;
-use Amp\ByteStream\StreamException;
-use Amp\ByteStream\ZlibReadableStream;
-use Amp\ByteStream\ZlibWritableStream;
 use Amp\PHPUnit\AsyncTestCase;
 
 class ZlibOutputStreamTest extends AsyncTestCase

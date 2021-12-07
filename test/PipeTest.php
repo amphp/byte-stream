@@ -1,12 +1,9 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\IterableStream;
-use Amp\ByteStream\OutputBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
-use function Amp\ByteStream\pipe;
 
 class PipeTest extends AsyncTestCase
 {

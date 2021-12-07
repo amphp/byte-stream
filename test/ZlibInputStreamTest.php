@@ -1,11 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\IterableStream;
-use Amp\ByteStream\StreamException;
-use Amp\ByteStream\ZlibReadableStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\AsyncGenerator;
 

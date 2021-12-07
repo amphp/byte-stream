@@ -1,10 +1,8 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\IterableStream;
 use Amp\PHPUnit\AsyncTestCase;
-use function Amp\ByteStream\buffer;
 
 class BufferTest extends AsyncTestCase
 {

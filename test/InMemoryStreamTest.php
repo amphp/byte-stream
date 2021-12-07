@@ -1,8 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\InMemoryStream;
 use Amp\PHPUnit\AsyncTestCase;
 
 class InMemoryStreamTest extends AsyncTestCase

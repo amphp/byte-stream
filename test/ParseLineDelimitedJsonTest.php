@@ -4,12 +4,10 @@
 
 /** @noinspection PhpUnhandledExceptionInspection */
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\InMemoryStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
-use function Amp\ByteStream\parseLineDelimitedJson;
 
 class ParseLineDelimitedJsonTest extends AsyncTestCase
 {

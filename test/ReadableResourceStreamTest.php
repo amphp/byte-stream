@@ -1,8 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\ReadableResourceStream;
 use Amp\PHPUnit\AsyncTestCase;
 
 class ReadableResourceStreamTest extends AsyncTestCase

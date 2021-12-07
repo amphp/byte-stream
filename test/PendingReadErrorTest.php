@@ -1,8 +1,7 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\PendingReadError;
 use PHPUnit\Framework\TestCase;
 
 class PendingReadErrorTest extends TestCase

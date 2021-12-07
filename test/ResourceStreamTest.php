@@ -1,21 +1,13 @@
 <?php
 
-namespace Amp\ByteStream\Test;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\ClosedException;
-use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\PendingReadError;
-use Amp\ByteStream\ReadableResourceStream;
-use Amp\ByteStream\StreamException;
-use Amp\ByteStream\WritableResourceStream;
 use Amp\CancelledException;
 use Amp\DeferredCancellation;
 use Amp\Future;
 use Amp\PHPUnit\AsyncTestCase;
 use Revolt\EventLoop;
 use function Amp\async;
-use function Amp\ByteStream\buffer;
-use function Amp\ByteStream\pipe;
 use function Amp\delay;
 
 class ResourceStreamTest extends AsyncTestCase
