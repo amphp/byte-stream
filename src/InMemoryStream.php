@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 
 /**
- * Input stream with a single already known data chunk.
+ * ReadableStream with a single already known data chunk.
  */
 final class InMemoryStream implements ReadableStream
 {
@@ -14,9 +14,9 @@ final class InMemoryStream implements ReadableStream
     /**
      * @param string|null $contents Data chunk or `null` for no data chunk.
      */
-    public function __construct(string $contents = null)
+    public function __construct(?string $contents = null)
     {
-        $this->contents = $contents;
+        $this->contents = $contents === '' ? null : $contents;
     }
 
     /**
@@ -26,10 +26,6 @@ final class InMemoryStream implements ReadableStream
      */
     public function read(?Cancellation $cancellation = null): ?string
     {
-        if ($this->contents === null) {
-            return null;
-        }
-
         $contents = $this->contents;
         $this->contents = null;
 

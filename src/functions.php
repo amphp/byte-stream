@@ -11,7 +11,7 @@ use Revolt\EventLoop;
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
     throw new \Error(
-        'The mbstring.func_overload ini setting is enabled. It must be disabled to use the stream package.'
+        'The mbstring.func_overload ini setting is enabled. It must be disabled to use amphp/byte-stream.'
     );
 } // @codeCoverageIgnoreEnd
 
@@ -45,7 +45,7 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
 }
 
 /**
- * Create a local stream pair where data written to the OutputStream is immediately available on the InputStream.
+ * Create a local stream pair where data written to the WritableStream is immediately available on the ReadableStream.
  * Primarily useful for testing mocks.
  *
  * @return array{ReadableStream, WritableStream}
@@ -105,26 +105,30 @@ function buffer(ReadableStream $source): string
 }
 
 /**
- * The php://input input buffer stream for the process associated with the currently active event loop.
+ * The php://input buffer stream for the process associated with the currently active event loop.
  *
  * @return ReadableResourceStream
  */
 function getInputBufferStream(): ReadableResourceStream
 {
     static $map;
+
     $map ??= new \WeakMap();
+
     return $map[EventLoop::getDriver()] ??= new ReadableResourceStream(\fopen('php://input', 'rb'));
 }
 
 /**
- * The php://output output buffer stream for the process associated with the currently active event loop.
+ * The php://output buffer stream for the process associated with the currently active event loop.
  *
  * @return WritableResourceStream
  */
 function getOutputBufferStream(): WritableResourceStream
 {
     static $map;
+
     $map ??= new \WeakMap();
+
     return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\fopen('php://output', 'wb'));
 }
 
@@ -136,7 +140,9 @@ function getOutputBufferStream(): WritableResourceStream
 function getStdin(): ReadableResourceStream
 {
     static $map;
+
     $map ??= new \WeakMap();
+
     return $map[EventLoop::getDriver()] ??= new ReadableResourceStream(\STDIN);
 }
 
@@ -148,7 +154,9 @@ function getStdin(): ReadableResourceStream
 function getStdout(): WritableResourceStream
 {
     static $map;
+
     $map ??= new \WeakMap();
+
     return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\STDOUT);
 }
 
@@ -160,7 +168,9 @@ function getStdout(): WritableResourceStream
 function getStderr(): WritableResourceStream
 {
     static $map;
+
     $map ??= new \WeakMap();
+
     return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\STDERR);
 }
 
@@ -183,14 +193,7 @@ function parseLineDelimitedJson(
                 continue;
             }
 
-            $data = \json_decode($line, $associative, $depth, $options);
-            $error = \json_last_error();
-
-            if ($error !== \JSON_ERROR_NONE) {
-                throw new \JsonException('Failed to parse JSON: ' . \json_last_error_msg(), $error);
-            }
-
-            yield $data;
+            yield \json_decode($line, $associative, $depth, $options | \JSON_THROW_ON_ERROR);
         }
     });
 }
