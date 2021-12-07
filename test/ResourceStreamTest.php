@@ -206,7 +206,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         EventLoop::queue(function () use ($middle): void {
             pipe(
-                new InMemoryStream(\file_get_contents(__FILE__)),
+                new ReadBuffer(\file_get_contents(__FILE__)),
                 $destination = new WritableResourceStream(\fopen($middle, 'wb'))
             );
 

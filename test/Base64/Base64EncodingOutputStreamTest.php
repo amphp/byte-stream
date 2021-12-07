@@ -2,14 +2,14 @@
 
 namespace Amp\ByteStream\Base64;
 
-use Amp\ByteStream\OutputBuffer;
+use Amp\ByteStream\WriteBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
 class Base64EncodingOutputStreamTest extends AsyncTestCase
 {
     public function testWrite(): void
     {
-        $buffer = new OutputBuffer;
+        $buffer = new WriteBuffer;
         $stream = new Base64EncodingWritableStream($buffer);
 
         $stream->write('foo')->await();
@@ -22,7 +22,7 @@ class Base64EncodingOutputStreamTest extends AsyncTestCase
 
     public function testEnd(): void
     {
-        $buffer = new OutputBuffer;
+        $buffer = new WriteBuffer;
         $stream = new Base64EncodingWritableStream($buffer);
 
         $stream->write('foo')->await();

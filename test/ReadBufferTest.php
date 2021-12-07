@@ -4,12 +4,18 @@ namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
 
-class InMemoryStreamTest extends AsyncTestCase
+final class ReadBufferTest extends AsyncTestCase
 {
     public function testSingleReadConsumesEverything(): void
     {
-        $stream = new InMemoryStream("foobar");
+        $stream = new ReadBuffer("foobar");
         self::assertSame("foobar", $stream->read());
+        self::assertNull($stream->read());
+    }
+
+    public function testEmpty(): void
+    {
+        $stream = new ReadBuffer("");
         self::assertNull($stream->read());
     }
 }

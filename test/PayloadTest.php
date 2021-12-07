@@ -224,7 +224,7 @@ class PayloadTest extends AsyncTestCase
 
     public function testReadAfterBuffer()
     {
-        $stream = new Payload(new InMemoryStream("test"));
+        $stream = new Payload(new ReadBuffer("test"));
         $stream->buffer();
 
         $this->expectException(\Error::class);
@@ -236,7 +236,7 @@ class PayloadTest extends AsyncTestCase
     public function testFurtherCallsToBufferReturnSameData()
     {
         $data = "test";
-        $stream = new Payload(new InMemoryStream($data));
+        $stream = new Payload(new ReadBuffer($data));
         self::assertSame($data, $stream->buffer());
         self::assertSame($data, $stream->buffer());
     }
