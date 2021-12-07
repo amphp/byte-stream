@@ -1,21 +1,24 @@
 <?php
 
-namespace Amp\ByteStream;
+namespace Amp\ByteStream\Compression;
 
+use Amp\ByteStream\ClosedException;
+use Amp\ByteStream\StreamException;
+use Amp\ByteStream\WritableStream;
 use Amp\Future;
 
 /**
  * Allows compression of output streams using Zlib.
  */
-final class ZlibWritableStream implements WritableStream
+final class CompressingWritableStream implements WritableStream
 {
     /** @var resource|null */
     private $resource;
 
     /**
      * @param WritableStream $destination Output stream to write the compressed data to.
-     * @param int          $encoding Compression encoding to use, see `deflate_init()`.
-     * @param array        $options Compression options to use, see `deflate_init()`.
+     * @param int $encoding Compression encoding to use, see `deflate_init()`.
+     * @param array $options Compression options to use, see `deflate_init()`.
      *
      * @throws StreamException If an invalid encoding or invalid options have been passed.
      *
@@ -29,7 +32,7 @@ final class ZlibWritableStream implements WritableStream
         $this->resource = @\deflate_init($encoding, $options);
 
         if ($this->resource === false) {
-            throw new StreamException("Failed initializing deflate context");
+            throw new StreamException("Failed initializing decompression context");
         }
     }
 

@@ -1,13 +1,15 @@
 <?php
 
-namespace Amp\ByteStream;
+namespace Amp\ByteStream\Compression;
 
+use Amp\ByteStream\ReadableStream;
+use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
 
 /**
  * Allows decompression of input streams using Zlib.
  */
-final class ZlibReadableStream implements ReadableStream
+final class DecompressingReadableStream implements ReadableStream
 {
     /** @var resource|null */
     private $resource;
@@ -30,7 +32,7 @@ final class ZlibReadableStream implements ReadableStream
         $this->resource = @\inflate_init($encoding, $options);
 
         if ($this->resource === false) {
-            throw new StreamException("Failed initializing deflate context");
+            throw new StreamException("Failed initializing decompression context");
         }
     }
 

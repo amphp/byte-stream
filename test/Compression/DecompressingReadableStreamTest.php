@@ -1,16 +1,19 @@
 <?php
 
-namespace Amp\ByteStream;
+namespace Amp\ByteStream\Compression;
 
+use Amp\ByteStream\InMemoryStream;
+use Amp\ByteStream\IterableStream;
+use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\AsyncGenerator;
 
-class ZlibInputStreamTest extends AsyncTestCase
+class DecompressingReadableStreamTest extends AsyncTestCase
 {
     public function testRead(): void
     {
-        $file1 = __DIR__ . "/fixtures/foobar.txt";
-        $file2 = __DIR__ . "/fixtures/foobar.txt.gz";
+        $file1 = __DIR__ . "/../fixtures/foobar.txt";
+        $file2 = __DIR__ . "/../fixtures/foobar.txt.gz";
 
         $stream = new IterableStream(new AsyncGenerator(function () use ($file2) {
             $content = \file_get_contents($file2);
@@ -21,7 +24,7 @@ class ZlibInputStreamTest extends AsyncTestCase
             }
         }));
 
-        $gzStream = new ZlibReadableStream($stream, \ZLIB_ENCODING_GZIP);
+        $gzStream = new DecompressingReadableStream($stream, \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $gzStream->read()) !== null) {
@@ -34,20 +37,16 @@ class ZlibInputStreamTest extends AsyncTestCase
 
     public function testGetEncoding(): void
     {
-        $gzStream = new ZlibReadableStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
+        $gzStream = new DecompressingReadableStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP);
 
         self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
 
     public function testInvalidEncoding(): void
     {
-        if (\PHP_VERSION_ID < 80000) {
-            $this->expectException(StreamException::class);
-        } else {
-            $this->expectException(\ValueError::class);
-        }
+        $this->expectException(\ValueError::class);
 
-        new ZlibReadableStream(new InMemoryStream(""), 1337);
+        new DecompressingReadableStream(new InMemoryStream(""), 1337);
     }
 
     public function testGetOptions(): void
@@ -59,7 +58,7 @@ class ZlibInputStreamTest extends AsyncTestCase
             "strategy" => \ZLIB_DEFAULT_STRATEGY,
         ];
 
-        $gzStream = new ZlibReadableStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP, $options);
+        $gzStream = new DecompressingReadableStream(new InMemoryStream(""), \ZLIB_ENCODING_GZIP, $options);
 
         self::assertSame($options, $gzStream->getOptions());
     }
@@ -68,7 +67,7 @@ class ZlibInputStreamTest extends AsyncTestCase
     {
         $this->expectException(StreamException::class);
 
-        $gzStream = new ZlibReadableStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
+        $gzStream = new DecompressingReadableStream(new InMemoryStream("Invalid"), \ZLIB_ENCODING_GZIP);
 
         $gzStream->read();
     }

@@ -1,17 +1,22 @@
 <?php
 
-namespace Amp\ByteStream;
+namespace Amp\ByteStream\Compression;
 
+use Amp\ByteStream\ClosedException;
+use Amp\ByteStream\InMemoryStream;
+use Amp\ByteStream\OutputBuffer;
+use Amp\ByteStream\ReadableResourceStream;
+use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 
-class ZlibOutputStreamTest extends AsyncTestCase
+class CompressingWritableStreamTest extends AsyncTestCase
 {
     public function testWrite(): void
     {
-        $file = __DIR__ . "/fixtures/foobar.txt";
+        $file = __DIR__ . "/../fixtures/foobar.txt";
 
         $bufferStream = new OutputBuffer();
-        $outputStream = new ZlibWritableStream($bufferStream, \ZLIB_ENCODING_GZIP);
+        $outputStream = new CompressingWritableStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
         $fileStream = new ReadableResourceStream(\fopen($file, 'rb'));
         while (($chunk = $fileStream->read()) !== null) {
@@ -20,7 +25,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
 
         $outputStream->end();
 
-        $inputStream = new ZlibReadableStream(new InMemoryStream($bufferStream->buffer()), \ZLIB_ENCODING_GZIP);
+        $inputStream = new DecompressingReadableStream(new InMemoryStream($bufferStream->buffer()), \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $inputStream->read()) !== null) {
@@ -34,7 +39,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
     {
         $this->expectException(ClosedException::class);
 
-        $gzStream = new ZlibWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream = new CompressingWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
         $gzStream->end("foo")->await();
         $gzStream->write("bar")->await();
     }
@@ -43,14 +48,14 @@ class ZlibOutputStreamTest extends AsyncTestCase
     {
         $this->expectException(ClosedException::class);
 
-        $gzStream = new ZlibWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream = new CompressingWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
         $gzStream->end("foo")->await();
         $gzStream->end("bar")->await();
     }
 
     public function testGetEncoding(): void
     {
-        $gzStream = new ZlibWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream = new CompressingWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP);
 
         self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
@@ -63,7 +68,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
             $this->expectException(\ValueError::class);
         }
 
-        new ZlibWritableStream(new OutputBuffer(), 1337);
+        new CompressingWritableStream(new OutputBuffer(), 1337);
     }
 
     public function testGetOptions(): void
@@ -75,7 +80,7 @@ class ZlibOutputStreamTest extends AsyncTestCase
             "strategy" => \ZLIB_DEFAULT_STRATEGY,
         ];
 
-        $gzStream = new ZlibWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, $options);
+        $gzStream = new CompressingWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, $options);
 
         self::assertSame($options, $gzStream->getOptions());
     }
@@ -88,6 +93,6 @@ class ZlibOutputStreamTest extends AsyncTestCase
             $this->expectException(\ValueError::class);
         }
 
-        new ZlibWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
+        new CompressingWritableStream(new OutputBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
     }
 }
