@@ -37,6 +37,6 @@ class Base64EncodingInputStreamTest extends AsyncTestCase
         parent::setUp();
 
         $this->source = new Emitter;
-        $this->stream = new Base64EncodingReadableStream(new PipelineStream($this->source->asPipeline()));
+        $this->stream = new Base64EncodingReadableStream(new PipelineStream($this->source->pipe()));
     }
 }

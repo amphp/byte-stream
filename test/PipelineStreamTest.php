@@ -15,7 +15,7 @@ class PipelineStreamTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $source = new Emitter;
-        $stream = new PipelineStream($source->asPipeline());
+        $stream = new PipelineStream($source->pipe());
 
         foreach ($values as $value) {
             $source->emit($value);
@@ -38,7 +38,7 @@ class PipelineStreamTest extends AsyncTestCase
         $value = "abc";
 
         $source = new Emitter;
-        $stream = new PipelineStream($source->asPipeline());
+        $stream = new PipelineStream($source->pipe());
 
         $source->emit($value);
         $source->error($exception);
@@ -64,7 +64,7 @@ class PipelineStreamTest extends AsyncTestCase
         $value = 42;
 
         $source = new Emitter;
-        $stream = new PipelineStream($source->asPipeline());
+        $stream = new PipelineStream($source->pipe());
 
         $source->emit($value);
 
@@ -78,7 +78,7 @@ class PipelineStreamTest extends AsyncTestCase
         $value = 42;
 
         $source = new Emitter;
-        $stream = new PipelineStream($source->asPipeline());
+        $stream = new PipelineStream($source->pipe());
 
         $source->emit($value);
 

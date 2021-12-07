@@ -19,7 +19,7 @@ class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         foreach ($values as $value) {
             $emitter->emit($value)->ignore();
@@ -35,7 +35,7 @@ class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         foreach ($values as $value) {
             $emitter->emit($value)->ignore();
@@ -59,7 +59,7 @@ class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         foreach ($values as $value) {
             $emitter->emit($value)->ignore();
@@ -81,7 +81,7 @@ class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         foreach ($values as $value) {
             $emitter->emit($value)->ignore();
@@ -97,7 +97,7 @@ class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($values[0])->ignore();
 
@@ -120,7 +120,7 @@ class PayloadTest extends AsyncTestCase
         $value = "abc";
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($value)->ignore();
         $emitter->error($exception);
@@ -145,7 +145,7 @@ class PayloadTest extends AsyncTestCase
         $value = "abc";
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $readFuture = async(fn () => $stream->read());
         $emitter->error($exception);
@@ -166,7 +166,7 @@ class PayloadTest extends AsyncTestCase
     {
         $emitter = new Emitter;
         $emitter->complete();
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         self::assertNull($stream->read());
     }
@@ -176,7 +176,7 @@ class PayloadTest extends AsyncTestCase
         $value = "";
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($value)->ignore();
 
@@ -190,7 +190,7 @@ class PayloadTest extends AsyncTestCase
         $value = "abc";
 
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         $emitter->emit($value)->ignore();
         $emitter->complete();
@@ -202,7 +202,7 @@ class PayloadTest extends AsyncTestCase
     public function testPendingRead()
     {
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
 
         EventLoop::delay(0, function () use ($emitter) {
             $emitter->emit("test")->ignore();
@@ -214,7 +214,7 @@ class PayloadTest extends AsyncTestCase
     public function testPendingReadError()
     {
         $emitter = new Emitter;
-        $stream = new Payload(new PipelineStream($emitter->asPipeline()));
+        $stream = new Payload(new PipelineStream($emitter->pipe()));
         async(fn () => $stream->read());
 
         $this->expectException(PendingReadError::class);

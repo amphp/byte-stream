@@ -56,7 +56,7 @@ function createStreamPair(): array
     $emitter = new Emitter();
 
     return [
-        new PipelineStream($emitter->asPipeline()),
+        new PipelineStream($emitter->pipe()),
         new class ($emitter) implements WritableStream {
             public function __construct(
                 private Emitter $emitter

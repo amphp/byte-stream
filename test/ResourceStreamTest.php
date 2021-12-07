@@ -294,7 +294,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $a->write('foo')->await();
 
-        delay(0); // Tick event loop to invoke read watcher.
+        delay(0.001); // Tick event loop to invoke read watcher.
 
         $cancellationSource->cancel();
 

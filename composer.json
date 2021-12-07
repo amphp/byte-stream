@@ -27,8 +27,8 @@
     ],
     "require": {
         "php": ">=8",
-        "amphp/amp": "v3.x-dev",
-        "amphp/pipeline": "v1.x-dev"
+        "amphp/amp": "^3",
+        "amphp/pipeline": "^1"
     },
     "require-dev": {
         "amphp/phpunit-util": "v2.x-dev",
@@ -38,7 +38,7 @@
         "psalm/phar": "^4.7",
         "jetbrains/phpstorm-stubs": "^2019.3"
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "beta",
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
