@@ -42,10 +42,10 @@
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
-            "Amp\\ByteStream\\": "lib"
+            "Amp\\ByteStream\\": "src"
         },
         "files": [
-            "lib/functions.php"
+            "src/functions.php"
         ]
     },
     "autoload-dev": {
