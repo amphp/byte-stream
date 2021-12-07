@@ -18,23 +18,23 @@ class OutputBuffer implements WritableStream
         $this->deferredFuture = new DeferredFuture;
     }
 
-    public function write(string $data): Future
+    public function write(string $bytes): Future
     {
         if ($this->closed) {
             return Future::error(new ClosedException("The stream has already been closed"));
         }
 
-        $this->contents .= $data;
+        $this->contents .= $bytes;
         return Future::complete();
     }
 
-    public function end(string $finalData = ""): Future
+    public function end(string $bytes = ""): Future
     {
         if ($this->closed) {
             return Future::error(new ClosedException("The stream has already been closed"));
         }
 
-        $this->contents .= $finalData;
+        $this->contents .= $bytes;
         $this->closed = true;
 
         $this->deferredFuture->complete($this->contents);

@@ -22,9 +22,9 @@ final class Base64DecodingWritableStream implements WritableStream
         $this->destination = $destination;
     }
 
-    public function write(string $data): Future
+    public function write(string $bytes): Future
     {
-        $this->buffer .= $data;
+        $this->buffer .= $bytes;
 
         $length = \strlen($this->buffer);
         $chunk = \base64_decode(\substr($this->buffer, 0, $length - $length % 4), true);
@@ -38,11 +38,11 @@ final class Base64DecodingWritableStream implements WritableStream
         return $this->destination->write($chunk);
     }
 
-    public function end(string $finalData = ""): Future
+    public function end(string $bytes = ""): Future
     {
         $this->offset += \strlen($this->buffer);
 
-        $chunk = \base64_decode($this->buffer . $finalData, true);
+        $chunk = \base64_decode($this->buffer . $bytes, true);
         if ($chunk === false) {
             throw new StreamException('Invalid base64 near offset ' . $this->offset);
         }

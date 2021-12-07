@@ -12,28 +12,28 @@ interface WritableStream
     /**
      * Writes data to the stream.
      *
-     * @param string $data Bytes to write.
+     * @param string $bytes Bytes to write.
      *
      * @return Future Completes once the data has been successfully written to the stream.
      *
      * @error ClosedException If the stream has already been closed.
      * @error StreamException If writing to the stream fails.
      */
-    public function write(string $data): Future;
+    public function write(string $bytes): Future;
 
     /**
      * Marks the stream as no longer writable. Optionally writes a final data chunk before. Note that this is not the
      * same as forcefully closing the stream. This method waits for all pending writes to complete before closing the
      * stream. Socket streams implementing this interface should only close the writable side of the stream.
      *
-     * @param string $finalData Bytes to write.
+     * @param string $bytes Bytes to write.
      *
      * @return Future Completes once the data has been successfully written to the stream.
      *
      * @error ClosedException If the stream has already been closed.
      * @error StreamException If writing to the stream fails.
      */
-    public function end(string $finalData = ""): Future;
+    public function end(string $bytes = ""): Future;
 
     /**
      * @return bool A stream may no longer be writable if it is closed or ended using {@see end()}.

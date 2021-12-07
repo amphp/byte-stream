@@ -17,23 +17,20 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
     /** @var resource|null */
     private $resource;
 
-    /** @var string */
-    private string $watcher;
+    private string $callbackId;
 
     /** @var \SplQueue<array{string, int, DeferredFuture|null, bool}> */
     private \SplQueue $writes;
 
-    /** @var bool */
     private bool $writable = true;
 
-    /** @var int|null */
     private ?int $chunkSize = null;
 
     /**
      * @param resource $stream Stream resource.
      * @param int|null $chunkSize Chunk size per `fwrite()` operation.
      */
-    public function __construct($stream, int $chunkSize = null)
+    public function __construct($stream, ?int $chunkSize = null)
     {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
@@ -55,13 +52,14 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
         $writable = &$this->writable;
         $resource = &$this->resource;
 
-        $this->watcher = EventLoop::onWritable($stream, static function ($watcher, $stream) use (
+        $this->callbackId = EventLoop::disable(EventLoop::onWritable($stream, static function ($callbackId, $stream) use (
             $writes,
             &$chunkSize,
             &$writable,
             &$resource
         ): void {
             static $emptyWrites = 0;
+
             $end = false;
             $deferredFuture = null;
 
@@ -72,7 +70,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        $deferredFuture?->complete(null);
+                        $deferredFuture?->complete();
                         continue;
                     }
 
@@ -120,7 +118,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                         return;
                     }
 
-                    $deferredFuture?->complete(null);
+                    $deferredFuture?->complete();
                 }
             } catch (\Throwable $exception) {
                 $writable = false;
@@ -132,10 +130,10 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                     $deferredFuture?->error($exception);
                 }
 
-                EventLoop::cancel($watcher);
+                EventLoop::cancel($callbackId);
             } finally {
                 if ($writes->isEmpty()) {
-                    EventLoop::disable($watcher);
+                    EventLoop::disable($callbackId);
                 }
 
                 if ($end && \is_resource($resource)) {
@@ -148,31 +146,29 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                     $resource = null;
                 }
             }
-        });
-
-        EventLoop::disable($this->watcher);
+        }));
     }
 
     /**
      * Writes data to the stream.
      *
-     * @param string $data Bytes to write.
+     * @param string $bytes Bytes to write.
      *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function write(string $data): Future
+    public function write(string $bytes): Future
     {
-        return $this->send($data, false);
+        return $this->send($bytes, false);
     }
 
     /**
      * Closes the stream after all pending writes have been completed. Optionally writes a final data chunk before.
      *
-     * @param string $finalData Bytes to write.
+     * @param string $bytes Bytes to write.
      */
-    public function end(string $finalData = ""): Future
+    public function end(string $bytes = ''): Future
     {
-        return $this->send($finalData, true);
+        return $this->send($bytes, true);
     }
 
     public function isWritable(): bool
@@ -223,7 +219,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
         $this->free();
     }
 
-    private function send(string $data, bool $end = false): Future
+    private function send(string $data, bool $end): Future
     {
         if (!$this->writable) {
             return Future::error(new ClosedException("The stream is not writable"));
@@ -242,7 +238,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                     $this->close();
                 }
 
-                return Future::complete(null);
+                return Future::complete();
             }
 
             if (!\is_resource($this->resource)) {
@@ -270,7 +266,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                     $this->close();
                 }
 
-                return Future::complete(null);
+                return Future::complete();
             }
 
             $data = \substr($data, $written);
@@ -285,8 +281,9 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
             }
         }
 
-        EventLoop::enable($this->watcher);
+        EventLoop::enable($this->callbackId);
         $this->writes->push([$data, $written, $deferredFuture = new DeferredFuture, $end]);
+
         return $deferredFuture->getFuture();
     }
 
@@ -301,7 +298,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
             return;
         }
 
-        EventLoop::reference($this->watcher);
+        EventLoop::reference($this->callbackId);
     }
 
     /**
@@ -315,7 +312,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
             return;
         }
 
-        EventLoop::unreference($this->watcher);
+        EventLoop::unreference($this->callbackId);
     }
 
     /**
@@ -339,6 +336,6 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
             } while (!$this->writes->isEmpty());
         }
 
-        EventLoop::cancel($this->watcher);
+        EventLoop::cancel($this->callbackId);
     }
 }

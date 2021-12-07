@@ -33,13 +33,13 @@ final class ZlibWritableStream implements WritableStream
         }
     }
 
-    public function write(string $data): Future
+    public function write(string $bytes): Future
     {
         if ($this->resource === null) {
             return Future::error(new ClosedException("The stream has already been closed"));
         }
 
-        $compressed = \deflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+        $compressed = \deflate_add($this->resource, $bytes, \ZLIB_SYNC_FLUSH);
 
         if ($compressed === false) {
             return Future::error(new StreamException("Failed adding data to deflate context"));
@@ -48,13 +48,13 @@ final class ZlibWritableStream implements WritableStream
         return $this->destination->write($compressed);
     }
 
-    public function end(string $finalData = ""): Future
+    public function end(string $bytes = ""): Future
     {
         if ($this->resource === null) {
             return Future::error(new ClosedException("The stream has already been closed"));
         }
 
-        $compressed = \deflate_add($this->resource, $finalData, \ZLIB_FINISH);
+        $compressed = \deflate_add($this->resource, $bytes, \ZLIB_FINISH);
 
         if ($compressed === false) {
             return Future::error(new StreamException("Failed adding data to deflate context"));

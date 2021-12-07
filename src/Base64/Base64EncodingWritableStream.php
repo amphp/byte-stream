@@ -18,9 +18,9 @@ final class Base64EncodingWritableStream implements WritableStream
         $this->destination = $destination;
     }
 
-    public function write(string $data): Future
+    public function write(string $bytes): Future
     {
-        $this->buffer .= $data;
+        $this->buffer .= $bytes;
 
         $length = \strlen($this->buffer);
         $chunk = \base64_encode(\substr($this->buffer, 0, $length - $length % 3));
@@ -29,9 +29,9 @@ final class Base64EncodingWritableStream implements WritableStream
         return $this->destination->write($chunk);
     }
 
-    public function end(string $finalData = ""): Future
+    public function end(string $bytes = ""): Future
     {
-        $chunk = \base64_encode($this->buffer . $finalData);
+        $chunk = \base64_encode($this->buffer . $bytes);
         $this->buffer = '';
 
         return $this->destination->end($chunk);

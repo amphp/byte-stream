@@ -64,17 +64,17 @@ function createStreamPair(): array
             ) {
             }
 
-            public function write(string $data): Future
+            public function write(string $bytes): Future
             {
                 if ($this->emitter->isComplete()) {
                     return Future::error(new ClosedException('The stream is no longer writable'));
                 }
-                return $this->emitter->emit($data);
+                return $this->emitter->emit($bytes);
             }
 
-            public function end(string $finalData = ""): Future
+            public function end(string $bytes = ""): Future
             {
-                $future = $this->write($finalData);
+                $future = $this->write($bytes);
                 if (!$this->emitter->isComplete()) {
                     $this->emitter->complete();
                 }

@@ -7,13 +7,13 @@ use Amp\Cancellation;
 final class ReadableStreamChain implements ReadableStream
 {
     /** @var ReadableStream[] */
-    private array $streams;
+    private array $sources;
 
     private bool $reading = false;
 
-    public function __construct(ReadableStream ...$streams)
+    public function __construct(ReadableStream ...$sources)
     {
-        $this->streams = $streams;
+        $this->sources = $sources;
     }
 
     public function read(?Cancellation $cancellation = null): ?string
@@ -22,17 +22,17 @@ final class ReadableStreamChain implements ReadableStream
             throw new PendingReadError;
         }
 
-        if (!$this->streams) {
+        if (!$this->sources) {
             return null;
         }
 
         $this->reading = true;
 
         try {
-            while ($this->streams) {
-                $chunk = $this->streams[0]->read($cancellation);
+            while ($this->sources) {
+                $chunk = $this->sources[0]->read($cancellation);
                 if ($chunk === null) {
-                    \array_shift($this->streams);
+                    \array_shift($this->sources);
                     continue;
                 }
 
@@ -47,6 +47,6 @@ final class ReadableStreamChain implements ReadableStream
 
     public function isReadable(): bool
     {
-        return !empty($this->streams);
+        return !empty($this->sources);
     }
 }
