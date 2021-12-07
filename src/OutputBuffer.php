@@ -25,6 +25,7 @@ class OutputBuffer implements WritableStream
         }
 
         $this->contents .= $bytes;
+
         return Future::complete();
     }
 
@@ -39,7 +40,8 @@ class OutputBuffer implements WritableStream
 
         $this->deferredFuture->complete($this->contents);
         $this->contents = '';
-        return Future::complete(null);
+
+        return Future::complete();
     }
 
     public function isWritable(): bool
