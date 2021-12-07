@@ -2,8 +2,8 @@
 
 namespace Amp\ByteStream\Base64;
 
-use Amp\ByteStream\WritableStream;
 use Amp\ByteStream\StreamException;
+use Amp\ByteStream\WritableStream;
 use Amp\Future;
 
 final class Base64DecodingWritableStream implements WritableStream

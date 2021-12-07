@@ -3,9 +3,9 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\InMemoryStream;
+use Amp\ByteStream\IterableStream;
 use Amp\ByteStream\Payload;
 use Amp\ByteStream\PendingReadError;
-use Amp\ByteStream\IterableStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\Pipeline\Emitter;

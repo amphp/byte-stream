@@ -2,8 +2,8 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\WritableResourceStream;
 use Amp\ByteStream\StreamException;
+use Amp\ByteStream\WritableResourceStream;
 use Amp\PHPUnit\AsyncTestCase;
 use function Amp\delay;
 

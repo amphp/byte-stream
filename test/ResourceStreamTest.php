@@ -6,10 +6,10 @@ use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\InMemoryStream;
 use Amp\ByteStream\PendingReadError;
 use Amp\ByteStream\ReadableResourceStream;
-use Amp\ByteStream\WritableResourceStream;
 use Amp\ByteStream\StreamException;
-use Amp\DeferredCancellation;
+use Amp\ByteStream\WritableResourceStream;
 use Amp\CancelledException;
+use Amp\DeferredCancellation;
 use Amp\Future;
 use Amp\PHPUnit\AsyncTestCase;
 use Revolt\EventLoop;
@@ -274,7 +274,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $cancellationSource = new DeferredCancellation();
 
-        $future = async(fn() => $b->read($cancellationSource->getCancellation()));
+        $future = async(fn () => $b->read($cancellationSource->getCancellation()));
 
         $cancellationSource->cancel();
 
@@ -290,7 +290,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $cancellationSource = new DeferredCancellation();
 
-        $future = async(fn() => $b->read($cancellationSource->getCancellation()));
+        $future = async(fn () => $b->read($cancellationSource->getCancellation()));
 
         $a->write('foo')->await();
 

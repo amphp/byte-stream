@@ -7,7 +7,6 @@
 namespace Amp\ByteStream\Test;
 
 use Amp\ByteStream\InMemoryStream;
-use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
 use function Amp\ByteStream\parseLineDelimitedJson;

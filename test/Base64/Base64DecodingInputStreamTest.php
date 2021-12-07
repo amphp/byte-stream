@@ -3,8 +3,8 @@
 namespace Amp\ByteStream\Test\Base64;
 
 use Amp\ByteStream\Base64\Base64DecodingReadableStream;
-use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\IterableStream;
+use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Emitter;

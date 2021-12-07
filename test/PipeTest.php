@@ -2,8 +2,8 @@
 
 namespace Amp\ByteStream\Test;
 
-use Amp\ByteStream\OutputBuffer;
 use Amp\ByteStream\IterableStream;
+use Amp\ByteStream\OutputBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
 use function Amp\ByteStream\pipe;
