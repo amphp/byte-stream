@@ -9,9 +9,11 @@ use Revolt\EventLoop;
 use function Amp\async;
 
 /**
- * Creates a buffered message from an InputStream. The message can be consumed in chunks using the read() API or it may
- * be buffered and accessed in its entirety by calling buffer(). Once buffering is requested through buffer(), the
- * stream cannot be read in chunks. On destruct any remaining data is read from the InputStream given to this class.
+ * Creates a buffered message from a ReadableStream.
+ *
+ * The message can be consumed in chunks using the read() API, or it may be buffered and accessed in its entirety by
+ * calling buffer(). Once buffering is requested through buffer(), the stream cannot be read in chunks. On destruct any
+ * remaining data is read from the ReadableStream given to this class.
  */
 class Payload implements ReadableStream
 {
@@ -54,9 +56,11 @@ class Payload implements ReadableStream
 
             try {
                 $chunk = $this->stream->read($cancellation);
+
                 $deferredFuture->complete($chunk !== null);
             } catch (\Throwable $exception) {
                 $deferredFuture->error($exception);
+
                 throw $exception;
             }
 
@@ -65,6 +69,7 @@ class Payload implements ReadableStream
 
         $chunk = $this->stream;
         $this->stream = null;
+
         return $chunk;
     }
 
@@ -76,7 +81,7 @@ class Payload implements ReadableStream
     }
 
     /**
-     * Buffers the entire message and resolves the returned promise then.
+     * Buffers the entire message and completes the returned future then.
      *
      * @return string The entire message contents.
      */
@@ -90,11 +95,11 @@ class Payload implements ReadableStream
             $stream = $this->stream;
             $lastRead = $this->lastRead;
             $this->future = async(static function () use ($stream, $lastRead): string {
-                $buffer = '';
                 if ($lastRead && !$lastRead->await()) {
-                    return $buffer;
+                    return '';
                 }
 
+                $buffer = '';
                 while (null !== $chunk = $stream->read()) {
                     $buffer .= $chunk;
                 }
@@ -106,8 +111,10 @@ class Payload implements ReadableStream
         }
 
         $payload = $this->stream ?? '';
+
         $this->future = Future::complete($payload);
         $this->stream = null;
+
         return $payload;
     }
 
