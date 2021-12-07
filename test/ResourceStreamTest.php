@@ -59,7 +59,8 @@ class ResourceStreamTest extends AsyncTestCase
             $a->end()->await();
         });
 
-        self::assertSame(\str_repeat($message, $i), buffer($b));
+        $buffer = buffer($b);
+        self::assertSame(\str_repeat($message, $i), $buffer);
     }
 
     public function testThrowsOnExternallyShutdownStreamWithLargePayload(): void

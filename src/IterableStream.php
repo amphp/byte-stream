@@ -42,8 +42,8 @@ final class IterableStream implements ReadableStream
 
             if (!\is_string($chunk)) {
                 throw new StreamException(\sprintf(
-                    "Unexpected pipeline value of type '%s', expected string",
-                    \is_object($chunk) ? \get_class($chunk) : \gettype($chunk)
+                    "Unexpected iterable value of type %s, expected string",
+                    \get_debug_type($chunk)
                 ));
             }
 
@@ -51,7 +51,7 @@ final class IterableStream implements ReadableStream
         } catch (\Throwable $exception) {
             $this->exception = $exception instanceof StreamException
                 ? $exception
-                : new StreamException("Pipeline threw an exception", 0, $exception);
+                : new StreamException("Iterable threw an exception", 0, $exception);
             throw $exception;
         } finally {
             $this->pending = false;

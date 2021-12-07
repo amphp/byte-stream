@@ -29,7 +29,7 @@ class ParseLineDelimitedJsonTest extends AsyncTestCase
     public function testInvalidJson(): void
     {
         $this->expectException(\JsonException::class);
-        $this->expectExceptionMessage('Failed to parse JSON');
+        $this->expectExceptionMessage('Syntax error');
 
         Pipeline\toArray(parseLineDelimitedJson(new InMemoryStream('{')));
     }
