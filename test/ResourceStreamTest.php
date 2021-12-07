@@ -14,18 +14,19 @@ use Amp\Future;
 use Amp\PHPUnit\AsyncTestCase;
 use Revolt\EventLoop;
 use function Amp\async;
+use function Amp\ByteStream\buffer;
 use function Amp\ByteStream\pipe;
 use function Amp\delay;
 
 class ResourceStreamTest extends AsyncTestCase
 {
-    const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
+    public const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
 
     public function getStreamPair(
-        $outputChunkSize = null,
-        $inputChunkSize = ReadableResourceStream::DEFAULT_CHUNK_SIZE
+        ?int $outputChunkSize = null,
+        int $inputChunkSize = ReadableResourceStream::DEFAULT_CHUNK_SIZE
     ): array {
-        $domain = \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX;
+        $domain = \PHP_OS_FAMILY === 'Windows' ? STREAM_PF_INET : STREAM_PF_UNIX;
         [$left, $right] = @\stream_socket_pair($domain, \STREAM_SOCK_STREAM, \STREAM_IPPROTO_IP);
 
         $a = new WritableResourceStream($left, $outputChunkSize);
@@ -42,12 +43,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $a->end($message)->ignore();
 
-        $received = "";
-        while (null !== $chunk = $b->read()) {
-            $received .= $chunk;
-        }
-
-        self::assertSame($message, $received);
+        self::assertSame($message, buffer($b));
     }
 
     public function testManySmallPayloads(): void
@@ -63,18 +59,11 @@ class ResourceStreamTest extends AsyncTestCase
             $a->end()->await();
         });
 
-        $received = "";
-        while (null !== $chunk = $b->read()) {
-            $received .= $chunk;
-        }
-
-        self::assertSame(\str_repeat($message, $i), $received);
+        self::assertSame(\str_repeat($message, $i), buffer($b));
     }
 
     public function testThrowsOnExternallyShutdownStreamWithLargePayload(): void
     {
-        $this->expectException(StreamException::class);
-
         $this->setTimeout(5);
 
         [$a, $b] = $this->getStreamPair();
@@ -86,20 +75,20 @@ class ResourceStreamTest extends AsyncTestCase
         $b->read();
         $b->close();
 
+        $this->expectException(StreamException::class);
+
         $writeFuture->await();
     }
 
     public function testThrowsOnExternallyShutdownStreamWithSmallPayloads(): void
     {
-        $this->expectException(StreamException::class);
-
         $this->setTimeout(5);
 
         [$a, $b] = $this->getStreamPair();
 
         $message = \str_repeat("*", 8192 /* default chunk size */);
 
-        $writeFuture = Future::complete(null);
+        $writeFuture = Future::complete();
 
         for ($i = 0; $i < 128; $i++) {
             $writeFuture?->ignore();
@@ -109,13 +98,13 @@ class ResourceStreamTest extends AsyncTestCase
         $b->read();
         $b->close();
 
+        $this->expectException(StreamException::class);
+
         $writeFuture->await();
     }
 
     public function testThrowsOnCloseBeforeWritingComplete(): void
     {
-        $this->expectException(ClosedException::class);
-
         /** @noinspection PhpUnusedLocalVariableInspection Required to keep reference */
         [$a, $b] = $this->getStreamPair(4096);
 
@@ -125,18 +114,20 @@ class ResourceStreamTest extends AsyncTestCase
 
         $a->close();
 
+        $this->expectException(ClosedException::class);
+
         $writeFuture->await();
     }
 
     public function testThrowsOnStreamNotWritable(): void
     {
-        $this->expectException(StreamException::class);
-
         [$a] = $this->getStreamPair();
 
         $message = \str_repeat("*", 8192 /* default chunk size */);
 
         $a->close();
+
+        $this->expectException(StreamException::class);
 
         $a->write($message)->await();
     }
@@ -191,12 +182,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $a->end($message)->ignore();
 
-        $received = "";
-        while (null !== $chunk = $b->read()) {
-            $received .= $chunk;
-        }
-
-        self::assertSame($message, $received);
+        self::assertSame($message, buffer($b));
     }
 
     public function testEmptyPayload(): void
@@ -207,12 +193,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $a->end($message)->ignore();
 
-        $received = "";
-        while (null !== $chunk = $b->read()) {
-            $received .= $chunk;
-        }
-
-        self::assertSame($message, $received);
+        self::assertSame($message, buffer($b));
     }
 
     public function testCloseStreamAfterEndPayload(): void
@@ -223,12 +204,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $a->end($message)->ignore();
 
-        $received = "";
-        while (null !== $chunk = $b->read()) {
-            $received .= $chunk;
-        }
-
-        self::assertSame($message, $received);
+        self::assertSame($message, buffer($b));
     }
 
     public function testIssue47()
@@ -272,11 +248,11 @@ class ResourceStreamTest extends AsyncTestCase
     {
         [$a, $b] = $this->getStreamPair();
 
-        $cancellationSource = new DeferredCancellation();
+        $deferredCancellation = new DeferredCancellation();
 
-        $future = async(fn () => $b->read($cancellationSource->getCancellation()));
+        $future = async(fn () => $b->read($deferredCancellation->getCancellation()));
 
-        $cancellationSource->cancel();
+        $deferredCancellation->cancel();
 
         $a->write('foo')->await();
 
@@ -288,15 +264,15 @@ class ResourceStreamTest extends AsyncTestCase
     {
         [$a, $b] = $this->getStreamPair();
 
-        $cancellationSource = new DeferredCancellation();
+        $deferredCancellation = new DeferredCancellation();
 
-        $future = async(fn () => $b->read($cancellationSource->getCancellation()));
+        $future = async(fn () => $b->read($deferredCancellation->getCancellation()));
 
         $a->write('foo')->await();
 
         delay(0.001); // Tick event loop to invoke read watcher.
 
-        $cancellationSource->cancel();
+        $deferredCancellation->cancel();
 
         self::assertSame('foo', $future->await());
     }
