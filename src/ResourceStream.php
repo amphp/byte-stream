@@ -19,7 +19,7 @@ interface ResourceStream
     public function unreference(): void;
 
     /**
-     * @return resource|object Stream resource (or object if PHP switches to object-based streams).
+     * @return resource|object|null Stream resource (or object if PHP switches to object-based streams).
      */
     public function getResource();
 }

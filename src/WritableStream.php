@@ -14,7 +14,7 @@ interface WritableStream
      *
      * @param string $data Bytes to write.
      *
-     * @return Future<null> Completes once the data has been successfully written to the stream.
+     * @return Future Completes once the data has been successfully written to the stream.
      *
      * @error ClosedException If the stream has already been closed.
      * @error StreamException If writing to the stream fails.
@@ -28,7 +28,7 @@ interface WritableStream
      *
      * @param string $finalData Bytes to write.
      *
-     * @return Future<null> Completes once the data has been successfully written to the stream.
+     * @return Future Completes once the data has been successfully written to the stream.
      *
      * @error ClosedException If the stream has already been closed.
      * @error StreamException If writing to the stream fails.

@@ -16,7 +16,6 @@ final class ReadableStreamChain implements ReadableStream
         $this->streams = $streams;
     }
 
-    /** @inheritDoc */
     public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->reading) {

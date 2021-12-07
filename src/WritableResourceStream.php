@@ -20,7 +20,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
     /** @var string */
     private string $watcher;
 
-    /** @var \SplQueue<array{string, int, DeferredFuture, bool}> */
+    /** @var \SplQueue<array{string, int, DeferredFuture|null, bool}> */
     private \SplQueue $writes;
 
     /** @var bool */
@@ -62,6 +62,8 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
             &$resource
         ): void {
             static $emptyWrites = 0;
+            $end = false;
+            $deferredFuture = null;
 
             try {
                 while (!$writes->isEmpty()) {
@@ -124,7 +126,6 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                 $writable = false;
                 $end = true;
 
-                /** @psalm-suppress PossiblyUndefinedVariable */
                 $deferredFuture?->error($exception);
                 while (!$writes->isEmpty()) {
                     [, , $deferredFuture] = $writes->shift();
@@ -138,11 +139,11 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                 }
 
                 if ($end && \is_resource($resource)) {
-                    $meta = @\stream_get_meta_data($resource);
-                    if ($meta && \str_contains($meta["mode"], "+")) {
-                        @\stream_socket_shutdown($resource, \STREAM_SHUT_WR);
+                    $meta = \stream_get_meta_data($resource);
+                    if (\str_contains($meta["mode"], "+")) {
+                        \stream_socket_shutdown($resource, \STREAM_SHUT_WR);
                     } else {
-                        @\fclose($resource);
+                        \fclose($resource);
                     }
                     $resource = null;
                 }
@@ -186,13 +187,13 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
     {
         if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
-            $meta = @\stream_get_meta_data($this->resource);
+            $meta = \stream_get_meta_data($this->resource);
 
-            if ($meta && \str_contains($meta["mode"], "+")) {
-                @\stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
+            if (\str_contains($meta["mode"], "+")) {
+                \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
             } else {
                 /** @psalm-suppress InvalidPropertyAssignmentValue psalm reports this as closed-resource */
-                @\fclose($this->resource);
+                \fclose($this->resource);
             }
         }
 
@@ -205,7 +206,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
     }
 
     /**
-     * @return resource|null Stream resource or null if end() has been called or the stream closed.
+     * @return resource|object|null Stream resource or null if end() has been called or the stream closed.
      */
     public function getResource()
     {

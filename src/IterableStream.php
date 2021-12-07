@@ -11,7 +11,7 @@ final class IterableStream implements ReadableStream
     /** @var Pipeline<string> */
     private Pipeline $pipeline;
 
-    private \Throwable $exception;
+    private ?\Throwable $exception = null;
 
     private bool $pending = false;
 
@@ -23,10 +23,9 @@ final class IterableStream implements ReadableStream
         $this->pipeline = $iterable instanceof Pipeline ? $iterable : fromIterable($iterable);
     }
 
-    /** @inheritdoc */
     public function read(?Cancellation $cancellation = null): ?string
     {
-        if (isset($this->exception)) {
+        if ($this->exception) {
             throw $this->exception;
         }
 

@@ -34,7 +34,6 @@ final class ZlibReadableStream implements ReadableStream
         }
     }
 
-    /** @inheritdoc */
     public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->resource === null) {
@@ -95,10 +94,6 @@ final class ZlibReadableStream implements ReadableStream
         return $this->options;
     }
 
-    /**
-     * @return void
-     * @internal
-     */
     private function close(): void
     {
         $this->resource = null;

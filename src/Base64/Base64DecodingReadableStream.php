@@ -60,6 +60,6 @@ final class Base64DecodingReadableStream implements ReadableStream
 
     public function isReadable(): bool
     {
-        return $this->source->isReadable();
+        return (bool) $this->source?->isReadable();
     }
 }

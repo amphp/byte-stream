@@ -33,14 +33,11 @@ final class ZlibWritableStream implements WritableStream
         }
     }
 
-    /** @inheritdoc */
     public function write(string $data): Future
     {
         if ($this->resource === null) {
             return Future::error(new ClosedException("The stream has already been closed"));
         }
-
-        \assert($this->destination !== null);
 
         $compressed = \deflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
 
@@ -51,14 +48,11 @@ final class ZlibWritableStream implements WritableStream
         return $this->destination->write($compressed);
     }
 
-    /** @inheritdoc */
     public function end(string $finalData = ""): Future
     {
         if ($this->resource === null) {
             return Future::error(new ClosedException("The stream has already been closed"));
         }
-
-        \assert($this->destination !== null);
 
         $compressed = \deflate_add($this->resource, $finalData, \ZLIB_FINISH);
 

@@ -100,7 +100,6 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
         EventLoop::disable($this->watcher);
     }
 
-    /** @inheritdoc */
     public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->suspension !== null) {
@@ -126,6 +125,7 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
         try {
             return $this->suspension->suspend();
         } finally {
+            /** @psalm-suppress PossiblyNullArgument If $cancellation is not null, $id will not be null. */
             $cancellation?->unsubscribe($id);
         }
     }
@@ -142,13 +142,13 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
     {
         if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
             // Error suppression, as resource might already be closed
-            $meta = @\stream_get_meta_data($this->resource);
+            $meta = \stream_get_meta_data($this->resource);
 
-            if ($meta && \str_contains($meta["mode"], "+")) {
-                @\stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
+            if (\str_contains($meta["mode"], "+")) {
+                \stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
             } else {
                 /** @psalm-suppress InvalidPropertyAssignmentValue */
-                @\fclose($this->resource);
+                \fclose($this->resource);
             }
         }
 
@@ -161,7 +161,7 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
     }
 
     /**
-     * @return resource|null The stream resource or null if the stream has closed.
+     * @return resource|object|null The stream resource or null if the stream has closed.
      */
     public function getResource()
     {

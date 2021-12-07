@@ -17,9 +17,9 @@ class Payload implements ReadableStream
 {
     private ReadableStream|string|null $stream;
 
-    private Future $future;
+    private ?Future $future = null;
 
-    private Future $lastRead;
+    private ?Future $lastRead = null;
 
     public function __construct(ReadableStream|string $stream)
     {
@@ -31,7 +31,7 @@ class Payload implements ReadableStream
 
     public function __destruct()
     {
-        if (!isset($this->future) && isset($this->lastRead)) {
+        if ($this->stream instanceof ReadableStream && !$this->future && $this->lastRead) {
             $stream = $this->stream;
             $lastRead = $this->lastRead;
             EventLoop::queue(static fn () => self::consume($stream, $lastRead));
@@ -39,13 +39,11 @@ class Payload implements ReadableStream
     }
 
     /**
-     * @inheritdoc
-     *
      * @throws \Error If a buffered message was requested by calling buffer().
      */
     final public function read(?Cancellation $cancellation = null): ?string
     {
-        if (isset($this->future)) {
+        if ($this->future) {
             throw new \Error("Cannot stream message data once a buffered message has been requested");
         }
 
@@ -84,18 +82,20 @@ class Payload implements ReadableStream
      */
     final public function buffer(?Cancellation $cancellation = null): string
     {
-        if (isset($this->future)) {
+        if ($this->future) {
             return $this->future->await($cancellation);
         }
 
         if ($this->stream instanceof ReadableStream) {
-            $this->future = async(function (): string {
+            $stream = $this->stream;
+            $lastRead = $this->lastRead;
+            $this->future = async(static function () use ($stream, $lastRead): string {
                 $buffer = '';
-                if (isset($this->lastRead) && !$this->lastRead->await()) {
+                if ($lastRead && !$lastRead->await()) {
                     return $buffer;
                 }
 
-                while (null !== $chunk = $this->stream->read()) {
+                while (null !== $chunk = $stream->read()) {
                     $buffer .= $chunk;
                 }
 
