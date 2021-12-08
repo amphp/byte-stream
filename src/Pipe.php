@@ -2,6 +2,8 @@
 
 namespace Amp\ByteStream;
 
+use Amp\ByteStream\Internal\PipeSink;
+use Amp\ByteStream\Internal\PipeSource;
 use Amp\Cancellation;
 use Amp\Future;
 use Amp\Pipeline\Emitter;
@@ -14,12 +16,22 @@ use Amp\Pipeline\Emitter;
 final class Pipe implements ReadableStream, WritableStream, ClosableStream
 {
     private Emitter $emitter;
-    private ReadableStream $source;
+    private ReadableStream $stream;
 
     public function __construct()
     {
         $this->emitter = new Emitter();
-        $this->source = new IterableStream($this->emitter->pipe());
+        $this->stream = new IterableStream($this->emitter->pipe());
+    }
+
+    public function getSource(): WritableStream /* & ClosableStream */
+    {
+        return new PipeSource($this);
+    }
+
+    public function getSink(): ReadableStream /* & ClosableStream */
+    {
+        return new PipeSink($this);
     }
 
     public function write(string $bytes): Future
@@ -61,11 +73,11 @@ final class Pipe implements ReadableStream, WritableStream, ClosableStream
 
     public function read(?Cancellation $cancellation = null): ?string
     {
-        return $this->source->read($cancellation);
+        return $this->stream->read($cancellation);
     }
 
     public function isReadable(): bool
     {
-        return $this->source->isReadable();
+        return $this->stream->isReadable();
     }
 }
