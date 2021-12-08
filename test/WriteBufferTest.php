@@ -9,8 +9,8 @@ final class WriteBufferTest extends AsyncTestCase
     public function testWrite(): void
     {
         $output = new WriteBuffer();
-        $output->write('foo')->await();
-        $output->end()->await();
+        $output->write('foo');
+        $output->end();
 
         self::assertSame('foo', $output->buffer());
     }
@@ -18,8 +18,8 @@ final class WriteBufferTest extends AsyncTestCase
     public function testEnd(): void
     {
         $output = new WriteBuffer();
-        $output->write('foo')->await();
-        $output->end('bar')->await();
+        $output->write('foo');
+        $output->end('bar');
 
         self::assertSame('foobar', $output->buffer());
     }
@@ -29,8 +29,8 @@ final class WriteBufferTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $output = new WriteBuffer();
-        $output->end('foo')->await();
-        $output->write('bar')->await();
+        $output->end('foo');
+        $output->write('bar');
     }
 
     public function testThrowsOnEndingToClosedBuffer(): void
@@ -38,7 +38,7 @@ final class WriteBufferTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $output = new WriteBuffer();
-        $output->end('foo')->await();
-        $output->end('bar')->await();
+        $output->end('foo');
+        $output->end('bar');
     }
 }

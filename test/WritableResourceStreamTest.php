@@ -48,7 +48,7 @@ class WritableResourceStreamTest extends AsyncTestCase
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
 
-        $stream->write("foobar")->await();
+        $stream->write("foobar");
     }
 
     public function testClosedRemoteSocket(): void
@@ -66,8 +66,8 @@ class WritableResourceStreamTest extends AsyncTestCase
         $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
 
         // The first write still succeeds somehow...
-        $stream->write("foobar")->await();
+        $stream->write("foobar");
         delay(0.1); // Provide some time for the OS to mark the socket is closed.
-        $stream->write("foobar")->await();
+        $stream->write("foobar");
     }
 }

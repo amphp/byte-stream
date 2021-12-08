@@ -20,7 +20,7 @@ class CompressingWritableStreamTest extends AsyncTestCase
 
         $fileStream = new ReadableResourceStream(\fopen($file, 'rb'));
         while (($chunk = $fileStream->read()) !== null) {
-            $outputStream->write($chunk)->await();
+            $outputStream->write($chunk);
         }
 
         $outputStream->end();
@@ -40,8 +40,8 @@ class CompressingWritableStreamTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $gzStream = new CompressingWritableStream(new WriteBuffer(), \ZLIB_ENCODING_GZIP);
-        $gzStream->end("foo")->await();
-        $gzStream->write("bar")->await();
+        $gzStream->end("foo");
+        $gzStream->write("bar");
     }
 
     public function testThrowsOnEndingToClosedContext(): void
@@ -49,8 +49,8 @@ class CompressingWritableStreamTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $gzStream = new CompressingWritableStream(new WriteBuffer(), \ZLIB_ENCODING_GZIP);
-        $gzStream->end("foo")->await();
-        $gzStream->end("bar")->await();
+        $gzStream->end("foo");
+        $gzStream->end("bar");
     }
 
     public function testGetEncoding(): void

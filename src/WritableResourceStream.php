@@ -3,8 +3,8 @@
 namespace Amp\ByteStream;
 
 use Amp\DeferredFuture;
-use Amp\Future;
 use Revolt\EventLoop;
+use Revolt\EventLoop\Suspension;
 
 /**
  * Output stream abstraction for PHP's stream resources.
@@ -61,16 +61,16 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
             static $emptyWrites = 0;
 
             $end = false;
-            $deferredFuture = null;
+            $suspension = null;
 
             try {
                 while (!$writes->isEmpty()) {
-                    /** @var DeferredFuture|null $deferredFuture */
-                    [$data, $previous, $deferredFuture, $end] = $writes->shift();
+                    /** @var Suspension|null $suspension */
+                    [$data, $previous, $suspension, $end] = $writes->shift();
                     $length = \strlen($data);
 
                     if ($length === 0) {
-                        $deferredFuture?->complete();
+                        $suspension?->resume();
                         continue;
                     }
 
@@ -104,7 +104,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                             throw new StreamException($message);
                         }
 
-                        $writes->unshift([$data, $previous, $deferredFuture, $end]);
+                        $writes->unshift([$data, $previous, $suspension, $end]);
                         $end = false;
                         return;
                     }
@@ -113,21 +113,21 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
 
                     if ($length > $written) {
                         $data = \substr($data, $written);
-                        $writes->unshift([$data, $written + $previous, $deferredFuture, $end]);
+                        $writes->unshift([$data, $written + $previous, $suspension, $end]);
                         $end = false;
                         return;
                     }
 
-                    $deferredFuture?->complete();
+                    $suspension?->resume();
                 }
             } catch (\Throwable $exception) {
                 $writable = false;
                 $end = true;
 
-                $deferredFuture?->error($exception);
+                $suspension?->throw($exception);
                 while (!$writes->isEmpty()) {
-                    [, , $deferredFuture] = $writes->shift();
-                    $deferredFuture?->error($exception);
+                    [, , $suspension] = $writes->shift();
+                    $suspension?->throw($exception);
                 }
 
                 EventLoop::cancel($callbackId);
@@ -156,9 +156,9 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
      *
      * @throws ClosedException If the stream has already been closed.
      */
-    public function write(string $bytes): Future
+    public function write(string $bytes): void
     {
-        return $this->send($bytes, false);
+        $this->send($bytes, false);
     }
 
     /**
@@ -166,9 +166,9 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
      *
      * @param string $bytes Bytes to write.
      */
-    public function end(string $bytes = ''): Future
+    public function end(string $bytes = ''): void
     {
-        return $this->send($bytes, true);
+        $this->send($bytes, true);
     }
 
     public function isWritable(): bool
@@ -219,10 +219,10 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
         $this->free();
     }
 
-    private function send(string $data, bool $end): Future
+    private function send(string $data, bool $end): void
     {
         if (!$this->writable) {
-            return Future::error(new ClosedException("The stream is not writable"));
+            throw new ClosedException("The stream is not writable");
         }
 
         $length = \strlen($data);
@@ -237,12 +237,11 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                 if ($end) {
                     $this->close();
                 }
-
-                return Future::complete();
+                return;
             }
 
             if (!\is_resource($this->resource)) {
-                return Future::error(new ClosedException("The stream was closed by the peer"));
+                throw new ClosedException("The stream was closed by the peer");
             }
 
             // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
@@ -258,15 +257,14 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                 if ($error = \error_get_last()) {
                     $message .= \sprintf("; %s", $error["message"]);
                 }
-                return Future::error(new StreamException($message));
+                throw new StreamException($message);
             }
 
             if ($length === $written) {
                 if ($end) {
                     $this->close();
                 }
-
-                return Future::complete();
+                return;
             }
 
             $data = \substr($data, $written);
@@ -282,9 +280,9 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
         }
 
         EventLoop::enable($this->callbackId);
-        $this->writes->push([$data, $written, $deferredFuture = new DeferredFuture, $end]);
+        $this->writes->push([$data, $written, $suspension = EventLoop::createSuspension(), $end]);
 
-        return $deferredFuture->getFuture();
+        $suspension->suspend();
     }
 
     /**
@@ -330,9 +328,9 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
         if (!$this->writes->isEmpty()) {
             $exception = new ClosedException("The socket was closed before writing completed");
             do {
-                /** @var DeferredFuture|null $deferredFuture */
-                [, , $deferredFuture] = $this->writes->shift();
-                $deferredFuture?->error($exception);
+                /** @var Suspension|null $suspension */
+                [, , $suspension] = $this->writes->shift();
+                $suspension?->throw($exception);
             } while (!$this->writes->isEmpty());
         }
 

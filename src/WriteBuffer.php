@@ -3,7 +3,6 @@
 namespace Amp\ByteStream;
 
 use Amp\DeferredFuture;
-use Amp\Future;
 
 final class WriteBuffer implements WritableStream
 {
@@ -18,21 +17,19 @@ final class WriteBuffer implements WritableStream
         $this->deferredFuture = new DeferredFuture;
     }
 
-    public function write(string $bytes): Future
+    public function write(string $bytes): void
     {
         if ($this->closed) {
-            return Future::error(new ClosedException("The stream has already been closed"));
+            throw new ClosedException("The stream has already been closed");
         }
 
         $this->contents .= $bytes;
-
-        return Future::complete();
     }
 
-    public function end(string $bytes = ""): Future
+    public function end(string $bytes = ""): void
     {
         if ($this->closed) {
-            return Future::error(new ClosedException("The stream has already been closed"));
+            throw new ClosedException("The stream has already been closed");
         }
 
         $this->contents .= $bytes;
@@ -40,8 +37,6 @@ final class WriteBuffer implements WritableStream
 
         $this->deferredFuture->complete($this->contents);
         $this->contents = '';
-
-        return Future::complete();
     }
 
     public function isWritable(): bool

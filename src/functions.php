@@ -38,9 +38,8 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
 
     while (($chunk = $source->read($cancellation)) !== null) {
         $written += \strlen($chunk);
-        $future = $destination->write($chunk);
+        $destination->write($chunk);
         $chunk = null; // free memory
-        $future->await($cancellation);
     }
 
     return $written;

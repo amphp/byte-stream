@@ -33,9 +33,11 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", self::LARGE_MESSAGE_SIZE);
 
-        $a->end($message)->ignore();
+        $future = async(fn () => $a->end($message));
 
         self::assertSame($message, buffer($b));
+
+        $future->await();
     }
 
     public function testManySmallPayloads(): void
@@ -46,9 +48,9 @@ class ResourceStreamTest extends AsyncTestCase
 
         EventLoop::queue(function () use (&$i, $a, $message): void {
             for ($i = 0; $i < 128; $i++) {
-                $a->write($message)->await();
+                $a->write($message);
             }
-            $a->end()->await();
+            $a->end();
         });
 
         $buffer = buffer($b);
@@ -63,7 +65,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", self::LARGE_MESSAGE_SIZE);
 
-        $writeFuture = $a->write($message);
+        $writeFuture = async(fn () => $a->write($message));
 
         $b->read();
         $b->close();
@@ -85,7 +87,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         for ($i = 0; $i < 128; $i++) {
             $writeFuture?->ignore();
-            $writeFuture = $a->write($message);
+            $writeFuture = async(fn () => $a->write($message));
         }
 
         $b->read();
@@ -103,7 +105,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", 8192 /* default chunk size */);
 
-        $writeFuture = $a->write($message);
+        $writeFuture = async(fn () => $a->write($message));
 
         $a->close();
 
@@ -122,7 +124,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $this->expectException(StreamException::class);
 
-        $a->write($message)->await();
+        $a->write($message);
     }
 
     public function testReferencingClosedStream(): void
@@ -173,7 +175,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", 8192 /* default chunk size */);
 
-        $a->end($message)->ignore();
+        $a->end($message);
 
         self::assertSame($message, buffer($b));
     }
@@ -184,7 +186,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = "";
 
-        $a->end($message)->ignore();
+        $a->end($message);
 
         self::assertSame($message, buffer($b));
     }
@@ -195,9 +197,11 @@ class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", 8192 /* default chunk size */);
 
-        $a->end($message)->ignore();
+        $future = async(fn () => $a->end($message));
 
         self::assertSame($message, buffer($b));
+
+        $future->await();
     }
 
     public function testIssue47()
@@ -229,7 +233,7 @@ class ResourceStreamTest extends AsyncTestCase
         $a->setChunkSize(1);
         $b->setChunkSize(1);
 
-        $a->write('foo')->await();
+        $a->write('foo');
 
         self::assertSame('f', $b->read());
 
@@ -247,7 +251,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $deferredCancellation->cancel();
 
-        $a->write('foo')->await();
+        $a->write('foo');
 
         $this->expectException(CancelledException::class);
         $future->await();
@@ -261,7 +265,7 @@ class ResourceStreamTest extends AsyncTestCase
 
         $future = async(fn () => $b->read($deferredCancellation->getCancellation()));
 
-        $a->write('foo')->await();
+        $a->write('foo');
 
         delay(0.001); // Tick event loop to invoke read watcher.
 

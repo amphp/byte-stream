@@ -5,7 +5,6 @@ namespace Amp\ByteStream\Compression;
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\WritableStream;
-use Amp\Future;
 
 /**
  * Allows compression of output streams using Zlib.
@@ -36,36 +35,36 @@ final class CompressingWritableStream implements WritableStream
         }
     }
 
-    public function write(string $bytes): Future
+    public function write(string $bytes): void
     {
         if ($this->resource === null) {
-            return Future::error(new ClosedException("The stream has already been closed"));
+            throw new ClosedException("The stream has already been closed");
         }
 
         $compressed = \deflate_add($this->resource, $bytes, \ZLIB_SYNC_FLUSH);
 
         if ($compressed === false) {
-            return Future::error(new StreamException("Failed adding data to deflate context"));
+            throw new StreamException("Failed adding data to deflate context");
         }
 
-        return $this->destination->write($compressed);
+        $this->destination->write($compressed);
     }
 
-    public function end(string $bytes = ""): Future
+    public function end(string $bytes = ""): void
     {
         if ($this->resource === null) {
-            return Future::error(new ClosedException("The stream has already been closed"));
+            throw new ClosedException("The stream has already been closed");
         }
 
         $compressed = \deflate_add($this->resource, $bytes, \ZLIB_FINISH);
 
         if ($compressed === false) {
-            return Future::error(new StreamException("Failed adding data to deflate context"));
+            throw new StreamException("Failed adding data to deflate context");
         }
 
         $this->resource = null;
 
-        return $this->destination->end($compressed);
+        $this->destination->end($compressed);
     }
 
     public function isWritable(): bool
