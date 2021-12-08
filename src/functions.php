@@ -3,11 +3,9 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
-use Amp\Pipeline\AsyncGenerator;
+use Amp\Pipeline;
 use Amp\Pipeline\Emitter;
 use Revolt\EventLoop;
-use function Amp\Pipeline\fromIterable;
-use function Amp\Pipeline\map;
 
 // @codeCoverageIgnoreStart
 if (\strlen('…') !== 3) {
@@ -185,24 +183,20 @@ function getStderr(): WritableResourceStream
  */
 function split(ReadableStream $source, string $delimiter): \Traversable
 {
-    return new AsyncGenerator(static function () use ($source, $delimiter): \Generator {
-        $buffer = '';
+    $buffer = '';
 
-        while (null !== $chunk = $source->read()) {
-            $buffer .= $chunk;
+    while (null !== $chunk = $source->read()) {
+        $buffer .= $chunk;
 
-            if (\str_contains($buffer, $delimiter)) {
-                $split = \explode($delimiter, $buffer);
-                $buffer = \array_pop($split);
+        $split = \explode($delimiter, $buffer);
+        $buffer = \array_pop($split);
 
-                yield from $split;
-            }
-        }
+        yield from $split;
+    }
 
-        if ($buffer !== '') {
-            yield $buffer;
-        }
-    });
+    if ($buffer !== '') {
+        yield $buffer;
+    }
 }
 
 /**
@@ -214,8 +208,8 @@ function split(ReadableStream $source, string $delimiter): \Traversable
  */
 function splitLines(ReadableStream $source): \Traversable
 {
-    return fromIterable(split($source, "\n"))
-        ->pipe(map(fn ($line) => \rtrim($line, "\r")));
+    return Pipeline\fromIterable(split($source, "\n"))
+        ->pipe(Pipeline\map(fn ($line) => \rtrim($line, "\r")));
 }
 
 /**
@@ -227,15 +221,13 @@ function parseLineDelimitedJson(
     int $depth = 512,
     int $options = 0
 ): \Traversable {
-    return new AsyncGenerator(static function () use ($source, $associative, $depth, $options): \Generator {
-        foreach (splitLines($source) as $line) {
-            $line = \trim($line);
+    foreach (splitLines($source) as $line) {
+        $line = \trim($line);
 
-            if ($line === '') {
-                continue;
-            }
-
-            yield \json_decode($line, $associative, $depth, $options | \JSON_THROW_ON_ERROR);
+        if ($line === '') {
+            continue;
         }
-    });
+
+        yield \json_decode($line, $associative, $depth, $options | \JSON_THROW_ON_ERROR);
+    }
 }
