@@ -23,17 +23,16 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
 
     private bool $readable = true;
 
-    private int $chunkSize;
+    private int $chunkSize = self::DEFAULT_CHUNK_SIZE;
 
     private \Closure $cancel;
 
     /**
      * @param resource $stream Stream resource.
-     * @param int      $chunkSize Chunk size per read operation.
      *
      * @throws \Error If an invalid stream or parameter has been passed.
      */
-    public function __construct($stream, int $chunkSize = self::DEFAULT_CHUNK_SIZE)
+    public function __construct($stream)
     {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");
@@ -50,10 +49,10 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
         \stream_set_read_buffer($stream, 0);
 
         $this->resource = &$stream;
-        $this->chunkSize = &$chunkSize;
 
         $suspension = &$this->suspension;
         $readable = &$this->readable;
+        $chunkSize = &$this->chunkSize;
         $this->callbackId = EventLoop::disable(EventLoop::onReadable($this->resource, static function ($callbackId) use (
             &$suspension,
             &$readable,

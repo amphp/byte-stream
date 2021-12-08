@@ -14,15 +14,16 @@ class ResourceStreamTest extends AsyncTestCase
 {
     public const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
 
-    public function getStreamPair(
-        ?int $outputChunkSize = null,
-        int $inputChunkSize = ReadableResourceStream::DEFAULT_CHUNK_SIZE
-    ): array {
+    /**
+     * @return array{WritableResourceStream, ReadableResourceStream}
+     */
+    public function getStreamPair(?int $outputChunkSize = null): array
+    {
         $domain = \PHP_OS_FAMILY === 'Windows' ? STREAM_PF_INET : STREAM_PF_UNIX;
         [$left, $right] = @\stream_socket_pair($domain, \STREAM_SOCK_STREAM, \STREAM_IPPROTO_IP);
 
         $a = new WritableResourceStream($left, $outputChunkSize);
-        $b = new ReadableResourceStream($right, $inputChunkSize);
+        $b = new ReadableResourceStream($right);
 
         return [$a, $b];
     }
@@ -227,18 +228,14 @@ class ResourceStreamTest extends AsyncTestCase
         $this->assertStringEqualsFile(__FILE__, $buffer);
     }
 
-    public function testSetChunkSize(): void
+    public function testReadLength(): void
     {
         [$a, $b] = $this->getStreamPair();
-        $a->setChunkSize(1);
-        $b->setChunkSize(1);
+        $a->write('foobar');
 
-        $a->write('foo');
-
-        self::assertSame('f', $b->read());
-
-        $b->setChunkSize(3);
-        self::assertSame('oo', $b->read());
+        self::assertSame('f', $b->read(length: 1));
+        self::assertSame('oo', $b->read(length: 2));
+        self::assertSame('bar', $b->read(length: 100));
     }
 
     public function testCancellationBeforeRead(): void
