@@ -100,7 +100,10 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
         };
     }
 
-    public function read(?Cancellation $cancellation = null): ?string
+    /**
+     * @param positive-int $length
+     */
+    public function read(?Cancellation $cancellation = null, int $length = self::DEFAULT_CHUNK_SIZE): ?string
     {
         if ($this->suspension !== null) {
             throw new PendingReadError;
@@ -112,12 +115,17 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
 
         \assert($this->resource !== null);
 
+        if ($length <= 0) {
+            throw new \ValueError('The chunk length must be a positive integer');
+        }
+
         if (\feof($this->resource)) {
             $this->free();
 
             return null;
         }
 
+        $this->chunkSize = $length;
         EventLoop::enable($this->callbackId);
         $this->suspension = EventLoop::createSuspension();
 
@@ -167,11 +175,6 @@ final class ReadableResourceStream implements ReadableStream, ClosableStream, Re
     public function getResource()
     {
         return $this->resource;
-    }
-
-    public function setChunkSize(int $chunkSize): void
-    {
-        $this->chunkSize = $chunkSize;
     }
 
     /**
