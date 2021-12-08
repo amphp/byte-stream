@@ -3,7 +3,6 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
-use Amp\Future;
 use Amp\Pipeline\AsyncGenerator;
 use Amp\Pipeline\Emitter;
 use Revolt\EventLoop;

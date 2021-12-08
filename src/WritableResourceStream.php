@@ -2,7 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\DeferredFuture;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
