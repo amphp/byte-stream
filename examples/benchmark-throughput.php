@@ -7,6 +7,8 @@ use Amp\ByteStream\ReadableResourceStream;
 use Amp\ByteStream\WritableResourceStream;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Driver\StreamSelectDriver;
+use function Amp\ByteStream\pipe;
+use function Amp\now;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -15,7 +17,7 @@ EventLoop::setDriver(new StreamSelectDriver);
 $args = \getopt('i:o:t:');
 $if = $args['i'] ?? '/dev/zero';
 $of = $args['o'] ?? '/dev/null';
-$t = (int) ($args['t'] ?? 30);
+$duration = (int) ($args['t'] ?? 30);
 
 \assert(\is_string($if) && \is_string($of));
 
@@ -39,24 +41,18 @@ try {
     $stderr->write("NOTICE: Assertions are enabled, this has a major impact on performance." . PHP_EOL);
 }
 
-$stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $t . ' second(s)) ...' . PHP_EOL);
+$stderr->write('piping from ' . $if . ' to ' . $of . ' (for max ' . $duration . ' second(s)) ...' . PHP_EOL);
 
-EventLoop::delay($t, fn () => $in->close());
+EventLoop::delay($duration, fn () => $in->close());
 
-$start = \microtime(true);
-$bytes = 0;
-
-while (($chunk = $in->read()) !== null) {
-    $out->write($chunk);
-    $bytes += \strlen($chunk);
-}
-
-$t = \microtime(true) - $start;
+$start = now();
+$bytes = pipe($in, $out);
+$duration = now() - $start;
 
 $resource = $out->getResource();
 \assert($resource !== null);
 
-$bytesFormatted = \round($bytes / 1024 / 1024 / $t, 1);
+$bytesFormatted = \round($bytes / 1024 / 1024 / $duration, 1);
 
-$stderr->write('read ' . $bytes . ' byte(s) in ' . \round($t, 3) . ' second(s) => ' . $bytesFormatted . ' MiB/s' . PHP_EOL);
+$stderr->write('read ' . $bytes . ' byte(s) in ' . \round($duration, 3) . ' second(s) => ' . $bytesFormatted . ' MiB/s' . PHP_EOL);
 $stderr->write('peak memory usage of ' . \round(\memory_get_peak_usage(true) / 1024 / 1024, 1) . ' MiB' . PHP_EOL);
