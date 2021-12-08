@@ -33,7 +33,7 @@ class WritableResourceStreamTest extends AsyncTestCase
     public function testBrokenPipe(): void
     {
         if (($sockets = @\stream_socket_pair(
-            \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
+            \PHP_OS_FAMILY === 'Windows' ? STREAM_PF_INET : STREAM_PF_UNIX,
             STREAM_SOCK_STREAM,
             STREAM_IPPROTO_IP
         )) === false) {
@@ -46,7 +46,12 @@ class WritableResourceStreamTest extends AsyncTestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
+
+        if (\PHP_OS_FAMILY === 'Windows') {
+            $this->expectExceptionMessage(/* S|s */ 'end of 6 bytes failed with errno=10053 An established connection was aborted by the software in your host machine');
+        } else {
+            $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
+        }
 
         $stream->write("foobar");
     }
