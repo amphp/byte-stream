@@ -63,7 +63,12 @@ class WritableResourceStreamTest extends AsyncTestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
+
+        if (\PHP_OS_FAMILY === 'Windows') {
+            $this->expectExceptionMessage(/* S|s */ 'end of 6 bytes failed with errno=10053 An established connection was aborted by the software in your host machine');
+        } else {
+            $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
+        }
 
         // The first write still succeeds somehow...
         $stream->write("foobar");
