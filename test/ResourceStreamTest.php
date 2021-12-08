@@ -14,6 +14,9 @@ final class ResourceStreamTest extends AsyncTestCase
 {
     public const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
 
+    /**
+     * @return array{WritableResourceStream, ReadableResourceStream}
+     */
     public function getStreamPair(
         ?int $outputChunkSize = null,
         int $inputChunkSize = ReadableResourceStream::DEFAULT_CHUNK_SIZE
@@ -239,6 +242,16 @@ final class ResourceStreamTest extends AsyncTestCase
 
         $b->setChunkSize(3);
         self::assertSame('oo', $b->read());
+    }
+
+    public function testReadLength(): void
+    {
+        [$a, $b] = $this->getStreamPair();
+        $a->write('foobar');
+
+        self::assertSame('f', $b->read(length: 1));
+        self::assertSame('oo', $b->read(length: 2));
+        self::assertSame('bar', $b->read(length: 100));
     }
 
     public function testCancellationBeforeRead(): void
