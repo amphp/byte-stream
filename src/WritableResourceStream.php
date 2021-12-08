@@ -27,7 +27,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
 
     /**
      * @param resource $stream Stream resource.
-     * @param int|null $chunkSize Chunk size per `fwrite()` operation.
+     * @param positive-int|null $chunkSize Chunk size per `fwrite()` operation.
      */
     public function __construct($stream, ?int $chunkSize = null)
     {
@@ -39,6 +39,10 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
 
         if (\str_contains($meta["mode"], "r") && !\str_contains($meta["mode"], "+")) {
             throw new \Error("Expected a writable stream");
+        }
+
+        if ($chunkSize !== null && $chunkSize <= 0) {
+            throw new \ValueError('The chunk length must be a positive integer');
         }
 
         \stream_set_blocking($stream, false);
@@ -208,8 +212,15 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
         return $this->resource;
     }
 
+    /**
+     * @param positive-int $chunkSize
+     */
     public function setChunkSize(int $chunkSize): void
     {
+        if ($chunkSize <= 0) {
+            throw new \ValueError('The chunk length must be a positive integer');
+        }
+
         $this->chunkSize = $chunkSize;
     }
 

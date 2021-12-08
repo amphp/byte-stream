@@ -26,7 +26,7 @@ $if = \preg_replace('(^/dev/fd/)', 'php://fd/', $if);
 $of = \preg_replace('(^/dev/fd/)', 'php://fd/', $of);
 
 $stderr = new WritableResourceStream(STDERR);
-$in = new ReadableResourceStream(\fopen($if, 'rb'), 65536 /* Default size used by React to allow comparisons */);
+$in = new ReadableResourceStream(\fopen($if, 'rb'));
 $out = new WritableResourceStream(\fopen($of, 'wb'));
 
 if (\extension_loaded('xdebug')) {

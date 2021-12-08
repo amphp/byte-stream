@@ -228,6 +228,20 @@ class ResourceStreamTest extends AsyncTestCase
         $this->assertStringEqualsFile(__FILE__, $buffer);
     }
 
+    public function testSetChunkSize(): void
+    {
+        [$a, $b] = $this->getStreamPair();
+        $a->setChunkSize(1);
+        $b->setChunkSize(1);
+
+        $a->write('foo');
+
+        self::assertSame('f', $b->read());
+
+        $b->setChunkSize(3);
+        self::assertSame('oo', $b->read());
+    }
+
     public function testReadLength(): void
     {
         [$a, $b] = $this->getStreamPair();
