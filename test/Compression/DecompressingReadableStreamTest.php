@@ -3,7 +3,7 @@
 namespace Amp\ByteStream\Compression;
 
 use Amp\ByteStream\IterableStream;
-use Amp\ByteStream\ReadBuffer;
+use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\AsyncGenerator;
@@ -37,7 +37,7 @@ class DecompressingReadableStreamTest extends AsyncTestCase
 
     public function testGetEncoding(): void
     {
-        $gzStream = new DecompressingReadableStream(new ReadBuffer(""), \ZLIB_ENCODING_GZIP);
+        $gzStream = new DecompressingReadableStream(new ReadableBuffer(""), \ZLIB_ENCODING_GZIP);
 
         self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
@@ -46,7 +46,7 @@ class DecompressingReadableStreamTest extends AsyncTestCase
     {
         $this->expectException(\ValueError::class);
 
-        new DecompressingReadableStream(new ReadBuffer(""), 1337);
+        new DecompressingReadableStream(new ReadableBuffer(""), 1337);
     }
 
     public function testGetOptions(): void
@@ -58,7 +58,7 @@ class DecompressingReadableStreamTest extends AsyncTestCase
             "strategy" => \ZLIB_DEFAULT_STRATEGY,
         ];
 
-        $gzStream = new DecompressingReadableStream(new ReadBuffer(""), \ZLIB_ENCODING_GZIP, $options);
+        $gzStream = new DecompressingReadableStream(new ReadableBuffer(""), \ZLIB_ENCODING_GZIP, $options);
 
         self::assertSame($options, $gzStream->getOptions());
     }
@@ -67,7 +67,7 @@ class DecompressingReadableStreamTest extends AsyncTestCase
     {
         $this->expectException(StreamException::class);
 
-        $gzStream = new DecompressingReadableStream(new ReadBuffer("Invalid"), \ZLIB_ENCODING_GZIP);
+        $gzStream = new DecompressingReadableStream(new ReadableBuffer("Invalid"), \ZLIB_ENCODING_GZIP);
 
         $gzStream->read();
     }

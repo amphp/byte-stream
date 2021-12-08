@@ -11,7 +11,7 @@ class ReadableStreamChainTest extends AsyncTestCase
     {
         $stream = new ReadableStreamChain(
             $this->createStream(["abc", "def", "hi"]),
-            new ReadBuffer,
+            new ReadableBuffer,
             $this->createStream(["kak"])
         );
 

@@ -3,10 +3,10 @@
 namespace Amp\ByteStream\Compression;
 
 use Amp\ByteStream\ClosedException;
+use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\ReadableResourceStream;
-use Amp\ByteStream\ReadBuffer;
 use Amp\ByteStream\StreamException;
-use Amp\ByteStream\WriteBuffer;
+use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
 class CompressingWritableStreamTest extends AsyncTestCase
@@ -15,7 +15,7 @@ class CompressingWritableStreamTest extends AsyncTestCase
     {
         $file = __DIR__ . "/../fixtures/foobar.txt";
 
-        $bufferStream = new WriteBuffer();
+        $bufferStream = new WritableBuffer();
         $outputStream = new CompressingWritableStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
         $fileStream = new ReadableResourceStream(\fopen($file, 'rb'));
@@ -25,7 +25,7 @@ class CompressingWritableStreamTest extends AsyncTestCase
 
         $outputStream->end();
 
-        $inputStream = new DecompressingReadableStream(new ReadBuffer($bufferStream->buffer()), \ZLIB_ENCODING_GZIP);
+        $inputStream = new DecompressingReadableStream(new ReadableBuffer($bufferStream->buffer()), \ZLIB_ENCODING_GZIP);
 
         $buffer = "";
         while (($chunk = $inputStream->read()) !== null) {
@@ -39,7 +39,7 @@ class CompressingWritableStreamTest extends AsyncTestCase
     {
         $this->expectException(ClosedException::class);
 
-        $gzStream = new CompressingWritableStream(new WriteBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream = new CompressingWritableStream(new WritableBuffer(), \ZLIB_ENCODING_GZIP);
         $gzStream->end("foo");
         $gzStream->write("bar");
     }
@@ -48,14 +48,14 @@ class CompressingWritableStreamTest extends AsyncTestCase
     {
         $this->expectException(ClosedException::class);
 
-        $gzStream = new CompressingWritableStream(new WriteBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream = new CompressingWritableStream(new WritableBuffer(), \ZLIB_ENCODING_GZIP);
         $gzStream->end("foo");
         $gzStream->end("bar");
     }
 
     public function testGetEncoding(): void
     {
-        $gzStream = new CompressingWritableStream(new WriteBuffer(), \ZLIB_ENCODING_GZIP);
+        $gzStream = new CompressingWritableStream(new WritableBuffer(), \ZLIB_ENCODING_GZIP);
 
         self::assertSame(\ZLIB_ENCODING_GZIP, $gzStream->getEncoding());
     }
@@ -68,7 +68,7 @@ class CompressingWritableStreamTest extends AsyncTestCase
             $this->expectException(\ValueError::class);
         }
 
-        new CompressingWritableStream(new WriteBuffer(), 1337);
+        new CompressingWritableStream(new WritableBuffer(), 1337);
     }
 
     public function testGetOptions(): void
@@ -80,7 +80,7 @@ class CompressingWritableStreamTest extends AsyncTestCase
             "strategy" => \ZLIB_DEFAULT_STRATEGY,
         ];
 
-        $gzStream = new CompressingWritableStream(new WriteBuffer(), \ZLIB_ENCODING_GZIP, $options);
+        $gzStream = new CompressingWritableStream(new WritableBuffer(), \ZLIB_ENCODING_GZIP, $options);
 
         self::assertSame($options, $gzStream->getOptions());
     }
@@ -93,6 +93,6 @@ class CompressingWritableStreamTest extends AsyncTestCase
             $this->expectException(\ValueError::class);
         }
 
-        new CompressingWritableStream(new WriteBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
+        new CompressingWritableStream(new WritableBuffer(), \ZLIB_ENCODING_GZIP, ["level" => 42]);
     }
 }

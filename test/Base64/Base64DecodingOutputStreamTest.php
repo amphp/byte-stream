@@ -3,14 +3,14 @@
 namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\StreamException;
-use Amp\ByteStream\WriteBuffer;
+use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
 class Base64DecodingOutputStreamTest extends AsyncTestCase
 {
     public function testWrite(): void
     {
-        $buffer = new WriteBuffer;
+        $buffer = new WritableBuffer;
         $stream = new Base64DecodingWritableStream($buffer);
 
         $stream->write('Zm9');
@@ -23,7 +23,7 @@ class Base64DecodingOutputStreamTest extends AsyncTestCase
 
     public function testEnd(): void
     {
-        $buffer = new WriteBuffer;
+        $buffer = new WritableBuffer;
         $stream = new Base64DecodingWritableStream($buffer);
 
         $stream->write('Zm9');
@@ -35,7 +35,7 @@ class Base64DecodingOutputStreamTest extends AsyncTestCase
 
     public function testInvalidDataMissingPadding(): void
     {
-        $buffer = new WriteBuffer;
+        $buffer = new WritableBuffer;
         $stream = new Base64DecodingWritableStream($buffer);
 
         $stream->write('Zm9');
@@ -49,7 +49,7 @@ class Base64DecodingOutputStreamTest extends AsyncTestCase
 
     public function testInvalidDataChar(): void
     {
-        $buffer = new WriteBuffer;
+        $buffer = new WritableBuffer;
         $stream = new Base64DecodingWritableStream($buffer);
 
         $this->expectException(StreamException::class);

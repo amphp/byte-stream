@@ -26,7 +26,7 @@ class Payload implements ReadableStream
     public function __construct(ReadableStream|string $stream)
     {
         $this->stream = match (true) {
-            $stream instanceof ReadBuffer => $stream->read(),
+            $stream instanceof ReadableBuffer => $stream->read(),
             default => $stream,
         };
     }

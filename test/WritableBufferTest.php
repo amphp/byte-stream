@@ -4,11 +4,11 @@ namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
 
-final class WriteBufferTest extends AsyncTestCase
+final class WritableBufferTest extends AsyncTestCase
 {
     public function testWrite(): void
     {
-        $output = new WriteBuffer();
+        $output = new WritableBuffer();
         $output->write('foo');
         $output->end();
 
@@ -17,7 +17,7 @@ final class WriteBufferTest extends AsyncTestCase
 
     public function testEnd(): void
     {
-        $output = new WriteBuffer();
+        $output = new WritableBuffer();
         $output->write('foo');
         $output->end('bar');
 
@@ -28,7 +28,7 @@ final class WriteBufferTest extends AsyncTestCase
     {
         $this->expectException(ClosedException::class);
 
-        $output = new WriteBuffer();
+        $output = new WritableBuffer();
         $output->end('foo');
         $output->write('bar');
     }
@@ -37,7 +37,7 @@ final class WriteBufferTest extends AsyncTestCase
     {
         $this->expectException(ClosedException::class);
 
-        $output = new WriteBuffer();
+        $output = new WritableBuffer();
         $output->end('foo');
         $output->end('bar');
     }

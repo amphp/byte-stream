@@ -13,7 +13,7 @@ class ParseLineDelimitedJsonTest extends AsyncTestCase
 {
     public function test(): void
     {
-        $result = Pipeline\toArray(parseLineDelimitedJson(new ReadBuffer(\implode("\n", [
+        $result = Pipeline\toArray(parseLineDelimitedJson(new ReadableBuffer(\implode("\n", [
             \json_encode(['foo' => "\nbar\r\n"]),
             \json_encode(['foo' => []]),
         ]))));
@@ -29,6 +29,6 @@ class ParseLineDelimitedJsonTest extends AsyncTestCase
         $this->expectException(\JsonException::class);
         $this->expectExceptionMessage('Syntax error');
 
-        Pipeline\toArray(parseLineDelimitedJson(new ReadBuffer('{')));
+        Pipeline\toArray(parseLineDelimitedJson(new ReadableBuffer('{')));
     }
 }
