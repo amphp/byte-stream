@@ -208,12 +208,15 @@ function split(ReadableStream $source, string $delimiter): \Traversable
  */
 function splitLines(ReadableStream $source): \Traversable
 {
-    return Pipeline\fromIterable(split($source, "\n"))
-        ->pipe(Pipeline\map(fn ($line) => \rtrim($line, "\r")));
+    foreach (split($source, "\n") as $line) {
+        yield \rtrim($line, "\r");
+    }
 }
 
 /**
- * @return \Traversable<int, mixed> Traversable of decoded JSON
+ * @return \Traversable<int, mixed> Traversable of decoded JSON values
+ *
+ * @throws \JsonException If JSON parsing fails
  */
 function parseLineDelimitedJson(
     ReadableStream $source,
