@@ -19,7 +19,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
 
     private string $callbackId;
 
-    /** @var \SplQueue<array{string, int, DeferredFuture|null, bool}> */
+    /** @var \SplQueue<array{string, int, Suspension|null, bool}> */
     private \SplQueue $writes;
 
     private bool $writable = true;
@@ -272,7 +272,10 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
 
         if ($length - $written > self::LARGE_CHUNK_SIZE) {
             $chunks = \str_split($data, self::LARGE_CHUNK_SIZE);
+
+            /** @var string $data */
             $data = \array_pop($chunks);
+
             foreach ($chunks as $chunk) {
                 $this->writes->push([$chunk, $written, null, false]);
                 $written += self::LARGE_CHUNK_SIZE;
