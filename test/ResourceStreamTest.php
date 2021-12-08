@@ -10,7 +10,7 @@ use Revolt\EventLoop;
 use function Amp\async;
 use function Amp\delay;
 
-class ResourceStreamTest extends AsyncTestCase
+final class ResourceStreamTest extends AsyncTestCase
 {
     public const LARGE_MESSAGE_SIZE = 1 << 20; // 1 MB
 

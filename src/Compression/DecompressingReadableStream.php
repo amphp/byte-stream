@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpComposerExtensionStubsInspection */
 
 namespace Amp\ByteStream\Compression;
 
@@ -19,7 +19,6 @@ final class DecompressingReadableStream implements ReadableStream
      * @param int         $encoding Compression algorithm used, see `inflate_init()`.
      * @param array       $options Algorithm options, see `inflate_init()`.
      *
-     * @throws StreamException
      * @throws \Error
      *
      * @see http://php.net/manual/en/function.inflate-init.php
@@ -32,7 +31,7 @@ final class DecompressingReadableStream implements ReadableStream
         $this->resource = @\inflate_init($encoding, $options);
 
         if ($this->resource === false) {
-            throw new StreamException("Failed initializing decompression context");
+            throw new \Error("Failed initializing decompression context");
         }
     }
 

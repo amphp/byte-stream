@@ -5,7 +5,7 @@ namespace Amp\ByteStream\Base64;
 use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
-class Base64EncodingOutputStreamTest extends AsyncTestCase
+final class Base64EncodingOutputStreamTest extends AsyncTestCase
 {
     public function testWrite(): void
     {

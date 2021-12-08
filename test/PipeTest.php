@@ -5,9 +5,9 @@ namespace Amp\ByteStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
 
-class PipeTest extends AsyncTestCase
+final class PipeTest extends AsyncTestCase
 {
-    public function testPipe()
+    public function testPipe(): void
     {
         $stream = new IterableStream(Pipeline\fromIterable(["abc", "def"]));
         $buffer = new WritableBuffer;

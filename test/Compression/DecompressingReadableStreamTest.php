@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpComposerExtensionStubsInspection */
 
 namespace Amp\ByteStream\Compression;
 
@@ -8,7 +8,7 @@ use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\AsyncGenerator;
 
-class DecompressingReadableStreamTest extends AsyncTestCase
+final class DecompressingReadableStreamTest extends AsyncTestCase
 {
     public function testRead(): void
     {
@@ -18,7 +18,7 @@ class DecompressingReadableStreamTest extends AsyncTestCase
         $stream = new IterableStream(new AsyncGenerator(function () use ($file2) {
             $content = \file_get_contents($file2);
 
-            while (\strlen($content)) {
+            while ($content !== '') {
                 yield $content[0];
                 $content = \substr($content, 1);
             }

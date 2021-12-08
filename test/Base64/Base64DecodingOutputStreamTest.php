@@ -6,7 +6,7 @@ use Amp\ByteStream\StreamException;
 use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
-class Base64DecodingOutputStreamTest extends AsyncTestCase
+final class Base64DecodingOutputStreamTest extends AsyncTestCase
 {
     public function testWrite(): void
     {

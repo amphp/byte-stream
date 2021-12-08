@@ -19,7 +19,7 @@ final class CompressingWritableStream implements WritableStream
      * @param int $encoding Compression encoding to use, see `deflate_init()`.
      * @param array $options Compression options to use, see `deflate_init()`.
      *
-     * @throws StreamException If an invalid encoding or invalid options have been passed.
+     * @throws \Error If an invalid encoding or invalid options have been passed.
      *
      * @see http://php.net/manual/en/function.deflate-init.php
      */
@@ -31,7 +31,7 @@ final class CompressingWritableStream implements WritableStream
         $this->resource = @\deflate_init($encoding, $options);
 
         if ($this->resource === false) {
-            throw new StreamException("Failed initializing decompression context");
+            throw new \Error("Failed initializing decompression context");
         }
     }
 

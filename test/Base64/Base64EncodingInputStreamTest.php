@@ -9,7 +9,7 @@ use Amp\Pipeline\Emitter;
 use function Amp\async;
 use function Amp\ByteStream\buffer;
 
-class Base64EncodingInputStreamTest extends AsyncTestCase
+final class Base64EncodingInputStreamTest extends AsyncTestCase
 {
     private Emitter $source;
 

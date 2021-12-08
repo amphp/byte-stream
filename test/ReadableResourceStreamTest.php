@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
 
-class ReadableResourceStreamTest extends AsyncTestCase
+final class ReadableResourceStreamTest extends AsyncTestCase
 {
     public function testGetResource(): void
     {
@@ -18,6 +18,7 @@ class ReadableResourceStreamTest extends AsyncTestCase
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a valid stream");
 
+        /** @noinspection PhpParamsInspection */
         new ReadableResourceStream(42);
     }
 

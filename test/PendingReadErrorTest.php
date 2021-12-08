@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use PHPUnit\Framework\TestCase;
 
-class PendingReadErrorTest extends TestCase
+final class PendingReadErrorTest extends TestCase
 {
     public function testDefaultErrorCode(): void
     {

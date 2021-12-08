@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\PHPUnit\AsyncTestCase;
 use function Amp\delay;
 
-class WritableResourceStreamTest extends AsyncTestCase
+final class WritableResourceStreamTest extends AsyncTestCase
 {
     public function testGetResource(): void
     {
@@ -19,6 +19,7 @@ class WritableResourceStreamTest extends AsyncTestCase
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Expected a valid stream");
 
+        /** @noinspection PhpParamsInspection */
         new WritableResourceStream(42);
     }
 

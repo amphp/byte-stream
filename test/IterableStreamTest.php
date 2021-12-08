@@ -6,7 +6,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\Pipeline\Emitter;
 
-class IterableStreamTest extends AsyncTestCase
+final class IterableStreamTest extends AsyncTestCase
 {
     public function testReadIterator(): void
     {

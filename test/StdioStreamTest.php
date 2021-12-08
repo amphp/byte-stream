@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\ByteStream;
 use Amp\PHPUnit\AsyncTestCase;
 
-class StdStreamTest extends AsyncTestCase
+final class StdioStreamTest extends AsyncTestCase
 {
     public function testGetInputBufferStream(): void
     {

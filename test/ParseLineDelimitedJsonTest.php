@@ -8,7 +8,7 @@ namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
 
-class ParseLineDelimitedJsonTest extends AsyncTestCase
+final class ParseLineDelimitedJsonTest extends AsyncTestCase
 {
     public function test(): void
     {

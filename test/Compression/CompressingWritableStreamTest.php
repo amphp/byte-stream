@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpComposerExtensionStubsInspection */
 
 namespace Amp\ByteStream\Compression;
 
@@ -9,7 +9,7 @@ use Amp\ByteStream\StreamException;
 use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
 
-class CompressingWritableStreamTest extends AsyncTestCase
+final class CompressingWritableStreamTest extends AsyncTestCase
 {
     public function testWrite(): void
     {

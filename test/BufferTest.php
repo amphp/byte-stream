@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
 
-class BufferTest extends AsyncTestCase
+final class BufferTest extends AsyncTestCase
 {
     public function testBuffer(): void
     {

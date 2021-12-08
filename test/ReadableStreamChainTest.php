@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline;
 
-class ReadableStreamChainTest extends AsyncTestCase
+final class ReadableStreamChainTest extends AsyncTestCase
 {
     public function test(): void
     {

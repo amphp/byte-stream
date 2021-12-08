@@ -8,9 +8,9 @@ use Amp\Pipeline\Emitter;
 use Revolt\EventLoop;
 use function Amp\async;
 
-class PayloadTest extends AsyncTestCase
+final class PayloadTest extends AsyncTestCase
 {
-    public function testBufferingAll()
+    public function testBufferingAll(): void
     {
         $values = ["abc", "def", "ghi"];
 
@@ -26,7 +26,7 @@ class PayloadTest extends AsyncTestCase
         self::assertSame(\implode($values), $stream->buffer());
     }
 
-    public function testFullStreamConsumption()
+    public function testFullStreamConsumption(): void
     {
         $values = ["abc", "def", "ghi"];
 
@@ -50,7 +50,7 @@ class PayloadTest extends AsyncTestCase
         self::assertSame("", $stream->buffer());
     }
 
-    public function testFastResolvingStream()
+    public function testFastResolvingStream(): void
     {
         $values = ["abc", "def", "ghi"];
 
@@ -72,7 +72,7 @@ class PayloadTest extends AsyncTestCase
         self::assertSame("", $stream->buffer());
     }
 
-    public function testFastResolvingStreamBufferingOnly()
+    public function testFastResolvingStreamBufferingOnly(): void
     {
         $values = ["abc", "def", "ghi"];
 
@@ -88,7 +88,7 @@ class PayloadTest extends AsyncTestCase
         self::assertSame(\implode($values), $stream->buffer());
     }
 
-    public function testPartialStreamConsumption()
+    public function testPartialStreamConsumption(): void
     {
         $values = ["abc", "def", "ghi"];
 
@@ -110,7 +110,7 @@ class PayloadTest extends AsyncTestCase
         self::assertSame(\implode($values), $stream->buffer());
     }
 
-    public function testFailingStream()
+    public function testFailingStream(): void
     {
         $exception = new TestException;
         $value = "abc";
@@ -135,7 +135,7 @@ class PayloadTest extends AsyncTestCase
         }
     }
 
-    public function testFailingStreamWithPendingRead()
+    public function testFailingStreamWithPendingRead(): void
     {
         $exception = new TestException;
         $value = "abc";
@@ -158,7 +158,7 @@ class PayloadTest extends AsyncTestCase
         }
     }
 
-    public function testEmptyStream()
+    public function testEmptyStream(): void
     {
         $emitter = new Emitter;
         $emitter->complete();
@@ -167,7 +167,7 @@ class PayloadTest extends AsyncTestCase
         self::assertNull($stream->read());
     }
 
-    public function testEmptyStringStream()
+    public function testEmptyStringStream(): void
     {
         $value = "";
 
@@ -181,7 +181,7 @@ class PayloadTest extends AsyncTestCase
         self::assertSame("", $stream->buffer());
     }
 
-    public function testReadAfterCompletion()
+    public function testReadAfterCompletion(): void
     {
         $value = "abc";
 
@@ -195,7 +195,7 @@ class PayloadTest extends AsyncTestCase
         self::assertNull($stream->read());
     }
 
-    public function testPendingRead()
+    public function testPendingRead(): void
     {
         $emitter = new Emitter;
         $stream = new Payload(new IterableStream($emitter->pipe()));
@@ -207,7 +207,7 @@ class PayloadTest extends AsyncTestCase
         self::assertSame("test", $stream->read());
     }
 
-    public function testPendingReadError()
+    public function testPendingReadError(): void
     {
         $emitter = new Emitter;
         $stream = new Payload(new IterableStream($emitter->pipe()));
@@ -222,7 +222,7 @@ class PayloadTest extends AsyncTestCase
         }
     }
 
-    public function testReadAfterBuffer()
+    public function testReadAfterBuffer(): void
     {
         $stream = new Payload(new ReadableBuffer("test"));
         $stream->buffer();
@@ -233,7 +233,7 @@ class PayloadTest extends AsyncTestCase
         $stream->read();
     }
 
-    public function testFurtherCallsToBufferReturnSameData()
+    public function testFurtherCallsToBufferReturnSameData(): void
     {
         $data = "test";
         $stream = new Payload(new ReadableBuffer($data));
@@ -241,7 +241,7 @@ class PayloadTest extends AsyncTestCase
         self::assertSame($data, $stream->buffer());
     }
 
-    public function testStringAsStream()
+    public function testStringAsStream(): void
     {
         $data = "test";
         $stream = new Payload($data);
