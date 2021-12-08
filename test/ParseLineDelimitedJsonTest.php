@@ -7,13 +7,12 @@
 namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline;
 
 class ParseLineDelimitedJsonTest extends AsyncTestCase
 {
     public function test(): void
     {
-        $result = iterator_to_array(parseLineDelimitedJson(new ReadableBuffer(\implode("\n", [
+        $result = \iterator_to_array(parseLineDelimitedJson(new ReadableBuffer(\implode("\n", [
             \json_encode(['foo' => "\nbar\r\n"]),
             \json_encode(['foo' => []]),
         ]))));
@@ -29,6 +28,6 @@ class ParseLineDelimitedJsonTest extends AsyncTestCase
         $this->expectException(\JsonException::class);
         $this->expectExceptionMessage('Syntax error');
 
-        iterator_to_array(parseLineDelimitedJson(new ReadableBuffer('{')));
+        \iterator_to_array(parseLineDelimitedJson(new ReadableBuffer('{')));
     }
 }
