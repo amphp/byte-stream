@@ -42,48 +42,6 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
 }
 
 /**
- * Create a local stream pair where data written to the WritableStream is immediately available on the ReadableStream.
- * Primarily useful for testing mocks.
- *
- * @return array{ReadableStream, WritableStream}
- */
-function createStreamPair(): array
-{
-    $emitter = new Emitter();
-
-    return [
-        new IterableStream($emitter->pipe()),
-        new class($emitter) implements WritableStream {
-            public function __construct(
-                private Emitter $emitter
-            ) {
-            }
-
-            public function write(string $bytes): void
-            {
-                if ($this->emitter->isComplete()) {
-                    throw new ClosedException('The stream is no longer writable');
-                }
-
-                $this->emitter->emit($bytes)->await();
-            }
-
-            public function end(): void
-            {
-                if (!$this->emitter->isComplete()) {
-                    $this->emitter->complete();
-                }
-            }
-
-            public function isWritable(): bool
-            {
-                return !$this->emitter->isComplete();
-            }
-        },
-    ];
-}
-
-/**
  * @param ReadableStream $source
  *
  * @return string Entire contents of the InputStream.
