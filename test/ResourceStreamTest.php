@@ -17,13 +17,15 @@ class ResourceStreamTest extends AsyncTestCase
     /**
      * @return array{WritableResourceStream, ReadableResourceStream}
      */
-    public function getStreamPair(?int $outputChunkSize = null): array
-    {
+    public function getStreamPair(
+        ?int $outputChunkSize = null,
+        int $inputChunkSize = ReadableResourceStream::DEFAULT_CHUNK_SIZE
+    ): array {
         $domain = \PHP_OS_FAMILY === 'Windows' ? STREAM_PF_INET : STREAM_PF_UNIX;
         [$left, $right] = @\stream_socket_pair($domain, \STREAM_SOCK_STREAM, \STREAM_IPPROTO_IP);
 
         $a = new WritableResourceStream($left, $outputChunkSize);
-        $b = new ReadableResourceStream($right);
+        $b = new ReadableResourceStream($right, $inputChunkSize);
 
         return [$a, $b];
     }
