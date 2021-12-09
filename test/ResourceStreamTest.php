@@ -73,7 +73,6 @@ final class ResourceStreamTest extends AsyncTestCase
 
         $writeFuture = async(fn () => $a->write($message));
 
-        $b->read();
         $b->close();
 
         $this->expectException(StreamException::class);
