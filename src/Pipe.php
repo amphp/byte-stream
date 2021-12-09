@@ -5,7 +5,6 @@ namespace Amp\ByteStream;
 use Amp\ByteStream\Internal\PipeSink;
 use Amp\ByteStream\Internal\PipeSource;
 use Amp\Cancellation;
-use Amp\Future;
 use Amp\Pipeline\Emitter;
 
 /**

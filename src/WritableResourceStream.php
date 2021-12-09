@@ -55,7 +55,8 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
         $writable = &$this->writable;
         $resource = &$this->resource;
 
-        $this->callbackId = EventLoop::disable(EventLoop::onWritable($stream,
+        $this->callbackId = EventLoop::disable(EventLoop::onWritable(
+            $stream,
             static function ($callbackId, $stream) use (
                 $writes,
                 &$chunkSize,
@@ -147,7 +148,8 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                         EventLoop::disable($callbackId);
                     }
                 }
-            }));
+            }
+        ));
     }
 
     /**

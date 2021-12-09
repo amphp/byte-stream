@@ -5,15 +5,13 @@ namespace Amp\ByteStream\Internal;
 use Amp\ByteStream\ClosableStream;
 use Amp\ByteStream\Pipe;
 use Amp\ByteStream\WritableStream;
-use Amp\Future;
 
 /** @internal */
 final class PipeSource implements WritableStream, ClosableStream
 {
     public function __construct(
         private Pipe $pipe
-    )
-    {
+    ) {
     }
 
     public function close(): void
