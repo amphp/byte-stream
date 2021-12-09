@@ -10,7 +10,6 @@ use Revolt\EventLoop\Suspension;
  */
 final class WritableResourceStream implements WritableStream, ClosableStream, ResourceStream
 {
-    private const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
     private const LARGE_CHUNK_SIZE = 128 * 1024;
 
     /** @var resource|null */
@@ -140,6 +139,16 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                         $resource = null;
                     }
                 } finally {
+                    if (!$writable && \is_resource($resource)) {
+                        $meta = \stream_get_meta_data($resource);
+                        if (\str_contains($meta["mode"], "+")) {
+                            \stream_socket_shutdown($resource, \STREAM_SHUT_WR);
+                        } else {
+                            \fclose($resource);
+                        }
+                        $resource = null;
+                    }
+
                     if ($writes->isEmpty()) {
                         EventLoop::disable($callbackId);
                     }
@@ -216,7 +225,11 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
      */
     public function end(string $bytes = ''): void
     {
-        $this->close();
+        $this->writable = false;
+
+        if ($this->writes->isEmpty()) {
+            $this->close();
+        }
     }
 
     public function isWritable(): bool
