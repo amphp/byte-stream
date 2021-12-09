@@ -36,7 +36,10 @@ final class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", self::LARGE_MESSAGE_SIZE);
 
-        $future = async(fn () => $a->end($message));
+        $future = async(function () use ($a, $message) {
+            $a->write($message);
+            $a->end();
+        });
 
         self::assertSame($message, buffer($b));
 
@@ -178,7 +181,8 @@ final class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", 8192 /* default chunk size */);
 
-        $a->end($message);
+        $a->write($message);
+        $a->end();
 
         self::assertSame($message, buffer($b));
     }
@@ -189,7 +193,8 @@ final class ResourceStreamTest extends AsyncTestCase
 
         $message = "";
 
-        $a->end($message);
+        $a->write($message);
+        $a->end();
 
         self::assertSame($message, buffer($b));
     }
@@ -200,7 +205,10 @@ final class ResourceStreamTest extends AsyncTestCase
 
         $message = \str_repeat("*", 8192 /* default chunk size */);
 
-        $future = async(fn () => $a->end($message));
+        $future = async(function () use ($a, $message) {
+            $a->write($message);
+            $a->end();
+        });
 
         self::assertSame($message, buffer($b));
 

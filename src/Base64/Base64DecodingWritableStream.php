@@ -37,18 +37,19 @@ final class Base64DecodingWritableStream implements WritableStream
         $this->destination->write($chunk);
     }
 
-    public function end(string $bytes = ""): void
+    public function end(): void
     {
         $this->offset += \strlen($this->buffer);
 
-        $chunk = \base64_decode($this->buffer . $bytes, true);
+        $chunk = \base64_decode($this->buffer, true);
         if ($chunk === false) {
             throw new StreamException('Invalid base64 near offset ' . $this->offset);
         }
 
         $this->buffer = '';
 
-        $this->destination->end($chunk);
+        $this->destination->write($chunk);
+        $this->destination->end();
     }
 
     public function isWritable(): bool

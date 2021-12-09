@@ -68,10 +68,8 @@ function createStreamPair(): array
                 $this->emitter->emit($bytes)->await();
             }
 
-            public function end(string $bytes = ""): void
+            public function end(): void
             {
-                $this->write($bytes);
-
                 if (!$this->emitter->isComplete()) {
                     $this->emitter->complete();
                 }

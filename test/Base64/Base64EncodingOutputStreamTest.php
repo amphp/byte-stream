@@ -28,7 +28,8 @@ final class Base64EncodingOutputStreamTest extends AsyncTestCase
         $stream->write('foo');
         $stream->write('.');
         $stream->write('');
-        $stream->end('bar');
+        $stream->write('bar');
+        $stream->end();
 
         self::assertSame('Zm9vLmJhcg==', $buffer->buffer());
     }

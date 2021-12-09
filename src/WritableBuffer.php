@@ -26,13 +26,12 @@ final class WritableBuffer implements WritableStream
         $this->contents .= $bytes;
     }
 
-    public function end(string $bytes = ""): void
+    public function end(): void
     {
         if ($this->closed) {
             throw new ClosedException("The stream has already been closed");
         }
 
-        $this->contents .= $bytes;
         $this->closed = true;
 
         $this->deferredFuture->complete($this->contents);

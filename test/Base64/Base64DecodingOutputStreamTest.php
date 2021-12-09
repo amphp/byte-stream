@@ -28,7 +28,8 @@ final class Base64DecodingOutputStreamTest extends AsyncTestCase
 
         $stream->write('Zm9');
         $stream->write('');
-        $stream->end('vLmJhcg==');
+        $stream->write('vLmJhcg==');
+        $stream->end();
 
         self::assertSame('foo.bar', $buffer->buffer());
     }
@@ -40,11 +41,12 @@ final class Base64DecodingOutputStreamTest extends AsyncTestCase
 
         $stream->write('Zm9');
         $stream->write('');
+        $stream->write('vLmJhcg=');
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage('Invalid base64 near offset 3');
+        $this->expectExceptionMessage('Invalid base64 near offset 11');
 
-        $stream->end('vLmJhcg=');
+        $stream->end();
     }
 
     public function testInvalidDataChar(): void

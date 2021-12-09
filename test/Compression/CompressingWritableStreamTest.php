@@ -40,8 +40,9 @@ final class CompressingWritableStreamTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $gzStream = new CompressingWritableStream(new WritableBuffer(), \ZLIB_ENCODING_GZIP);
-        $gzStream->end("foo");
-        $gzStream->write("bar");
+        $gzStream->write('foo');
+        $gzStream->end();
+        $gzStream->write('bar');
     }
 
     public function testThrowsOnEndingToClosedContext(): void
@@ -49,8 +50,8 @@ final class CompressingWritableStreamTest extends AsyncTestCase
         $this->expectException(ClosedException::class);
 
         $gzStream = new CompressingWritableStream(new WritableBuffer(), \ZLIB_ENCODING_GZIP);
-        $gzStream->end("foo");
-        $gzStream->end("bar");
+        $gzStream->end();
+        $gzStream->end();
     }
 
     public function testGetEncoding(): void

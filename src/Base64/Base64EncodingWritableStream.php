@@ -28,12 +28,13 @@ final class Base64EncodingWritableStream implements WritableStream
         $this->destination->write($chunk);
     }
 
-    public function end(string $bytes = ""): void
+    public function end(): void
     {
-        $chunk = \base64_encode($this->buffer . $bytes);
+        $chunk = \base64_encode($this->buffer);
         $this->buffer = '';
 
-        $this->destination->end($chunk);
+        $this->destination->write($chunk);
+        $this->destination->end();
     }
 
     public function isWritable(): bool

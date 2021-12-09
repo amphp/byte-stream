@@ -50,13 +50,13 @@ final class CompressingWritableStream implements WritableStream
         $this->destination->write($compressed);
     }
 
-    public function end(string $bytes = ""): void
+    public function end(): void
     {
         if ($this->resource === null) {
             throw new ClosedException("The stream has already been closed");
         }
 
-        $compressed = \deflate_add($this->resource, $bytes, \ZLIB_FINISH);
+        $compressed = \deflate_add($this->resource, '', \ZLIB_FINISH);
 
         if ($compressed === false) {
             throw new StreamException("Failed adding data to deflate context");
@@ -64,7 +64,8 @@ final class CompressingWritableStream implements WritableStream
 
         $this->resource = null;
 
-        $this->destination->end($compressed);
+        $this->destination->write($compressed);
+        $this->destination->end();
     }
 
     public function isWritable(): bool
