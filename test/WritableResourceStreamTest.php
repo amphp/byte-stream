@@ -55,6 +55,7 @@ final class WritableResourceStreamTest extends AsyncTestCase
         }
 
         $stream->write("foobar");
+        $stream->write("foobar");
     }
 
     public function testClosedRemoteSocket(): void
@@ -80,5 +81,23 @@ final class WritableResourceStreamTest extends AsyncTestCase
         $stream->write("foobar");
         delay(0.1); // Provide some time for the OS to mark the socket is closed.
         $stream->write("foobar");
+    }
+
+    /**
+     * @see https://github.com/reactphp/stream/pull/150
+     */
+    public function testUploadBiggerBlockSecure(): void
+    {
+        $size = 2 ** 18; // 256kb
+
+        $resource = \stream_socket_client('tls://httpbin.org:443');
+
+        $output = new WritableResourceStream($resource);
+        $input = new ReadableResourceStream($resource);
+
+        $body = \str_repeat('.', $size);
+        $output->write("POST /post HTTP/1.0\r\nHost: httpbin.org\r\nContent-Length: $size\r\n\r\n" . $body);
+
+        $this->assertStringContainsString($body, buffer($input));
     }
 }

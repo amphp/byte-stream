@@ -65,6 +65,11 @@ final class ResourceStreamTest extends AsyncTestCase
 
     public function testThrowsOnExternallyShutdownStreamWithLargePayload(): void
     {
+        if (\PHP_OS_FAMILY === 'Windows') {
+            // See https://stackoverflow.com/a/28799536/2373138
+            $this->markTestSkipped('Send buffer can grow large on Windows, so this test doesn\'t work.');
+        }
+
         $this->setTimeout(5);
 
         [$a, $b] = $this->getStreamPair();
@@ -73,7 +78,6 @@ final class ResourceStreamTest extends AsyncTestCase
 
         $writeFuture = async(fn () => $a->write($message));
 
-        $b->read();
         $b->close();
 
         $this->expectException(StreamException::class);

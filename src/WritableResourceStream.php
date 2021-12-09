@@ -10,7 +10,6 @@ use Revolt\EventLoop\Suspension;
  */
 final class WritableResourceStream implements WritableStream, ClosableStream, ResourceStream
 {
-    private const MAX_CONSECUTIVE_EMPTY_WRITES = 3;
     private const LARGE_CHUNK_SIZE = 128 * 1024;
 
     /** @var resource|null */
@@ -18,7 +17,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
 
     private string $callbackId;
 
-    /** @var \SplQueue<array{string, int, Suspension|null, bool}> */
+    /** @var \SplQueue<array{string, Suspension|null}> */
     private \SplQueue $writes;
 
     private bool $writable = true;
@@ -55,16 +54,15 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
         $writable = &$this->writable;
         $resource = &$this->resource;
 
-        $this->callbackId = EventLoop::disable(EventLoop::onWritable($stream,
+        $this->callbackId = EventLoop::disable(EventLoop::onWritable(
+            $stream,
             static function ($callbackId, $stream) use (
                 $writes,
                 &$chunkSize,
                 &$writable,
                 &$resource
             ): void {
-                static $emptyWrites = 0;
-
-                $end = false;
+                $firstWrite = true;
                 $suspension = null;
 
                 try {
@@ -82,37 +80,34 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                             throw new ClosedException("The stream was closed by the peer");
                         }
 
+                        // Using error handler to verify that writing zero bytes was not due an error.
+                        // @see https://github.com/reactphp/stream/pull/150
+                        $error = 0;
+                        $errorMessage = 'Unknown error';
+                        \set_error_handler(static function (int $errno, string $message) use (&$error, &$errorMessage) {
+                            $error = $errno;
+                            $errorMessage = $message;
+
+                            return true;
+                        });
+
                         // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
                         // Use conditional, because PHP doesn't like getting null passed
                         if ($chunkSize) {
-                            $written = @\fwrite($stream, $data, $chunkSize);
+                            $written = \fwrite($stream, $data, $chunkSize);
                         } else {
-                            $written = @\fwrite($stream, $data);
+                            $written = \fwrite($stream, $data);
                         }
 
-                        if ($written === false) {
-                            $message = "Failed to write to stream";
-                            if ($error = \error_get_last()) {
-                                $message .= \sprintf("; %s", $error["message"]);
-                            }
-                            throw new StreamException($message);
-                        }
+                        \restore_error_handler();
+
+                        $written = (int) $written; // Cast potential false to 0.
 
                         // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
-                        if ($written === 0) {
-                            if ($emptyWrites++ > self::MAX_CONSECUTIVE_EMPTY_WRITES) {
-                                $message = "Failed to write to stream after multiple attempts";
-                                if ($error = \error_get_last()) {
-                                    $message .= \sprintf("; %s", $error["message"]);
-                                }
-                                throw new StreamException($message);
-                            }
-
-                            $writes->unshift([$data, $suspension]);
-                            return;
+                        // fwrite() may write zero bytes on subsequent calls due to the buffer filling again.
+                        if ($written === 0 && $error !== 0 && $firstWrite) {
+                            throw new StreamException('Failed to write to stream: ' . $errorMessage);
                         }
-
-                        $emptyWrites = 0;
 
                         if ($length > $written) {
                             $data = \substr($data, $written);
@@ -121,6 +116,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                         }
 
                         $suspension?->resume();
+                        $firstWrite = false;
                     }
                 } catch (\Throwable $exception) {
                     $writable = false;
@@ -143,11 +139,22 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                         $resource = null;
                     }
                 } finally {
+                    if (!$writable && \is_resource($resource)) {
+                        $meta = \stream_get_meta_data($resource);
+                        if (\str_contains($meta["mode"], "+")) {
+                            \stream_socket_shutdown($resource, \STREAM_SHUT_WR);
+                        } else {
+                            \fclose($resource);
+                        }
+                        $resource = null;
+                    }
+
                     if ($writes->isEmpty()) {
                         EventLoop::disable($callbackId);
                     }
                 }
-            }));
+            }
+        ));
     }
 
     /**
@@ -183,19 +190,15 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
                 $written = @\fwrite($this->resource, $bytes);
             }
 
-            if ($written === false) {
-                $message = "Failed to write to stream";
-                if ($error = \error_get_last()) {
-                    $message .= \sprintf("; %s", $error["message"]);
-                }
-                throw new StreamException($message);
-            }
+            $written = (int) $written; // Cast potential false to 0.
 
             if ($length === $written) {
                 return;
             }
 
-            $bytes = \substr($bytes, $written);
+            if ($written > 0) {
+                $bytes = \substr($bytes, $written);
+            }
         }
 
         if ($length - $written > self::LARGE_CHUNK_SIZE) {
@@ -222,7 +225,11 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
      */
     public function end(string $bytes = ''): void
     {
-        $this->close();
+        $this->writable = false;
+
+        if ($this->writes->isEmpty()) {
+            $this->close();
+        }
     }
 
     public function isWritable(): bool
@@ -324,7 +331,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
             $exception = new ClosedException("The socket was closed before writing completed");
             do {
                 /** @var Suspension|null $suspension */
-                [, , $suspension] = $this->writes->shift();
+                [, $suspension] = $this->writes->shift();
                 $suspension?->throw($exception);
             } while (!$this->writes->isEmpty());
         }
