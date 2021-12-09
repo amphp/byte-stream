@@ -34,24 +34,20 @@ final class Pipe implements ReadableStream, WritableStream, ClosableStream
         return new PipeSink($this);
     }
 
-    public function write(string $bytes): Future
+    public function write(string $bytes): void
     {
         if ($this->emitter->isComplete()) {
-            return Future::error(new ClosedException('The stream is no longer writable'));
+            throw new ClosedException('The stream is no longer writable');
         }
 
-        return $this->emitter->emit($bytes);
+        $this->emitter->emit($bytes)->ignore();
     }
 
-    public function end(string $bytes = ""): Future
+    public function end(): void
     {
-        $future = $this->write($bytes);
-
         if (!$this->emitter->isComplete()) {
             $this->emitter->complete();
         }
-
-        return $future;
     }
 
     public function isWritable(): bool
