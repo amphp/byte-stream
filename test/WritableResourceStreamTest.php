@@ -55,6 +55,7 @@ final class WritableResourceStreamTest extends AsyncTestCase
         }
 
         $stream->write("foobar");
+        $stream->write("foobar");
     }
 
     public function testClosedRemoteSocket(): void
