@@ -7,10 +7,12 @@ use Amp\Pipeline\Emitter;
 final class EmitterStream implements WritableStream, ClosableStream
 {
     private Emitter $emitter;
+    private int $bufferSize;
 
-    public function __construct(Emitter $emitter)
+    public function __construct(Emitter $emitter, int $bufferSize)
     {
         $this->emitter = $emitter;
+        $this->bufferSize = $bufferSize;
     }
 
     public function close(): void
@@ -31,7 +33,18 @@ final class EmitterStream implements WritableStream, ClosableStream
             throw new ClosedException('The stream is no longer writable');
         }
 
-        $this->emitter->emit($bytes)->ignore();
+        $length = \strlen($bytes);
+        $this->bufferSize -= $length;
+
+        $future = $this->emitter->emit($bytes)->finally(function () use ($length) {
+            $this->bufferSize += $length;
+        });
+
+        if ($this->bufferSize < 0) {
+            $future->await();
+        } else {
+            $future->ignore();
+        }
     }
 
     public function end(): void

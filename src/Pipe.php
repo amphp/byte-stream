@@ -17,11 +17,11 @@ final class Pipe
     /** @var ReadableStream&ClosableStream */
     private ReadableStream $source;
 
-    public function __construct()
+    public function __construct(int $bufferSize)
     {
         $emitter = new Emitter();
 
-        $this->sink = new EmitterStream($emitter);
+        $this->sink = new EmitterStream($emitter, $bufferSize);
         $this->source = new IterableStream($emitter->pipe());
     }
 
