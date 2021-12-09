@@ -2,9 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\ByteStream\Internal\PipeSink;
-use Amp\ByteStream\Internal\PipeSource;
-use Amp\Cancellation;
+use Amp\ByteStream\Internal\EmitterStream;
 use Amp\Pipeline\Emitter;
 
 /**
@@ -12,67 +10,26 @@ use Amp\Pipeline\Emitter;
  *
  * Primarily useful for testing.
  */
-final class Pipe implements ReadableStream, WritableStream, ClosableStream
+final class Pipe
 {
-    private Emitter $emitter;
-    private ReadableStream $stream;
+    private WritableStream $sink;
+    private ReadableStream $source;
 
     public function __construct()
     {
-        $this->emitter = new Emitter();
-        $this->stream = new IterableStream($this->emitter->pipe());
+        $emitter = new Emitter();
+
+        $this->sink = new EmitterStream($emitter);
+        $this->source = new IterableStream($emitter->pipe());
     }
 
-    public function getSource(): WritableStream /* & ClosableStream */
+    public function getSource(): ReadableStream /* & ClosableStream */
     {
-        return new PipeSource($this);
+        return $this->source;
     }
 
-    public function getSink(): ReadableStream /* & ClosableStream */
+    public function getSink(): WritableStream /* & ClosableStream */
     {
-        return new PipeSink($this);
-    }
-
-    public function write(string $bytes): void
-    {
-        if ($this->emitter->isComplete()) {
-            throw new ClosedException('The stream is no longer writable');
-        }
-
-        $this->emitter->emit($bytes)->ignore();
-    }
-
-    public function end(): void
-    {
-        if (!$this->emitter->isComplete()) {
-            $this->emitter->complete();
-        }
-    }
-
-    public function isWritable(): bool
-    {
-        return !$this->emitter->isComplete();
-    }
-
-    public function close(): void
-    {
-        if (!$this->emitter->isComplete()) {
-            $this->emitter->complete();
-        }
-    }
-
-    public function isClosed(): bool
-    {
-        return !$this->isWritable() && !$this->isReadable();
-    }
-
-    public function read(?Cancellation $cancellation = null): ?string
-    {
-        return $this->stream->read($cancellation);
-    }
-
-    public function isReadable(): bool
-    {
-        return $this->stream->isReadable();
+        return $this->sink;
     }
 }

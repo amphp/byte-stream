@@ -6,10 +6,10 @@ use Amp\Cancellation;
 use Amp\Pipeline\Pipeline;
 use function Amp\Pipeline\fromIterable;
 
-final class IterableStream implements ReadableStream
+final class IterableStream implements ReadableStream, ClosableStream
 {
-    /** @var Pipeline<string> */
-    private Pipeline $pipeline;
+    /** @var Pipeline<string>|null */
+    private ?Pipeline $pipeline;
 
     private ?\Throwable $exception = null;
 
@@ -31,6 +31,10 @@ final class IterableStream implements ReadableStream
 
         if ($this->pending) {
             throw new PendingReadError;
+        }
+
+        if ($this->pipeline === null) {
+            return null;
         }
 
         $this->pending = true;
@@ -60,6 +64,17 @@ final class IterableStream implements ReadableStream
 
     public function isReadable(): bool
     {
-        return !$this->pipeline->isComplete();
+        return $this->pipeline !== null && !$this->pipeline->isComplete();
+    }
+
+    public function close(): void
+    {
+        $this->pipeline?->dispose();
+        $this->pipeline = null;
+    }
+
+    public function isClosed(): bool
+    {
+        return !$this->isReadable();
     }
 }
