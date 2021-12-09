@@ -23,11 +23,17 @@ final class Pipe
         $this->source = new IterableStream($emitter->pipe());
     }
 
+    /**
+     * @return ReadableStream&ClosableStream
+     */
     public function getSource(): ReadableStream /* & ClosableStream */
     {
         return $this->source;
     }
 
+    /**
+     * @return WritableStream&ClosableStream
+     */
     public function getSink(): WritableStream /* & ClosableStream */
     {
         return $this->sink;
