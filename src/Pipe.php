@@ -11,7 +11,10 @@ use Amp\Pipeline\Emitter;
  */
 final class Pipe
 {
+    /** @var WritableStream&ClosableStream */
     private WritableStream $sink;
+
+    /** @var ReadableStream&ClosableStream */
     private ReadableStream $source;
 
     public function __construct()
