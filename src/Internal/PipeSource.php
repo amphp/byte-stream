@@ -26,14 +26,14 @@ final class PipeSource implements WritableStream, ClosableStream
         return $this->pipe->isClosed();
     }
 
-    public function write(string $bytes): Future
+    public function write(string $bytes): void
     {
-        return $this->pipe->write($bytes);
+        $this->pipe->write($bytes);
     }
 
-    public function end(string $bytes = ""): Future
+    public function end(string $bytes = ""): void
     {
-        return $this->pipe->end($bytes);
+        $this->pipe->end();
     }
 
     public function isWritable(): bool
