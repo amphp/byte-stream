@@ -31,7 +31,7 @@ final class PipeSource implements WritableStream, ClosableStream
         $this->pipe->write($bytes);
     }
 
-    public function end(string $bytes = ""): void
+    public function end(): void
     {
         $this->pipe->end();
     }
