@@ -18,7 +18,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
 
     private string $callbackId;
 
-    /** @var \SplQueue<array{string, int, Suspension|null, bool}> */
+    /** @var \SplQueue<array{string, Suspension|null}> */
     private \SplQueue $writes;
 
     private bool $writable = true;
@@ -326,7 +326,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
             $exception = new ClosedException("The socket was closed before writing completed");
             do {
                 /** @var Suspension|null $suspension */
-                [, , $suspension] = $this->writes->shift();
+                [, $suspension] = $this->writes->shift();
                 $suspension?->throw($exception);
             } while (!$this->writes->isEmpty());
         }
