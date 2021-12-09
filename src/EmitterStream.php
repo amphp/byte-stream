@@ -1,13 +1,9 @@
 <?php
 
-namespace Amp\ByteStream\Internal;
+namespace Amp\ByteStream;
 
-use Amp\ByteStream\ClosableStream;
-use Amp\ByteStream\ClosedException;
-use Amp\ByteStream\WritableStream;
 use Amp\Pipeline\Emitter;
 
-/** @internal */
 final class EmitterStream implements WritableStream, ClosableStream
 {
     private Emitter $emitter;

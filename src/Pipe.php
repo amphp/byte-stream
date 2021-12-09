@@ -2,7 +2,6 @@
 
 namespace Amp\ByteStream;
 
-use Amp\ByteStream\Internal\EmitterStream;
 use Amp\Pipeline\Emitter;
 
 /**
