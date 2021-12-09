@@ -101,7 +101,7 @@ final class WritableResourceStream implements WritableStream, ClosableStream, Re
 
                         \restore_error_handler();
 
-                        $written = (int)  $written; // Cast potential false to 0.
+                        $written = (int) $written; // Cast potential false to 0.
 
                         // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
                         // fwrite() may write zero bytes on subsequent calls due to the buffer filling again.
