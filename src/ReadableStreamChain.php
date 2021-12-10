@@ -62,6 +62,6 @@ final class ReadableStreamChain implements ReadableStream
 
     public function isClosed(): bool
     {
-        // TODO: Implement isClosed() method.
+        return !$this->isReadable();
     }
 }
