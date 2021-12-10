@@ -88,7 +88,9 @@ class Payload implements ReadableStream
 
     public function close(): void
     {
-        $this->stream->close();
+        if ($this->stream instanceof ReadableStream) {
+            $this->stream->close();
+        }
     }
 
     public function isClosed(): bool
