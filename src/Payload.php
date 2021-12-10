@@ -132,4 +132,14 @@ class Payload implements ReadableStream
             // If exception is thrown here the stream completed anyway.
         }
     }
+
+    public function close(): void
+    {
+        // TODO: Implement close() method.
+    }
+
+    public function isClosed(): bool
+    {
+        // TODO: Implement isClosed() method.
+    }
 }

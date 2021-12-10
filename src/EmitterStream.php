@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\Pipeline\Emitter;
 
-final class EmitterStream implements WritableStream, ClosableStream
+final class EmitterStream implements WritableStream
 {
     private Emitter $emitter;
     private int $bufferSize;

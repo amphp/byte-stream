@@ -31,6 +31,8 @@ final class DecompressingReadableStream implements ReadableStream
         $this->resource = @\inflate_init($encoding, $options);
 
         if ($this->resource === false) {
+            $this->close();
+
             throw new \Error("Failed initializing decompression context");
         }
     }
@@ -53,6 +55,8 @@ final class DecompressingReadableStream implements ReadableStream
             $decompressed = @\inflate_add($this->resource, "", \ZLIB_FINISH);
 
             if ($decompressed === false) {
+                $this->close();
+
                 throw new StreamException("Failed adding data to deflate context");
             }
 
@@ -64,6 +68,8 @@ final class DecompressingReadableStream implements ReadableStream
         $decompressed = @\inflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
 
         if ($decompressed === false) {
+            $this->close();
+
             throw new StreamException("Failed adding data to deflate context");
         }
 
@@ -95,8 +101,14 @@ final class DecompressingReadableStream implements ReadableStream
         return $this->options;
     }
 
-    private function close(): void
+    public function close(): void
     {
+        $this->source->close();
         $this->resource = null;
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->resource === null;
     }
 }

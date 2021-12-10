@@ -36,4 +36,14 @@ final class ReadableBuffer implements ReadableStream
     {
         return $this->contents !== null;
     }
+
+    public function close(): void
+    {
+        $this->contents = null;
+    }
+
+    public function isClosed(): bool
+    {
+        return !$this->isReadable();
+    }
 }

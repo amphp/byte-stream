@@ -62,4 +62,14 @@ final class Base64DecodingReadableStream implements ReadableStream
     {
         return (bool) $this->source?->isReadable();
     }
+
+    public function close(): void
+    {
+        $this->source?->close();
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->source?->isClosed() ?? true;
+    }
 }

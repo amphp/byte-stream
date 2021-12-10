@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 /**
  * A `WritableStream` allows writing data in chunks. Writers can wait on the returned promises to feel the backpressure.
  */
-interface WritableStream
+interface WritableStream extends ClosableStream
 {
     /**
      * Writes data to the stream.
@@ -33,4 +33,18 @@ interface WritableStream
      * @return bool A stream may no longer be writable if it is closed or ended using {@see end()}.
      */
     public function isWritable(): bool;
+
+    /**
+     * Closes the stream, marking it as unreadable and/or unwritable.
+     *
+     * Whether pending writes are aborted or not is implementation dependent. New write operations should throw.
+     */
+    public function close(): void;
+
+    /**
+     * Returns whether the stream has been closed.
+     *
+     * @return bool {@code true} if closed, otherwise {@code false}
+     */
+    public function isClosed(): bool;
 }

@@ -49,4 +49,19 @@ final class ReadableStreamChain implements ReadableStream
     {
         return !empty($this->sources);
     }
+
+    public function close(): void
+    {
+        $sources = $this->sources;
+        $this->sources = [];
+
+        foreach ($sources as $source) {
+            $source->close();
+        }
+    }
+
+    public function isClosed(): bool
+    {
+        // TODO: Implement isClosed() method.
+    }
 }
