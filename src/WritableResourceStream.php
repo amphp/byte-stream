@@ -220,10 +220,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
 
     /**
      * Closes the stream after all pending writes have been completed. Optionally writes a final data chunk before.
-     *
-     * @param string $bytes Bytes to write.
      */
-    public function end(string $bytes = ''): void
+    public function end(): void
     {
         $this->writable = false;
 
