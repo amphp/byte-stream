@@ -42,16 +42,17 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
 
 /**
  * @param ReadableStream $source
+ * @param Cancellation|null $cancellation
  *
  * @return string Entire contents of the InputStream.
  */
-function buffer(ReadableStream $source): string
+function buffer(ReadableStream $source, ?Cancellation $cancellation = null): string
 {
     $buffer = '';
 
-    while (($chunk = $source->read()) !== null) {
+    while (null !== $chunk = $source->read($cancellation)) {
         $buffer .= $chunk;
-        $chunk = null; // free memory
+        unset($chunk); // free memory
     }
 
     return $buffer;

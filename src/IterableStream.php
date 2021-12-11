@@ -6,7 +6,7 @@ use Amp\Cancellation;
 use Amp\Pipeline\Pipeline;
 use function Amp\Pipeline\fromIterable;
 
-final class IterableStream implements ReadableStream, ClosableStream
+final class IterableStream implements ReadableStream
 {
     /** @var Pipeline<string>|null */
     private ?Pipeline $pipeline;

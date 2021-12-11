@@ -32,10 +32,7 @@ final class WritableBuffer implements WritableStream
             throw new ClosedException("The stream has already been closed");
         }
 
-        $this->closed = true;
-
-        $this->deferredFuture->complete($this->contents);
-        $this->contents = '';
+        $this->close();
     }
 
     public function isWritable(): bool
@@ -46,5 +43,18 @@ final class WritableBuffer implements WritableStream
     public function buffer(): string
     {
         return $this->deferredFuture->getFuture()->await();
+    }
+
+    public function close(): void
+    {
+        $this->closed = true;
+
+        $this->deferredFuture->complete($this->contents);
+        $this->contents = '';
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->closed;
     }
 }

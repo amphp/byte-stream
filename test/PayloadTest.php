@@ -47,7 +47,6 @@ final class PayloadTest extends AsyncTestCase
         }
 
         self::assertSame(\implode($values), $buffer);
-        self::assertSame("", $stream->buffer());
     }
 
     public function testFastResolvingStream(): void
@@ -69,7 +68,6 @@ final class PayloadTest extends AsyncTestCase
         }
 
         self::assertSame($values, $emitted);
-        self::assertSame("", $stream->buffer());
     }
 
     public function testFastResolvingStreamBufferingOnly(): void
@@ -107,7 +105,10 @@ final class PayloadTest extends AsyncTestCase
 
         $emitter->complete();
 
-        self::assertSame(\implode($values), $stream->buffer());
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage("Can't buffer payload after calling read()");
+
+        $stream->buffer();
     }
 
     public function testFailingStream(): void
@@ -228,16 +229,20 @@ final class PayloadTest extends AsyncTestCase
         $stream->buffer();
 
         $this->expectException(\Error::class);
-        $this->expectExceptionMessage("Cannot stream message data once a buffered message has been requested");
+        $this->expectExceptionMessage("Can't stream payload after calling buffer()");
 
         $stream->read();
     }
 
-    public function testFurtherCallsToBufferReturnSameData(): void
+    public function testFurtherCallsToBufferThrows(): void
     {
         $data = "test";
         $stream = new Payload(new ReadableBuffer($data));
         self::assertSame($data, $stream->buffer());
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage("Can't buffer() a payload more than once");
+
         self::assertSame($data, $stream->buffer());
     }
 
@@ -247,10 +252,8 @@ final class PayloadTest extends AsyncTestCase
         $stream = new Payload($data);
         self::assertSame($data, $stream->read());
         self::assertNull($stream->read());
-        self::assertSame('', $stream->buffer());
 
         $stream = new Payload($data);
-        self::assertSame($data, $stream->buffer());
         self::assertSame($data, $stream->buffer());
     }
 }

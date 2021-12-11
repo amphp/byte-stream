@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 /**
  * A `WritableStream` allows writing data in chunks. Writers can wait on the returned promises to feel the backpressure.
  */
-interface WritableStream
+interface WritableStream extends ClosableStream
 {
     /**
      * Writes data to the stream.

@@ -31,6 +31,8 @@ final class CompressingWritableStream implements WritableStream
         $this->resource = @\deflate_init($encoding, $options);
 
         if ($this->resource === false) {
+            $this->close();
+
             throw new \Error("Failed initializing decompression context");
         }
     }
@@ -44,6 +46,8 @@ final class CompressingWritableStream implements WritableStream
         $compressed = \deflate_add($this->resource, $bytes, \ZLIB_SYNC_FLUSH);
 
         if ($compressed === false) {
+            $this->close();
+
             throw new StreamException("Failed adding data to deflate context");
         }
 
@@ -59,6 +63,8 @@ final class CompressingWritableStream implements WritableStream
         $compressed = \deflate_add($this->resource, '', \ZLIB_FINISH);
 
         if ($compressed === false) {
+            $this->close();
+
             throw new StreamException("Failed adding data to deflate context");
         }
 
@@ -91,5 +97,15 @@ final class CompressingWritableStream implements WritableStream
     public function getOptions(): array
     {
         return $this->options;
+    }
+
+    public function close(): void
+    {
+        $this->destination->close();
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->destination->isClosed();
     }
 }

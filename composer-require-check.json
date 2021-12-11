@@ -16,6 +16,7 @@
         "mixed",
         "void",
         "object",
+        "buffer",
         "split",
         "splitLines",
         "deflate_add",

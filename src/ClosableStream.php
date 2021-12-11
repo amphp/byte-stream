@@ -6,6 +6,12 @@ interface ClosableStream
 {
     /**
      * Closes the stream, marking it as unreadable and/or unwritable.
+     *
+     * - Whether pending reads are aborted or not is implementation dependent.
+     * - New read operations should immediately return {@code null}.
+     *
+     * - Whether pending writes are aborted or not is implementation dependent.
+     * - New write operations should throw.
      */
     public function close(): void;
 

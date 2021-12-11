@@ -21,7 +21,7 @@ use Amp\Cancellation;
  * }
  * ```
  */
-interface ReadableStream
+interface ReadableStream extends ClosableStream
 {
     /**
      * Reads data from the stream.

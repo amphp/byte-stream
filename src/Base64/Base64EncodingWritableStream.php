@@ -41,4 +41,14 @@ final class Base64EncodingWritableStream implements WritableStream
     {
         return $this->destination->isWritable();
     }
+
+    public function close(): void
+    {
+        $this->destination->close();
+    }
+
+    public function isClosed(): bool
+    {
+        return $this->destination->isClosed();
+    }
 }
