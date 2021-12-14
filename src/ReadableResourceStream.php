@@ -25,6 +25,8 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
     private int $chunkSize;
 
+    private bool $useSingleRead;
+
     private int $defaultChunkSize;
 
     private \Closure $cancel;
@@ -42,7 +44,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
         }
 
         $meta = \stream_get_meta_data($stream);
-        $useSingleRead = $meta["stream_type"] === "udp_socket" || $meta["stream_type"] === "STDIO";
+        $this->useSingleRead = $useSingleRead = $meta["stream_type"] === "udp_socket" || $meta["stream_type"] === "STDIO";
 
         if (!\str_contains($meta["mode"], "r") && !\str_contains($meta["mode"], "+")) {
             throw new \Error("Expected a readable stream");
@@ -128,24 +130,45 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
         \assert($this->resource !== null);
 
-        if (\feof($this->resource)) {
-            $this->free();
-
-            return null;
+        // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
+        if ($this->useSingleRead) {
+            $data = @\fread($this->resource, $length);
+        } else {
+            $data = @\stream_get_contents($this->resource, $length);
         }
 
-        $this->chunkSize = $length;
-        EventLoop::enable($this->callbackId);
-        $this->suspension = EventLoop::createSuspension();
+        \assert(
+            $data !== false,
+            "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to."
+        );
 
-        $id = $cancellation?->subscribe($this->cancel);
+        if ($data === '') {
+            if (\feof($this->resource)) {
+                $this->free();
 
-        try {
-            return $this->suspension->suspend();
-        } finally {
-            /** @psalm-suppress PossiblyNullArgument If $cancellation is not null, $id will not be null. */
-            $cancellation?->unsubscribe($id);
+                return null;
+            }
+
+            $this->chunkSize = $length;
+            EventLoop::enable($this->callbackId);
+            $this->suspension = EventLoop::createSuspension();
+
+            $id = $cancellation?->subscribe($this->cancel);
+
+            try {
+                return $this->suspension->suspend();
+            } finally {
+                /** @psalm-suppress PossiblyNullArgument If $cancellation is not null, $id will not be null. */
+                $cancellation?->unsubscribe($id);
+            }
         }
+
+        //return $data;
+
+        // Use a deferred suspension so other events are not starved by a stream that always has data available.
+        $suspension = EventLoop::createSuspension();
+        EventLoop::defer(static fn () => $suspension->resume($data));
+        return $suspension->suspend();
     }
 
     public function isReadable(): bool

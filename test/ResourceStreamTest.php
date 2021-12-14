@@ -221,6 +221,10 @@ final class ResourceStreamTest extends AsyncTestCase
 
     public function testIssue47()
     {
+        if (!EventLoop::getDriver() instanceof EventLoop\Driver\StreamSelectDriver) {
+            $this->markTestSkipped('Test only works with stream_select');
+        }
+
         $middle = \tempnam(\sys_get_temp_dir(), 'byte-stream-middle-');
 
         EventLoop::queue(function () use ($middle): void {
@@ -276,7 +280,7 @@ final class ResourceStreamTest extends AsyncTestCase
 
         $deferredCancellation->cancel();
 
-        $a->write('foo');
+        async(fn () => $a->write('foo'))->ignore();
 
         $this->expectException(CancelledException::class);
         $future->await();
