@@ -221,9 +221,7 @@ final class ResourceStreamTest extends AsyncTestCase
 
     public function testIssue47()
     {
-        if (!EventLoop::getDriver() instanceof EventLoop\Driver\StreamSelectDriver) {
-            $this->markTestSkipped('Test only works with stream_select');
-        }
+        $this->markTestSkipped('Not currently supported');
 
         $middle = \tempnam(\sys_get_temp_dir(), 'byte-stream-middle-');
 

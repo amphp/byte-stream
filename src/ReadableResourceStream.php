@@ -163,12 +163,14 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
             }
         }
 
-        //return $data;
-
         // Use a deferred suspension so other events are not starved by a stream that always has data available.
-        $suspension = EventLoop::createSuspension();
-        EventLoop::defer(static fn () => $suspension->resume($data));
-        return $suspension->suspend();
+        $this->suspension = EventLoop::createSuspension();
+        EventLoop::defer(function () use ($data): void {
+            $this->suspension?->resume($data);
+            $this->suspension = null;
+        });
+
+        return $this->suspension->suspend();
     }
 
     public function isReadable(): bool
@@ -264,10 +266,8 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
         $this->readable = false;
         $this->resource = null;
 
-        if ($this->suspension !== null) {
-            $this->suspension->resume();
-            $this->suspension = null;
-        }
+        $this->suspension?->resume();
+        $this->suspension = null;
 
         EventLoop::cancel($this->callbackId);
     }
