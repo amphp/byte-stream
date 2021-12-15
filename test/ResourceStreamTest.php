@@ -263,9 +263,9 @@ final class ResourceStreamTest extends AsyncTestCase
         [$a, $b] = $this->getStreamPair();
         $a->write('foobar');
 
-        self::assertSame('f', $b->read(length: 1));
-        self::assertSame('oo', $b->read(length: 2));
-        self::assertSame('bar', $b->read(length: 100));
+        self::assertSame('f', $b->read(maxLength: 1));
+        self::assertSame('oo', $b->read(maxLength: 2));
+        self::assertSame('bar', $b->read(maxLength: 100));
     }
 
     public function testCancellationBeforeRead(): void

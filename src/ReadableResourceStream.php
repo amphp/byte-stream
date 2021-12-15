@@ -110,13 +110,13 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
     }
 
     /**
-     * @param positive-int|null $length
+     * @param positive-int|null $maxLength
      */
-    public function read(?Cancellation $cancellation = null, ?int $length = null): ?string
+    public function read(?Cancellation $cancellation = null, ?int $maxLength = null): ?string
     {
-        $length ??= $this->defaultChunkSize;
+        $maxLength ??= $this->defaultChunkSize;
 
-        if ($length <= 0) {
+        if ($maxLength <= 0) {
             throw new \ValueError('The chunk length must be a positive integer');
         }
 
@@ -132,9 +132,9 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
         // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
         if ($this->useSingleRead) {
-            $data = @\fread($this->resource, $length);
+            $data = @\fread($this->resource, $maxLength);
         } else {
-            $data = @\stream_get_contents($this->resource, $length);
+            $data = @\stream_get_contents($this->resource, $maxLength);
         }
 
         \assert(
@@ -149,7 +149,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
                 return null;
             }
 
-            $this->chunkSize = $length;
+            $this->chunkSize = $maxLength;
             EventLoop::enable($this->callbackId);
             $this->suspension = EventLoop::createSuspension();
 
