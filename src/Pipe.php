@@ -11,10 +11,8 @@ use Amp\Pipeline\Emitter;
  */
 final class Pipe
 {
-    /** @var WritableStream&ClosableStream */
     private WritableStream $sink;
 
-    /** @var ReadableStream&ClosableStream */
     private ReadableStream $source;
 
     public function __construct(int $bufferSize)
@@ -26,17 +24,19 @@ final class Pipe
     }
 
     /**
-     * @return ReadableStream&ClosableStream
+     * @return ReadableStream Data written to the WritableStream returned by {@see getSink()} will be readable
+     * on this stream.
      */
-    public function getSource(): ReadableStream /* & ClosableStream */
+    public function getSource(): ReadableStream
     {
         return $this->source;
     }
 
     /**
-     * @return WritableStream&ClosableStream
+     * @return WritableStream Data written to this stream will be readable by the stream returned from
+     * {@see getSource()}.
      */
-    public function getSink(): WritableStream /* & ClosableStream */
+    public function getSink(): WritableStream
     {
         return $this->sink;
     }
