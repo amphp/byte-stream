@@ -43,19 +43,28 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
 /**
  * @param ReadableStream $source
  * @param Cancellation|null $cancellation
+ * @param int $maxLength Only buffer up to the given number of bytes, throwing {@see StreamException} if exceeded.
  *
  * @return string Entire contents of the InputStream.
+ *
+ * @throws StreamException Thrown if the maximum number of bytes is exceeded.
  */
-function buffer(ReadableStream $source, ?Cancellation $cancellation = null): string
+function buffer(ReadableStream $source, ?Cancellation $cancellation = null, int $maxLength = \PHP_INT_MAX): string
 {
-    $buffer = '';
+    $chunks = [];
+    $length = 0;
 
     while (null !== $chunk = $source->read($cancellation)) {
-        $buffer .= $chunk;
+        $length += \strlen($chunk);
+        if ($length > $maxLength) {
+            throw new StreamException("Max length of $maxLength bytes exceeded");
+        }
+
+        $chunks[] = $chunk;
         unset($chunk); // free memory
     }
 
-    return $buffer;
+    return \implode($chunks);
 }
 
 /**
