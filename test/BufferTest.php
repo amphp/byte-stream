@@ -22,7 +22,7 @@ final class BufferTest extends AsyncTestCase
     public function testBufferLimit(): void
     {
         try {
-            buffer($this->stream, maxLength: 4);
+            buffer($this->stream, limit: 4);
         } catch (BufferException $exception) {
             self::assertSame("abcdef", $exception->getBuffer());
         }
