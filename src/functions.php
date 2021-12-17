@@ -47,7 +47,7 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
  *
  * @return string Entire contents of the InputStream.
  *
- * @throws StreamException Thrown if the maximum number of bytes is exceeded.
+ * @throws BufferException Thrown if the maximum number of bytes is exceeded.
  */
 function buffer(ReadableStream $source, ?Cancellation $cancellation = null, int $maxLength = \PHP_INT_MAX): string
 {
@@ -55,13 +55,11 @@ function buffer(ReadableStream $source, ?Cancellation $cancellation = null, int 
     $length = 0;
 
     while (null !== $chunk = $source->read($cancellation)) {
+        $chunks[] = $chunk;
         $length += \strlen($chunk);
         if ($length > $maxLength) {
-            throw new StreamException("Max length of $maxLength bytes exceeded");
+            throw new BufferException(\implode($chunks), "Max length of $maxLength bytes exceeded");
         }
-
-        $chunks[] = $chunk;
-        unset($chunk); // free memory
     }
 
     return \implode($chunks);
