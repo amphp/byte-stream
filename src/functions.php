@@ -34,7 +34,7 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
     while (($chunk = $source->read($cancellation)) !== null) {
         $written += \strlen($chunk);
         $destination->write($chunk);
-        $chunk = null; // free memory
+        unset($chunk); // free memory
     }
 
     return $written;
@@ -43,7 +43,7 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
 /**
  * @param ReadableStream $source
  * @param Cancellation|null $cancellation
- * @param int $limit Only buffer up to the given number of bytes, throwing {@see StreamException} if exceeded.
+ * @param int $limit Only buffer up to the given number of bytes, throwing {@see BufferException} if exceeded.
  *
  * @return string Entire contents of the InputStream.
  *

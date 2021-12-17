@@ -60,11 +60,17 @@ class Payload implements ReadableStream
     }
 
     /**
-     * Buffers the entire message and completes the returned future then.
+     * Buffers the entire message.
+     *
+     * @param Cancellation|null $cancellation
+     * @param int $limit Only buffer up to the given number of bytes, throwing {@see BufferException} if exceeded.
      *
      * @return string The entire message contents.
+     *
+     * @throws StreamException
+     * @throws BufferException
      */
-    final public function buffer(?Cancellation $cancellation = null): string
+    final public function buffer(?Cancellation $cancellation = null, int $limit = \PHP_INT_MAX): string
     {
         if ($this->mode === self::MODE_STREAM) {
             throw new \Error('Can\'t buffer payload after calling read()');
@@ -77,7 +83,7 @@ class Payload implements ReadableStream
         $this->mode = self::MODE_BUFFER;
 
         if ($this->stream instanceof ReadableStream) {
-            return buffer($this->stream, $cancellation);
+            return buffer($this->stream, $cancellation, $limit);
         }
 
         $payload = $this->stream ?? '';
