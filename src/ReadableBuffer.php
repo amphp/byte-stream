@@ -19,11 +19,6 @@ final class ReadableBuffer implements ReadableStream
         $this->contents = $contents === '' ? null : $contents;
     }
 
-    /**
-     * Reads data from the stream.
-     *
-     * @return string|null Returns the full contents or `null` if the stream has closed / already been consumed.
-     */
     public function read(?Cancellation $cancellation = null): ?string
     {
         $contents = $this->contents;

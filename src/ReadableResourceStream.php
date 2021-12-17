@@ -117,7 +117,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
         $limit ??= $this->defaultChunkSize;
 
         if ($limit <= 0) {
-            throw new \ValueError('The chunk length must be a positive integer');
+            throw new \ValueError('The length limit must be a positive integer, got ' . $limit);
         }
 
         if ($this->suspension !== null) {
