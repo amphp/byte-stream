@@ -12,8 +12,8 @@ interface WritableStream extends ClosableStream
      *
      * @param string $bytes Bytes to write.
      *
-     * @error ClosedException If the stream has already been closed.
-     * @error StreamException If writing to the stream fails.
+     * @throws ClosedException If the stream has already been closed.
+     * @throws StreamException If writing to the stream fails.
      */
     public function write(string $bytes): void;
 
@@ -24,8 +24,8 @@ interface WritableStream extends ClosableStream
      * complete before closing the stream. Socket streams implementing this interface should only close the writable
      * side of the stream.
      *
-     * @error ClosedException If the stream has already been closed.
-     * @error StreamException If writing to the stream fails.
+     * @throws ClosedException If the stream has already been closed.
+     * @throws StreamException If writing to the stream fails.
      */
     public function end(): void;
 
