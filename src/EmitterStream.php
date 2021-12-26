@@ -36,9 +36,7 @@ final class EmitterStream implements WritableStream
         $length = \strlen($bytes);
         $this->bufferSize -= $length;
 
-        $future = $this->emitter->emit($bytes)->finally(function () use ($length) {
-            $this->bufferSize += $length;
-        });
+        $future = $this->emitter->emit($bytes)->finally(fn () => $this->bufferSize += $length);
 
         if ($this->bufferSize < 0) {
             $future->await();
