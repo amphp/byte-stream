@@ -78,15 +78,17 @@ final class AsyncWriter
     }
 
     /**
+     * Queues a chunk of data to be written to the stream, returning a {@see Future} that is completed once the data
+     * has been written to the stream or errors if it cannot be written to the stream.
+     *
      * @param string $bytes
      *
-     * @return Future
-     * @throws ClosedException If the stream is no longer writable.
+     * @return Future<void>
      */
     public function write(string $bytes): Future
     {
         if (!$this->isWritable()) {
-            throw new ClosedException('The destination stream is no longer writable');
+            Future::error(new ClosedException('The destination stream is no longer writable'));
         }
 
         $deferredFuture = new DeferredFuture();
@@ -97,10 +99,15 @@ final class AsyncWriter
         return $deferredFuture->getFuture();
     }
 
+    /**
+     * Closes the underlying WritableStream once all queued data has been written.
+     *
+     * @return Future<void>
+     */
     public function end(): Future
     {
         if (!$this->isWritable()) {
-            throw new ClosedException('The destination stream is no longer writable');
+            Future::error(new ClosedException('The destination stream is no longer writable'));
         }
 
         $this->destination = null;
