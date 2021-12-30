@@ -90,8 +90,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                         // @see https://github.com/reactphp/stream/pull/150
                         $errorCode = 0;
                         $errorMessage = 'Unknown error';
-                        \set_error_handler(static function (int $errno, string $message) use (&$error, &$errorMessage): bool {
-                            $error = $errno;
+                        \set_error_handler(static function (int $errno, string $message) use (&$errorCode, &$errorMessage): bool {
+                            $errorCode = $errno;
                             $errorMessage = $message;
 
                             return true;
