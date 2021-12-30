@@ -16,6 +16,7 @@ final class AsyncWriter
 {
     private ?WritableStream $destination;
 
+    /** @var \SplQueue<array{DeferredFuture, string|null}> */
     private \SplQueue $writeQueue;
 
     private ?Suspension $suspension = null;
@@ -40,29 +41,24 @@ final class AsyncWriter
                     /**
                      * @var DeferredFuture $deferredFuture
                      * @var string|null $bytes
-                     * @var bool $end
                      */
-                    [$deferredFuture, $bytes, $end] = $writeQueue->shift();
+                    [$deferredFuture, $bytes] = $writeQueue->shift();
 
                     try {
                         if ($bytes !== null) {
                             $destination->write($bytes);
-                        }
-
-                        if ($end) {
+                        } else {
                             $destination->end();
                         }
 
                         $deferredFuture->complete();
                     } catch (\Throwable $exception) {
+                        $this->active = false;
                         $deferredFuture->error($exception);
                         while (!$writeQueue->isEmpty()) {
                             [$deferredFuture] = $writeQueue->shift();
                             $deferredFuture->error($exception);
                         }
-
-                        $active = false;
-                        $destination->close();
                         return;
                     }
                 }
@@ -92,7 +88,7 @@ final class AsyncWriter
         }
 
         $deferredFuture = new DeferredFuture();
-        $this->writeQueue->push([$deferredFuture, $bytes, false]);
+        $this->writeQueue->push([$deferredFuture, $bytes]);
         $this->suspension?->resume();
         $this->suspension = null;
 
@@ -113,7 +109,7 @@ final class AsyncWriter
         $this->destination = null;
 
         $deferredFuture = new DeferredFuture();
-        $this->writeQueue->push([$deferredFuture, null, true]);
+        $this->writeQueue->push([$deferredFuture, null]);
         $this->suspension?->resume();
         $this->suspension = null;
 
@@ -122,6 +118,6 @@ final class AsyncWriter
 
     public function isWritable(): bool
     {
-        return $this->destination && $this->destination->isWritable();
+        return $this->active && $this->destination?->isWritable();
     }
 }
