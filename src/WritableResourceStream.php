@@ -24,6 +24,9 @@ final class WritableResourceStream implements WritableStream, ResourceStream
 
     private ?int $chunkSize = null;
 
+    /** @var \Closure():bool */
+    private \Closure $errorHandler;
+
     /**
      * @param resource $stream Stream resource.
      * @param positive-int|null $chunkSize Chunk size per `fwrite()` operation.
@@ -47,6 +50,9 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         \stream_set_blocking($stream, false);
         \stream_set_write_buffer($stream, 0);
 
+        // Ignore any errors raised while this handler is set. Errors will be checked through return values.
+        $this->errorHandler = static fn () => true;
+
         $this->resource = $stream;
         $this->chunkSize = &$chunkSize;
 
@@ -60,7 +66,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                 $writes,
                 &$chunkSize,
                 &$writable,
-                &$resource
+                &$resource,
             ): void {
                 $firstWrite = true;
                 $suspension = null;
@@ -82,31 +88,34 @@ final class WritableResourceStream implements WritableStream, ResourceStream
 
                         // Using error handler to verify that writing zero bytes was not due an error.
                         // @see https://github.com/reactphp/stream/pull/150
-                        $error = 0;
+                        $errorCode = 0;
                         $errorMessage = 'Unknown error';
-                        \set_error_handler(static function (int $errno, string $message) use (&$error, &$errorMessage) {
+                        \set_error_handler(static function (int $errno, string $message) use (&$error, &$errorMessage): bool {
                             $error = $errno;
                             $errorMessage = $message;
 
                             return true;
                         });
 
-                        // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
-                        // Use conditional, because PHP doesn't like getting null passed
-                        if ($chunkSize) {
-                            $written = \fwrite($stream, $data, $chunkSize);
-                        } else {
-                            $written = \fwrite($stream, $data);
+                        try {
+                            // Customer error handler needed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
+                            // Use conditional, because PHP doesn't like getting null passed
+                            if ($chunkSize) {
+                                $written = \fwrite($stream, $data, $chunkSize);
+                            } else {
+                                $written = \fwrite($stream, $data);
+                            }
+                        } finally {
+                            \restore_error_handler();
                         }
-
-                        \restore_error_handler();
 
                         $written = (int) $written; // Cast potential false to 0.
 
                         // Broken pipes between processes on macOS/FreeBSD do not detect EOF properly.
                         // fwrite() may write zero bytes on subsequent calls due to the buffer filling again.
-                        if ($written === 0 && $error !== 0 && $firstWrite) {
-                            throw new StreamException('Failed to write to stream: ' . $errorMessage);
+                        /** @psalm-suppress TypeDoesNotContainType $errorCode may be set by error handler. */
+                        if ($written === 0 && $errorCode !== 0 && $firstWrite) {
+                            throw new StreamException(sprintf('Failed to write to stream (%d): %s', $errorCode, $errorMessage));
                         }
 
                         if ($length > $written) {
@@ -182,12 +191,18 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                 throw new ClosedException("The stream was closed by the peer");
             }
 
-            // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
-            // Use conditional, because PHP doesn't like getting null passed.
-            if ($this->chunkSize) {
-                $written = @\fwrite($this->resource, $bytes, $this->chunkSize);
-            } else {
-                $written = @\fwrite($this->resource, $bytes);
+            \set_error_handler($this->errorHandler);
+
+            try {
+                // Error reporting suppressed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
+                // Use conditional, because PHP doesn't like getting null passed.
+                if ($this->chunkSize) {
+                    $written = \fwrite($this->resource, $bytes, $this->chunkSize);
+                } else {
+                    $written = \fwrite($this->resource, $bytes);
+                }
+            } finally {
+                \restore_error_handler();
             }
 
             $written = (int) $written; // Cast potential false to 0.

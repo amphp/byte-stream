@@ -29,7 +29,11 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
     private int $defaultChunkSize;
 
+    /** @var \Closure(CancelledException):void */
     private \Closure $cancel;
+
+    /** @var \Closure():bool */
+    private \Closure $errorHandler;
 
     /**
      * @param resource $stream Stream resource.
@@ -57,6 +61,9 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
         \stream_set_blocking($stream, false);
         \stream_set_read_buffer($stream, 0);
 
+        // Ignore any errors raised while this handler is set. Errors will be checked through return values.
+        $this->errorHandler = $errorHandler = static fn () => true;
+
         $this->resource = &$stream;
         $this->defaultChunkSize = $this->chunkSize = &$chunkSize;
 
@@ -68,12 +75,19 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
             &$readable,
             &$stream,
             &$chunkSize,
-            $useSingleRead
+            $useSingleRead,
+            $errorHandler,
         ): void {
-            if ($useSingleRead) {
-                $data = @\fread($stream, $chunkSize);
-            } else {
-                $data = @\stream_get_contents($stream, $chunkSize);
+            \set_error_handler($errorHandler);
+
+            try {
+                if ($useSingleRead) {
+                    $data = \fread($stream, $chunkSize);
+                } else {
+                    $data = \stream_get_contents($stream, $chunkSize);
+                }
+            } finally {
+                \restore_error_handler();
             }
 
             \assert(
@@ -81,10 +95,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
                 "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to."
             );
 
-            // Error suppression, because pthreads does crazy things with resources,
-            // which might be closed during two operations.
-            // See https://github.com/amphp/byte-stream/issues/32
-            if ($data === '' && @\feof($stream)) {
+            if ($data === '' && \feof($stream)) {
                 $readable = false;
                 $stream = null;
                 $data = null; // Stream closed, resolve read with null.
@@ -130,11 +141,17 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
         \assert($this->resource !== null);
 
-        // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
-        if ($this->useSingleRead) {
-            $data = @\fread($this->resource, $limit);
-        } else {
-            $data = @\stream_get_contents($this->resource, $limit);
+        \set_error_handler($this->errorHandler);
+
+        try {
+            // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
+            if ($this->useSingleRead) {
+                $data = \fread($this->resource, $limit);
+            } else {
+                $data = \stream_get_contents($this->resource, $limit);
+            }
+        } finally {
+            \restore_error_handler();
         }
 
         \assert(
