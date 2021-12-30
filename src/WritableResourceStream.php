@@ -115,7 +115,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                         // fwrite() may write zero bytes on subsequent calls due to the buffer filling again.
                         /** @psalm-suppress TypeDoesNotContainType $errorCode may be set by error handler. */
                         if ($written === 0 && $errorCode !== 0 && $firstWrite) {
-                            throw new StreamException(sprintf('Failed to write to stream (%d): %s', $errorCode, $errorMessage));
+                            throw new StreamException(\sprintf('Failed to write to stream (%d): %s', $errorCode, $errorMessage));
                         }
 
                         if ($length > $written) {

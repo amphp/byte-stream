@@ -2,8 +2,8 @@
 
 namespace Amp\ByteStream;
 
-use Amp\PHPUnit\AsyncTestCase;
 use Amp\Future;
+use Amp\PHPUnit\AsyncTestCase;
 
 final class AsyncWriterTest extends AsyncTestCase
 {
