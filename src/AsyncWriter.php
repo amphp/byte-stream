@@ -79,7 +79,7 @@ final class AsyncWriter
      *
      * @param string $bytes
      *
-     * @return Future<void>
+     * @return Future<never>
      */
     public function write(string $bytes): Future
     {
