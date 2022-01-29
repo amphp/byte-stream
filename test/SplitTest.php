@@ -3,7 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline;
+use Amp\Pipeline\Pipeline;
 
 final class SplitTest extends AsyncTestCase
 {
@@ -59,7 +59,7 @@ final class SplitTest extends AsyncTestCase
 
     public function testCustomDelimiter(): void
     {
-        $stream = new IterableStream(Pipeline\fromIterable(["a|b|c", "|", "||d|e|f"]));
+        $stream = new IterableStream(Pipeline::fromIterable(["a|b|c", "|", "||d|e|f"]));
 
         $lines = [];
         foreach (split($stream, '|') as $line) {
@@ -71,7 +71,7 @@ final class SplitTest extends AsyncTestCase
 
     public function testLineFeedDelimiter(): void
     {
-        $stream = new IterableStream(Pipeline\fromIterable(["a\r\n", "b\r\n", "c\r\n"]));
+        $stream = new IterableStream(Pipeline::fromIterable(["a\r\n", "b\r\n", "c\r\n"]));
 
         $lines = [];
         foreach (split($stream, "\n") as $line) {
@@ -83,7 +83,7 @@ final class SplitTest extends AsyncTestCase
 
     private function check(array $chunks, array $expectedLines): void
     {
-        $stream = new IterableStream(Pipeline\fromIterable($chunks));
+        $stream = new IterableStream(Pipeline::fromIterable($chunks));
 
         $lines = [];
         foreach (splitLines($stream) as $line) {

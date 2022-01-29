@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
-use Amp\Pipeline\Emitter;
+use Amp\Pipeline\Queue;
 
 final class IterableStreamTest extends AsyncTestCase
 {
@@ -12,11 +12,11 @@ final class IterableStreamTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $source = new Emitter;
+        $source = new Queue;
         $stream = new IterableStream($source->pipe());
 
         foreach ($values as $value) {
-            $source->emit($value);
+            $source->pushAsync($value);
         }
 
         $source->complete();
@@ -35,10 +35,10 @@ final class IterableStreamTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $source = new Emitter;
+        $source = new Queue;
         $stream = new IterableStream($source->pipe());
 
-        $source->emit($value);
+        $source->pushAsync($value);
         $source->error($exception);
 
         $callable = $this->createCallback(1);
@@ -61,10 +61,10 @@ final class IterableStreamTest extends AsyncTestCase
 
         $value = 42;
 
-        $source = new Emitter;
+        $source = new Queue;
         $stream = new IterableStream($source->pipe());
 
-        $source->emit($value);
+        $source->pushAsync($value);
 
         $stream->read();
     }
@@ -75,10 +75,10 @@ final class IterableStreamTest extends AsyncTestCase
 
         $value = 42;
 
-        $source = new Emitter;
+        $source = new Queue;
         $stream = new IterableStream($source->pipe());
 
-        $source->emit($value);
+        $source->pushAsync($value);
 
         try {
             $stream->read();

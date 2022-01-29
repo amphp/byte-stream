@@ -168,7 +168,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
             $this->chunkSize = $limit;
             EventLoop::enable($this->callbackId);
-            $this->suspension = EventLoop::createSuspension();
+            $this->suspension = EventLoop::getSuspension();
 
             $id = $cancellation?->subscribe($this->cancel);
 
@@ -181,7 +181,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
         }
 
         // Use a deferred suspension so other events are not starved by a stream that always has data available.
-        $this->suspension = EventLoop::createSuspension();
+        $this->suspension = EventLoop::getSuspension();
         EventLoop::defer(function () use ($data): void {
             $this->suspension?->resume($data);
             $this->suspension = null;

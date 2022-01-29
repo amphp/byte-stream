@@ -3,13 +3,14 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
+use Amp\Pipeline\ConcurrentIterableIterator;
+use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
-use function Amp\Pipeline\fromIterable;
 
 final class IterableStream implements ReadableStream
 {
-    /** @var Pipeline<string>|null */
-    private ?Pipeline $pipeline;
+    /** @var ConcurrentIterator<string>|null */
+    private ?ConcurrentIterator $iterator;
 
     private ?\Throwable $exception = null;
 
@@ -20,7 +21,13 @@ final class IterableStream implements ReadableStream
      */
     public function __construct(iterable $iterable)
     {
-        $this->pipeline = $iterable instanceof Pipeline ? $iterable : fromIterable($iterable);
+        if ($iterable instanceof Pipeline) {
+            $iterable = $iterable->getIterator();
+        }
+
+        $this->iterator = $iterable instanceof ConcurrentIterator
+            ? $iterable
+            : new ConcurrentIterableIterator($iterable);
     }
 
     public function read(?Cancellation $cancellation = null): ?string
@@ -33,16 +40,18 @@ final class IterableStream implements ReadableStream
             throw new PendingReadError;
         }
 
-        if ($this->pipeline === null) {
+        if ($this->iterator === null) {
             return null;
         }
 
         $this->pending = true;
 
         try {
-            if (null === $chunk = $this->pipeline->continue($cancellation)) {
+            if (!$this->iterator->continue($cancellation)) {
                 return null;
             }
+
+            $chunk = $this->iterator->getValue();
 
             if (!\is_string($chunk)) {
                 throw new StreamException(\sprintf(
@@ -64,13 +73,13 @@ final class IterableStream implements ReadableStream
 
     public function isReadable(): bool
     {
-        return $this->pipeline !== null && !$this->pipeline->isComplete();
+        return $this->iterator !== null && !$this->iterator->isComplete();
     }
 
     public function close(): void
     {
-        $this->pipeline?->dispose();
-        $this->pipeline = null;
+        $this->iterator?->dispose();
+        $this->iterator = null;
     }
 
     public function isClosed(): bool

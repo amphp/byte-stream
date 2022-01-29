@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Pipeline\Emitter;
+use Amp\Pipeline\Queue;
 
 /**
  * Create a local stream where data written to the pipe is immediately available on the pipe.
@@ -17,10 +17,10 @@ final class Pipe
 
     public function __construct(int $bufferSize)
     {
-        $emitter = new Emitter();
+        $queue = new Queue();
 
-        $this->sink = new EmitterStream($emitter, $bufferSize);
-        $this->source = new IterableStream($emitter->pipe());
+        $this->sink = new QueueStream($queue, $bufferSize);
+        $this->source = new IterableStream($queue->pipe());
     }
 
     /**

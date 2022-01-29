@@ -6,13 +6,13 @@ use Amp\ByteStream\IterableStream;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline\Emitter;
+use Amp\Pipeline\Queue;
 use function Amp\async;
 use function Amp\ByteStream\buffer;
 
 final class Base64DecodingInputStreamTest extends AsyncTestCase
 {
-    private Emitter $source;
+    private Queue $source;
 
     private ReadableStream $stream;
 
@@ -20,9 +20,9 @@ final class Base64DecodingInputStreamTest extends AsyncTestCase
     {
         $future = async(fn () => buffer($this->stream));
 
-        $this->source->emit('Z');
-        $this->source->emit('m9vLmJhcg=');
-        $this->source->emit('=');
+        $this->source->pushAsync('Z');
+        $this->source->pushAsync('m9vLmJhcg=');
+        $this->source->pushAsync('=');
         $this->source->complete();
 
         self::assertSame('foo.bar', $future->await());
@@ -32,9 +32,9 @@ final class Base64DecodingInputStreamTest extends AsyncTestCase
     {
         $future = async(fn () => buffer($this->stream));
 
-        $this->source->emit('Z');
-        $this->source->emit('m9vLmJhcg=');
-        $this->source->emit(''); // missing =
+        $this->source->pushAsync('Z');
+        $this->source->pushAsync('m9vLmJhcg=');
+        $this->source->pushAsync(''); // missing =
         $this->source->complete();
 
         $this->expectException(StreamException::class);
@@ -47,8 +47,8 @@ final class Base64DecodingInputStreamTest extends AsyncTestCase
     {
         $future = async(fn () => buffer($this->stream));
 
-        $this->source->emit('Z');
-        $this->source->emit('!');
+        $this->source->pushAsync('Z');
+        $this->source->pushAsync('!');
         $this->source->complete();
 
         $this->expectException(StreamException::class);
@@ -61,7 +61,7 @@ final class Base64DecodingInputStreamTest extends AsyncTestCase
     {
         parent::setUp();
 
-        $this->source = new Emitter;
+        $this->source = new Queue;
         $this->stream = new Base64DecodingReadableStream(new IterableStream($this->source->pipe()));
     }
 }

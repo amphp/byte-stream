@@ -3,7 +3,6 @@
 namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline;
 use function Amp\async;
 use function Amp\delay;
 use function Amp\now;
@@ -12,7 +11,7 @@ final class PipeTest extends AsyncTestCase
 {
     public function testPipeFunction(): void
     {
-        $stream = new IterableStream(Pipeline\fromIterable(["abc", "def"]));
+        $stream = new IterableStream(["abc", "def"]);
         $buffer = new WritableBuffer;
 
         self::assertSame(6, pipe($stream, $buffer));

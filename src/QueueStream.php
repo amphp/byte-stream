@@ -2,23 +2,23 @@
 
 namespace Amp\ByteStream;
 
-use Amp\Pipeline\Emitter;
+use Amp\Pipeline\Queue;
 
-final class EmitterStream implements WritableStream
+final class QueueStream implements WritableStream
 {
-    private Emitter $emitter;
+    private Queue $queue;
     private int $bufferSize;
 
-    public function __construct(Emitter $emitter, int $bufferSize)
+    public function __construct(Queue $queue, int $bufferSize)
     {
-        $this->emitter = $emitter;
+        $this->queue = $queue;
         $this->bufferSize = $bufferSize;
     }
 
     public function close(): void
     {
-        if (!$this->emitter->isComplete()) {
-            $this->emitter->complete();
+        if (!$this->queue->isComplete()) {
+            $this->queue->complete();
         }
     }
 
@@ -29,14 +29,14 @@ final class EmitterStream implements WritableStream
 
     public function write(string $bytes): void
     {
-        if ($this->emitter->isComplete()) {
+        if ($this->queue->isComplete()) {
             throw new ClosedException('The stream is no longer writable');
         }
 
         $length = \strlen($bytes);
         $this->bufferSize -= $length;
 
-        $future = $this->emitter->emit($bytes)->finally(fn () => $this->bufferSize += $length);
+        $future = $this->queue->pushAsync($bytes)->finally(fn () => $this->bufferSize += $length);
 
         if ($this->bufferSize < 0) {
             $future->await();
@@ -47,13 +47,13 @@ final class EmitterStream implements WritableStream
 
     public function end(): void
     {
-        if (!$this->emitter->isComplete()) {
-            $this->emitter->complete();
+        if (!$this->queue->isComplete()) {
+            $this->queue->complete();
         }
     }
 
     public function isWritable(): bool
     {
-        return !$this->emitter->isComplete();
+        return !$this->queue->isComplete();
     }
 }

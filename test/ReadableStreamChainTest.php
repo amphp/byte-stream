@@ -3,7 +3,8 @@
 namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline;
+use Amp\Pipeline\Pipeline;
+use function Amp\delay;
 
 final class ReadableStreamChainTest extends AsyncTestCase
 {
@@ -20,6 +21,6 @@ final class ReadableStreamChainTest extends AsyncTestCase
 
     private function createStream(array $chunks): ReadableStream
     {
-        return new IterableStream(Pipeline\fromIterable($chunks)->pipe(Pipeline\postpone(0.01)));
+        return new IterableStream(Pipeline::fromIterable($chunks)->tap(fn () => delay(0.01)));
     }
 }

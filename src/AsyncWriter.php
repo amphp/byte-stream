@@ -33,7 +33,7 @@ final class AsyncWriter
         EventLoop::queue(static function () use ($destination, $writeQueue, &$suspension, &$active): void {
             while ($active && $destination->isWritable()) {
                 if ($writeQueue->isEmpty()) {
-                    $suspension = EventLoop::createSuspension();
+                    $suspension = EventLoop::getSuspension();
                     $suspension->suspend();
                 }
 

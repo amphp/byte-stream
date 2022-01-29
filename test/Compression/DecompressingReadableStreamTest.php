@@ -6,7 +6,7 @@ use Amp\ByteStream\IterableStream;
 use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline\AsyncGenerator;
+use Amp\Pipeline\Pipeline;
 
 final class DecompressingReadableStreamTest extends AsyncTestCase
 {
@@ -15,7 +15,7 @@ final class DecompressingReadableStreamTest extends AsyncTestCase
         $file1 = __DIR__ . "/../fixtures/foobar.txt";
         $file2 = __DIR__ . "/../fixtures/foobar.txt.gz";
 
-        $stream = new IterableStream(new AsyncGenerator(function () use ($file2) {
+        $stream = new IterableStream(Pipeline::fromIterable(function () use ($file2) {
             $content = \file_get_contents($file2);
 
             while ($content !== '') {

@@ -228,7 +228,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         }
 
         EventLoop::enable($this->callbackId);
-        $this->writes->push([$bytes, $suspension = EventLoop::createSuspension()]);
+        $this->writes->push([$bytes, $suspension = EventLoop::getSuspension()]);
 
         $suspension->suspend();
     }

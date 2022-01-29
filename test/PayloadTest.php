@@ -4,7 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
-use Amp\Pipeline\Emitter;
+use Amp\Pipeline\Queue;
 use Revolt\EventLoop;
 use function Amp\async;
 
@@ -14,14 +14,14 @@ final class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
         foreach ($values as $value) {
-            $emitter->emit($value)->ignore();
+            $queue->pushAsync($value)->ignore();
         }
 
-        $emitter->complete();
+        $queue->complete();
 
         self::assertSame(\implode($values), $stream->buffer());
     }
@@ -30,15 +30,15 @@ final class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
         foreach ($values as $value) {
-            $emitter->emit($value)->ignore();
+            $queue->pushAsync($value)->ignore();
         }
 
-        EventLoop::delay(0.005, function () use ($emitter) {
-            $emitter->complete();
+        EventLoop::delay(0.005, function () use ($queue) {
+            $queue->complete();
         });
 
         $buffer = "";
@@ -53,14 +53,14 @@ final class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
         foreach ($values as $value) {
-            $emitter->emit($value)->ignore();
+            $queue->pushAsync($value)->ignore();
         }
 
-        $emitter->complete();
+        $queue->complete();
 
         $emitted = [];
         while (($chunk = $stream->read()) !== null) {
@@ -74,14 +74,14 @@ final class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
         foreach ($values as $value) {
-            $emitter->emit($value)->ignore();
+            $queue->pushAsync($value)->ignore();
         }
 
-        $emitter->complete();
+        $queue->complete();
 
         self::assertSame(\implode($values), $stream->buffer());
     }
@@ -90,20 +90,20 @@ final class PayloadTest extends AsyncTestCase
     {
         $values = ["abc", "def", "ghi"];
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
-        $emitter->emit($values[0])->ignore();
+        $queue->pushAsync($values[0])->ignore();
 
         $chunk = $stream->read();
 
         self::assertSame(\array_shift($values), $chunk);
 
         foreach ($values as $value) {
-            $emitter->emit($value)->ignore();
+            $queue->pushAsync($value)->ignore();
         }
 
-        $emitter->complete();
+        $queue->complete();
 
         $this->expectException(\Error::class);
         $this->expectExceptionMessage("Can't buffer payload after calling read()");
@@ -116,11 +116,11 @@ final class PayloadTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
-        $emitter->emit($value)->ignore();
-        $emitter->error($exception);
+        $queue->pushAsync($value)->ignore();
+        $queue->error($exception);
 
         $callable = $this->createCallback(1);
 
@@ -141,11 +141,11 @@ final class PayloadTest extends AsyncTestCase
         $exception = new TestException;
         $value = "abc";
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
         $readFuture = async(fn () => $stream->read());
-        $emitter->error($exception);
+        $queue->error($exception);
 
         $callable = $this->createCallback(1);
 
@@ -161,9 +161,9 @@ final class PayloadTest extends AsyncTestCase
 
     public function testEmptyStream(): void
     {
-        $emitter = new Emitter;
-        $emitter->complete();
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $queue->complete();
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
         self::assertNull($stream->read());
     }
@@ -172,12 +172,12 @@ final class PayloadTest extends AsyncTestCase
     {
         $value = "";
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
-        $emitter->emit($value)->ignore();
+        $queue->pushAsync($value)->ignore();
 
-        $emitter->complete();
+        $queue->complete();
 
         self::assertSame("", $stream->buffer());
     }
@@ -186,11 +186,11 @@ final class PayloadTest extends AsyncTestCase
     {
         $value = "abc";
 
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
-        $emitter->emit($value)->ignore();
-        $emitter->complete();
+        $queue->pushAsync($value)->ignore();
+        $queue->complete();
 
         self::assertSame($value, $stream->read());
         self::assertNull($stream->read());
@@ -198,11 +198,11 @@ final class PayloadTest extends AsyncTestCase
 
     public function testPendingRead(): void
     {
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
 
-        EventLoop::delay(0, function () use ($emitter) {
-            $emitter->emit("test")->ignore();
+        EventLoop::delay(0, function () use ($queue) {
+            $queue->pushAsync("test")->ignore();
         });
 
         self::assertSame("test", $stream->read());
@@ -210,8 +210,8 @@ final class PayloadTest extends AsyncTestCase
 
     public function testPendingReadError(): void
     {
-        $emitter = new Emitter;
-        $stream = new Payload(new IterableStream($emitter->pipe()));
+        $queue = new Queue;
+        $stream = new Payload(new IterableStream($queue->pipe()));
         async(fn () => $stream->read());
 
         $this->expectException(PendingReadError::class);
@@ -219,7 +219,7 @@ final class PayloadTest extends AsyncTestCase
         try {
             async(fn () => $stream->read())->await();
         } finally {
-            $emitter->complete();
+            $queue->complete();
         }
     }
 

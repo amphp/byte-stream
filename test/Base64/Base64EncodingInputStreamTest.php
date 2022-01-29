@@ -5,13 +5,13 @@ namespace Amp\ByteStream\Base64;
 use Amp\ByteStream\IterableStream;
 use Amp\ByteStream\ReadableStream;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline\Emitter;
+use Amp\Pipeline\Queue;
 use function Amp\async;
 use function Amp\ByteStream\buffer;
 
 final class Base64EncodingInputStreamTest extends AsyncTestCase
 {
-    private Emitter $source;
+    private Queue $source;
 
     private ReadableStream $stream;
 
@@ -19,13 +19,13 @@ final class Base64EncodingInputStreamTest extends AsyncTestCase
     {
         $future = async(fn () => buffer($this->stream));
 
-        $this->source->emit('f');
-        $this->source->emit('o');
-        $this->source->emit('o');
-        $this->source->emit('.');
-        $this->source->emit('b');
-        $this->source->emit('a');
-        $this->source->emit('r');
+        $this->source->pushAsync('f');
+        $this->source->pushAsync('o');
+        $this->source->pushAsync('o');
+        $this->source->pushAsync('.');
+        $this->source->pushAsync('b');
+        $this->source->pushAsync('a');
+        $this->source->pushAsync('r');
         $this->source->complete();
 
         self::assertSame('Zm9vLmJhcg==', $future->await());
@@ -35,7 +35,7 @@ final class Base64EncodingInputStreamTest extends AsyncTestCase
     {
         parent::setUp();
 
-        $this->source = new Emitter;
+        $this->source = new Queue;
         $this->stream = new Base64EncodingReadableStream(new IterableStream($this->source->pipe()));
     }
 }
