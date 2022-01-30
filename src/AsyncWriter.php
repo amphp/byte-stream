@@ -79,12 +79,12 @@ final class AsyncWriter
      *
      * @param string $bytes
      *
-     * @return Future<void>
+     * @return Future<never>
      */
     public function write(string $bytes): Future
     {
         if (!$this->isWritable()) {
-            Future::error(new ClosedException('The destination stream is no longer writable'));
+            return Future::error(new ClosedException('The destination stream is no longer writable'));
         }
 
         $deferredFuture = new DeferredFuture();
@@ -103,7 +103,7 @@ final class AsyncWriter
     public function end(): Future
     {
         if (!$this->isWritable()) {
-            Future::error(new ClosedException('The destination stream is no longer writable'));
+            return Future::error(new ClosedException('The destination stream is no longer writable'));
         }
 
         $this->destination = null;
