@@ -14,6 +14,9 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 {
     public const DEFAULT_CHUNK_SIZE = 8192;
 
+    /** @var \Closure():bool */
+    private static \Closure $errorHandler;
+
     /** @var resource|null */
     private $resource;
 
@@ -31,9 +34,6 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
     /** @var \Closure(CancelledException):void */
     private \Closure $cancel;
-
-    /** @var \Closure():bool */
-    private \Closure $errorHandler;
 
     /**
      * @param resource $stream Stream resource.
@@ -62,7 +62,8 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
         \stream_set_read_buffer($stream, 0);
 
         // Ignore any errors raised while this handler is set. Errors will be checked through return values.
-        $this->errorHandler = $errorHandler = static fn () => true;
+        /** @psalm-suppress RedundantPropertyInitializationCheck */
+        self::$errorHandler ??= static fn () => true;
 
         $this->resource = &$stream;
         $this->defaultChunkSize = $this->chunkSize = &$chunkSize;
@@ -76,9 +77,8 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
             &$stream,
             &$chunkSize,
             $useSingleRead,
-            $errorHandler,
         ): void {
-            \set_error_handler($errorHandler);
+            \set_error_handler(self::$errorHandler);
 
             try {
                 if ($useSingleRead) {
@@ -141,7 +141,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
         \assert($this->resource !== null);
 
-        \set_error_handler($this->errorHandler);
+        \set_error_handler(self::$errorHandler);
 
         try {
             // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
