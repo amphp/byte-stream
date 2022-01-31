@@ -35,7 +35,7 @@ final class BufferedReader
         }
     }
 
-    public function emptyBuffer(): string
+    public function drain(): string
     {
         return $this->guard(function (): string {
             $buffer = $this->buffer;
@@ -135,7 +135,7 @@ final class BufferedReader
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
      */
-    public function bufferAll(?Cancellation $cancellation = null, int $limit = \PHP_INT_MAX): string
+    public function buffer(?Cancellation $cancellation = null, int $limit = \PHP_INT_MAX): string
     {
         return $this->guard(function () use ($cancellation, $limit): string {
             $length = \strlen($this->buffer);
