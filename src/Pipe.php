@@ -16,7 +16,7 @@ final class Pipe
     public function __construct(int $bufferSize)
     {
         $this->sink = new WritableIterableStream($bufferSize);
-        $this->source = new ReadableIterableStream($this->sink);
+        $this->source = new ReadableIterableStream($this->sink->getIterator());
     }
 
     /**
