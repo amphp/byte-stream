@@ -15,17 +15,6 @@ final class BufferedReader
     ) {
     }
 
-    public function getBuffer(): string
-    {
-        if ($this->pending) {
-            throw new PendingReadError('Cannot retrieve the buffer while a read operation is pending');
-        }
-
-        $buffer = $this->buffer;
-        $this->buffer = '';
-        return $buffer;
-    }
-
     /**
      * @template TString as string|null
      *
@@ -44,6 +33,15 @@ final class BufferedReader
         } finally {
             $this->pending = false;
         }
+    }
+
+    public function emptyBuffer(): string
+    {
+        return $this->guard(function (): string {
+            $buffer = $this->buffer;
+            $this->buffer = '';
+            return $buffer;
+        });
     }
 
     /**
@@ -137,7 +135,7 @@ final class BufferedReader
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
      */
-    public function buffer(?Cancellation $cancellation = null, int $limit = \PHP_INT_MAX): string
+    public function bufferAll(?Cancellation $cancellation = null, int $limit = \PHP_INT_MAX): string
     {
         return $this->guard(function () use ($cancellation, $limit): string {
             $length = \strlen($this->buffer);
