@@ -48,6 +48,7 @@ final class IterableStream implements ReadableStream
 
         try {
             if (!$this->iterator->continue($cancellation)) {
+                $this->iterator = null;
                 return null;
             }
 
@@ -73,7 +74,7 @@ final class IterableStream implements ReadableStream
 
     public function isReadable(): bool
     {
-        return $this->iterator !== null && !$this->iterator->isComplete();
+        return $this->iterator !== null;
     }
 
     public function close(): void

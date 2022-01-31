@@ -21,6 +21,8 @@ final class IterableStreamTest extends AsyncTestCase
 
         $source->complete();
 
+        self::assertTrue($stream->isReadable());
+
         $buffer = "";
         while (($chunk = $stream->read()) !== null) {
             $buffer .= $chunk;
@@ -28,6 +30,7 @@ final class IterableStreamTest extends AsyncTestCase
 
         self::assertSame(\implode($values), $buffer);
         self::assertNull($stream->read());
+        self::assertFalse($stream->isReadable());
     }
 
     public function testFailingIterator(): void
