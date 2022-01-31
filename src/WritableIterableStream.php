@@ -4,14 +4,16 @@ namespace Amp\ByteStream;
 
 use Amp\Pipeline\Queue;
 
-final class QueueStream implements WritableStream
+final class WritableIterableStream implements WritableStream, \IteratorAggregate
 {
     private Queue $queue;
+    private iterable $iterable;
     private int $bufferSize;
 
-    public function __construct(Queue $queue, int $bufferSize)
+    public function __construct(int $bufferSize)
     {
-        $this->queue = $queue;
+        $this->queue = new Queue;
+        $this->iterable = $this->queue->iterate();
         $this->bufferSize = $bufferSize;
     }
 
@@ -55,5 +57,10 @@ final class QueueStream implements WritableStream
     public function isWritable(): bool
     {
         return !$this->queue->isComplete();
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return $this->iterable;
     }
 }

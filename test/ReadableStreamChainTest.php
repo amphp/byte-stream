@@ -21,6 +21,6 @@ final class ReadableStreamChainTest extends AsyncTestCase
 
     private function createStream(array $chunks): ReadableStream
     {
-        return new IterableStream(Pipeline::fromIterable($chunks)->tap(fn () => delay(0.01)));
+        return new ReadableIterableStream(Pipeline::fromIterable($chunks)->tap(fn () => delay(0.01)));
     }
 }

@@ -13,7 +13,7 @@ final class IterableStreamTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $source = new Queue;
-        $stream = new IterableStream($source->pipe());
+        $stream = new ReadableIterableStream($source->pipe());
 
         foreach ($values as $value) {
             $source->pushAsync($value);
@@ -39,7 +39,7 @@ final class IterableStreamTest extends AsyncTestCase
         $value = "abc";
 
         $source = new Queue;
-        $stream = new IterableStream($source->pipe());
+        $stream = new ReadableIterableStream($source->pipe());
 
         $source->pushAsync($value);
         $source->error($exception);
@@ -65,7 +65,7 @@ final class IterableStreamTest extends AsyncTestCase
         $value = 42;
 
         $source = new Queue;
-        $stream = new IterableStream($source->pipe());
+        $stream = new ReadableIterableStream($source->pipe());
 
         $source->pushAsync($value);
 
@@ -79,7 +79,7 @@ final class IterableStreamTest extends AsyncTestCase
         $value = 42;
 
         $source = new Queue;
-        $stream = new IterableStream($source->pipe());
+        $stream = new ReadableIterableStream($source->pipe());
 
         $source->pushAsync($value);
 

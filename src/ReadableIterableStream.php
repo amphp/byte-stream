@@ -7,7 +7,7 @@ use Amp\Pipeline\ConcurrentIterableIterator;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 
-final class IterableStream implements ReadableStream
+final class ReadableIterableStream implements ReadableStream
 {
     /** @var ConcurrentIterator<string>|null */
     private ?ConcurrentIterator $iterator;
