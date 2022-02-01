@@ -35,6 +35,11 @@ final class BufferedReader
         }
     }
 
+    public function isReadable(): bool
+    {
+        return $this->stream->isReadable();
+    }
+
     public function drain(): string
     {
         return $this->guard(function (): string {
