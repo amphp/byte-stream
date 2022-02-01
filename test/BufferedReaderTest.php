@@ -20,7 +20,7 @@ final class BufferedReaderTest extends AsyncTestCase
             \array_fill(0, self::REPEAT_COUNT, self::CHUNK . self::CHUNK)
         )->delay(0.01);
 
-        $this->bufferedReader = new BufferedReader(new IterableStream($pipeline));
+        $this->bufferedReader = new BufferedReader(new ReadableIterableStream($pipeline));
     }
 
     public function testRead(): void
