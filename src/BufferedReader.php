@@ -78,6 +78,7 @@ final class BufferedReader
      */
     public function readLength(int $length, ?Cancellation $cancellation = null): string
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($length <= 0) {
             throw new \ValueError('The number of bytes to read must be a positive integer');
         }
@@ -118,7 +119,7 @@ final class BufferedReader
         $length = \strlen($delimiter);
 
         if (!$length) {
-            throw new \ValueError('The suffix must be a non-empty string');
+            throw new \ValueError('The delimiter must be a non-empty string');
         }
 
         return $this->guard(function () use ($delimiter, $length, $cancellation, $limit): string {
