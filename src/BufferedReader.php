@@ -37,7 +37,7 @@ final class BufferedReader
 
     public function isReadable(): bool
     {
-        return $this->stream->isReadable();
+        return $this->stream->isReadable() || $this->buffer !== '';
     }
 
     public function drain(): string
@@ -69,8 +69,7 @@ final class BufferedReader
     }
 
     /**
-     * @param positive-int $length The number of bytes to read from the stream. Fewer bytes may be returned if the
-     * stream closes before the given number of bytes can be read.
+     * @param positive-int $length The number of bytes to read from the stream.
      *
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
@@ -105,8 +104,7 @@ final class BufferedReader
 
     /**
      * @param non-empty-string $delimiter Read from the stream until the given delimiter is found in the stream, at
-     * which point all bytes up to and including the delimiter will be returned. If the stream closes before the
-     * delimiter is found, the bytes read up to that point will be returned.
+     * which point all bytes up to the delimiter will be returned (but not the delimiter).
      * @param positive-int $limit
      *
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
