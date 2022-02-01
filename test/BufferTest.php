@@ -11,7 +11,7 @@ final class BufferTest extends AsyncTestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->stream = new IterableStream(["abc", "def", "g"]);
+        $this->stream = new ReadableIterableStream(["abc", "def", "g"]);
     }
 
     public function testBuffer(): void

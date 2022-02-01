@@ -15,7 +15,7 @@ final class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         foreach ($values as $value) {
             $queue->pushAsync($value)->ignore();
@@ -31,7 +31,7 @@ final class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         foreach ($values as $value) {
             $queue->pushAsync($value)->ignore();
@@ -54,7 +54,7 @@ final class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         foreach ($values as $value) {
             $queue->pushAsync($value)->ignore();
@@ -75,7 +75,7 @@ final class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         foreach ($values as $value) {
             $queue->pushAsync($value)->ignore();
@@ -91,7 +91,7 @@ final class PayloadTest extends AsyncTestCase
         $values = ["abc", "def", "ghi"];
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         $queue->pushAsync($values[0])->ignore();
 
@@ -117,7 +117,7 @@ final class PayloadTest extends AsyncTestCase
         $value = "abc";
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         $queue->pushAsync($value)->ignore();
         $queue->error($exception);
@@ -142,7 +142,7 @@ final class PayloadTest extends AsyncTestCase
         $value = "abc";
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         $readFuture = async(fn () => $stream->read());
         $queue->error($exception);
@@ -163,7 +163,7 @@ final class PayloadTest extends AsyncTestCase
     {
         $queue = new Queue;
         $queue->complete();
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         self::assertNull($stream->read());
     }
@@ -173,7 +173,7 @@ final class PayloadTest extends AsyncTestCase
         $value = "";
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         $queue->pushAsync($value)->ignore();
 
@@ -187,7 +187,7 @@ final class PayloadTest extends AsyncTestCase
         $value = "abc";
 
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         $queue->pushAsync($value)->ignore();
         $queue->complete();
@@ -199,7 +199,7 @@ final class PayloadTest extends AsyncTestCase
     public function testPendingRead(): void
     {
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
 
         EventLoop::delay(0, function () use ($queue) {
             $queue->pushAsync("test")->ignore();
@@ -211,7 +211,7 @@ final class PayloadTest extends AsyncTestCase
     public function testPendingReadError(): void
     {
         $queue = new Queue;
-        $stream = new Payload(new IterableStream($queue->pipe()));
+        $stream = new Payload(new ReadableIterableStream($queue->pipe()));
         async(fn () => $stream->read());
 
         $this->expectException(PendingReadError::class);

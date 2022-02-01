@@ -11,7 +11,7 @@ final class PipeTest extends AsyncTestCase
 {
     public function testPipeFunction(): void
     {
-        $stream = new IterableStream(["abc", "def"]);
+        $stream = new ReadableIterableStream(["abc", "def"]);
         $buffer = new WritableBuffer;
 
         self::assertSame(6, pipe($stream, $buffer));

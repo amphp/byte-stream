@@ -2,7 +2,7 @@
 
 namespace Amp\ByteStream\Base64;
 
-use Amp\ByteStream\IterableStream;
+use Amp\ByteStream\ReadableIterableStream;
 use Amp\ByteStream\ReadableStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Queue;
@@ -36,6 +36,6 @@ final class Base64EncodingInputStreamTest extends AsyncTestCase
         parent::setUp();
 
         $this->source = new Queue;
-        $this->stream = new Base64EncodingReadableStream(new IterableStream($this->source->pipe()));
+        $this->stream = new Base64EncodingReadableStream(new ReadableIterableStream($this->source->pipe()));
     }
 }

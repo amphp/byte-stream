@@ -7,7 +7,7 @@ use Amp\Pipeline\ConcurrentIterableIterator;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 
-final class IterableStream implements ReadableStream
+final class ReadableIterableStream implements ReadableStream
 {
     /** @var ConcurrentIterator<string>|null */
     private ?ConcurrentIterator $iterator;
@@ -17,7 +17,7 @@ final class IterableStream implements ReadableStream
     private bool $pending = false;
 
     /**
-     * @param iterable<string> $iterable
+     * @param iterable<mixed, string> $iterable
      */
     public function __construct(iterable $iterable)
     {
