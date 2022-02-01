@@ -75,7 +75,7 @@ final class BufferedReader
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
      */
-    public function readFixedLength(int $length, ?Cancellation $cancellation = null): string
+    public function readLength(int $length, ?Cancellation $cancellation = null): string
     {
         if ($length <= 0) {
             throw new \ValueError('The number of bytes to read must be a positive integer');
@@ -106,7 +106,7 @@ final class BufferedReader
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
      */
-    public function readUntilDelimiter(string $delimiter, ?Cancellation $cancellation = null): string
+    public function readUntil(string $delimiter, ?Cancellation $cancellation = null): string
     {
         $length = \strlen($delimiter);
 
