@@ -74,6 +74,7 @@ final class BufferedReader
      *
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
+     * @throws BufferException If the stream closes before the given number of bytes are read.
      */
     public function readLength(int $length, ?Cancellation $cancellation = null): string
     {
@@ -87,7 +88,10 @@ final class BufferedReader
                 if ($chunk === null) {
                     $buffer = $this->buffer;
                     $this->buffer = '';
-                    return $buffer;
+                    throw new BufferException(
+                        $buffer,
+                        'The stream closed before the given number of bytes were read',
+                    );
                 }
                 $this->buffer .= $chunk;
             }
@@ -102,11 +106,14 @@ final class BufferedReader
      * @param non-empty-string $delimiter Read from the stream until the given delimiter is found in the stream, at
      * which point all bytes up to and including the delimiter will be returned. If the stream closes before the
      * delimiter is found, the bytes read up to that point will be returned.
+     * @param positive-int $limit
      *
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
+     * @throws BufferException If the stream closes before the delimiter is found in the stream or if the buffer
+     * exceeds $limit.
      */
-    public function readUntil(string $delimiter, ?Cancellation $cancellation = null): string
+    public function readUntil(string $delimiter, ?Cancellation $cancellation = null, int $limit = \PHP_INT_MAX): string
     {
         $length = \strlen($delimiter);
 
@@ -114,15 +121,25 @@ final class BufferedReader
             throw new \ValueError('The suffix must be a non-empty string');
         }
 
-        return $this->guard(function () use ($delimiter, $length, $cancellation): string {
+        return $this->guard(function () use ($delimiter, $length, $cancellation, $limit): string {
             while (($position = \strpos($this->buffer, $delimiter)) === false) {
                 $chunk = $this->stream->read($cancellation);
                 if ($chunk === null) {
                     $buffer = $this->buffer;
                     $this->buffer = '';
-                    return $buffer;
+                    throw new BufferException(
+                        $buffer,
+                        'The stream closed before the delimiter was found in the stream',
+                    );
                 }
+
                 $this->buffer .= $chunk;
+
+                if (\strlen($this->buffer) > $limit) {
+                    $buffer = $this->buffer;
+                    $this->buffer = '';
+                    throw new BufferException($buffer, "Max length of $limit bytes exceeded");
+                }
             }
 
             /** @psalm-suppress PossiblyUndefinedVariable */
@@ -135,6 +152,8 @@ final class BufferedReader
 
     /**
      * @see buffer()
+     *
+     * @param positive-int $limit
      *
      * @throws BufferException If the $limit given is exceeded.
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the

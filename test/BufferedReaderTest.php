@@ -16,11 +16,9 @@ final class BufferedReaderTest extends AsyncTestCase
     {
         parent::setUp();
 
-        $pipeline = Pipeline::concat([
-            Pipeline::fromIterable(\array_fill(0, self::REPEAT_COUNT, self::CHUNK . self::CHUNK))
-                ->delay(0.01),
-            Pipeline::fromIterable([\trim(self::CHUNK)]),
-        ]);
+        $pipeline = Pipeline::fromIterable(
+            \array_fill(0, self::REPEAT_COUNT, self::CHUNK . self::CHUNK)
+        )->delay(0.01);
 
         $this->bufferedReader = new BufferedReader(new IterableStream($pipeline));
     }
@@ -29,21 +27,34 @@ final class BufferedReaderTest extends AsyncTestCase
     {
         $length = \strlen(self::CHUNK);
 
-        for ($i = 0; $i < self::REPEAT_COUNT; ++$i) {
+        for ($i = 0; $i < self::REPEAT_COUNT - 1; ++$i) {
             self::assertSame(self::CHUNK, $this->bufferedReader->readLength($length));
-            self::assertSame(self::CHUNK, $this->bufferedReader->read());
         }
 
-        self::assertSame(\trim(self::CHUNK), $this->bufferedReader->read());
+        self::assertSame(self::CHUNK, $this->bufferedReader->read());
     }
 
     public function testReadUntil(): void
     {
-        for ($i = 0; $i < self::REPEAT_COUNT * 2; ++$i) {
+        for ($i = 0; $i < self::REPEAT_COUNT * 2 - 1; ++$i) {
             self::assertSame(self::CHUNK, $this->bufferedReader->readUntil("\n"));
         }
 
-        self::assertSame(\trim(self::CHUNK), $this->bufferedReader->readUntil("\n"));
+        self::assertSame(self::CHUNK, $this->bufferedReader->readUntil("\n"));
+    }
+
+    public function testReadUntilDelimiterNotFound(): void
+    {
+        $this->expectException(BufferException::class);
+        $this->expectExceptionMessage('delimiter');
+        $this->bufferedReader->readUntil("\r");
+    }
+
+    public function testReadUntilLimitExceeded(): void
+    {
+        $this->expectException(BufferException::class);
+        $this->expectExceptionMessage('exceeded');
+        $this->bufferedReader->readUntil("\r", limit: \strlen(self::CHUNK));
     }
 
     public function testReadLength(): void
@@ -54,15 +65,34 @@ final class BufferedReaderTest extends AsyncTestCase
             self::assertSame(self::CHUNK, $this->bufferedReader->readLength($length));
         }
 
-        self::assertSame(\trim(self::CHUNK), $this->bufferedReader->readLength($length));
+        self::assertNull($this->bufferedReader->read());
+    }
+
+    public function testReadLengthStreamClosesEarly(): void
+    {
+        $length = \strlen(self::CHUNK);
+
+        for ($i = 0; $i < self::REPEAT_COUNT * 2 - 1; ++$i) {
+            self::assertSame(self::CHUNK, $this->bufferedReader->readLength($length));
+        }
+
+        try {
+            $this->bufferedReader->readLength($length + 1);
+        } catch (BufferException $exception) {
+            self::assertSame(self::CHUNK, $exception->getBuffer());
+        }
     }
 
     public function testReadingSingleBytes(): void
     {
         $length = \strlen(self::CHUNK);
 
-        for ($i = 0; '' !== $byte = $this->bufferedReader->readLength(1); ++$i) {
-            self::assertSame(self::CHUNK[$i % $length], $byte);
+        try {
+            for ($i = 0; '' !== $byte = $this->bufferedReader->readLength(1); ++$i) {
+                self::assertSame(self::CHUNK[$i % $length], $byte);
+            }
+        } catch (BufferException $exception) {
+            self::assertSame('', $exception->getBuffer());
         }
     }
 }
