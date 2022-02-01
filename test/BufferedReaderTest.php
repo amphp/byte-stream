@@ -36,11 +36,13 @@ final class BufferedReaderTest extends AsyncTestCase
 
     public function testReadUntil(): void
     {
+        $expected = \trim(self::CHUNK);
+
         for ($i = 0; $i < self::REPEAT_COUNT * 2 - 1; ++$i) {
-            self::assertSame(self::CHUNK, $this->bufferedReader->readUntil("\n"));
+            self::assertSame($expected, $this->bufferedReader->readUntil("\n"));
         }
 
-        self::assertSame(self::CHUNK, $this->bufferedReader->readUntil("\n"));
+        self::assertSame($expected, $this->bufferedReader->readUntil("\n"));
     }
 
     public function testReadUntilDelimiterNotFound(): void

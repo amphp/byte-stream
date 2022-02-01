@@ -144,9 +144,8 @@ final class BufferedReader
             }
 
             /** @psalm-suppress PossiblyUndefinedVariable */
-            $position += $length;
             $buffer = \substr($this->buffer, 0, $position);
-            $this->buffer = \substr($this->buffer, $position);
+            $this->buffer = \substr($this->buffer, $position + $length);
             return $buffer;
         });
     }
