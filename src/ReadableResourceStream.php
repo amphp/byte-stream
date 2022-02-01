@@ -54,6 +54,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
             throw new \Error("Expected a readable stream");
         }
 
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($chunkSize <= 0) {
             throw new \ValueError('The chunk length must be a positive integer');
         }
@@ -233,6 +234,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
      */
     public function setChunkSize(int $chunkSize): void
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($chunkSize <= 0) {
             throw new \ValueError('The chunk length must be a positive integer');
         }

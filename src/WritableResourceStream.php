@@ -43,6 +43,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
             throw new \Error("Expected a writable stream");
         }
 
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($chunkSize !== null && $chunkSize <= 0) {
             throw new \ValueError('The chunk length must be a positive integer');
         }
@@ -288,6 +289,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
      */
     public function setChunkSize(int $chunkSize): void
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($chunkSize <= 0) {
             throw new \ValueError('The chunk length must be a positive integer');
         }

@@ -21,6 +21,7 @@ final class IterableStream implements ReadableStream
      */
     public function __construct(iterable $iterable)
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($iterable instanceof Pipeline) {
             $iterable = $iterable->getIterator();
         }
