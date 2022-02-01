@@ -70,7 +70,7 @@ final class BufferedReader
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
      */
-    public function readLength(int $length, ?Cancellation $cancellation = null): string
+    public function readFixedLength(int $length, ?Cancellation $cancellation = null): string
     {
         if ($length <= 0) {
             throw new \ValueError('The number of bytes to read must be a positive integer');
@@ -94,23 +94,23 @@ final class BufferedReader
     }
 
     /**
-     * @param non-empty-string $suffix Read from the stream until the given suffix is found in the stream, at which
-     * point all bytes up to and including the suffix will be returned. If the stream closes before the suffix is found,
-     * the bytes read up to that point will be returned.
+     * @param non-empty-string $delimiter Read from the stream until the given delimiter is found in the stream, at
+     * which point all bytes up to and including the delimiter will be returned. If the stream closes before the
+     * delimiter is found, the bytes read up to that point will be returned.
      *
      * @throws StreamException If the implementation of {@see ReadableStream::read()} of the instance given the
      * constructor can throw.
      */
-    public function readUntil(string $suffix, ?Cancellation $cancellation = null): string
+    public function readUntilDelimiter(string $delimiter, ?Cancellation $cancellation = null): string
     {
-        $length = \strlen($suffix);
+        $length = \strlen($delimiter);
 
         if (!$length) {
             throw new \ValueError('The suffix must be a non-empty string');
         }
 
-        return $this->guard(function () use ($suffix, $length, $cancellation): string {
-            while (($position = \strpos($this->buffer, $suffix)) === false) {
+        return $this->guard(function () use ($delimiter, $length, $cancellation): string {
+            while (($position = \strpos($this->buffer, $delimiter)) === false) {
                 $chunk = $this->stream->read($cancellation);
                 if ($chunk === null) {
                     $buffer = $this->buffer;
