@@ -4,10 +4,16 @@ namespace Amp\ByteStream;
 
 use Amp\Pipeline\Queue;
 
+/**
+ * @template-implements \IteratorAggregate<int, string>
+ */
 final class WritableIterableStream implements WritableStream, \IteratorAggregate
 {
     private Queue $queue;
+
+    /** @var \Traversable<int, string> */
     private iterable $iterable;
+
     private int $bufferSize;
 
     public function __construct(int $bufferSize)
