@@ -133,7 +133,7 @@ final class BufferedReader
                     );
                 }
 
-                $position = \strlen($this->buffer);
+                $position = \max(\strlen($this->buffer) - $length + 1, 0);
                 $this->buffer .= $chunk;
 
                 if (\strlen($this->buffer) > $limit) {
