@@ -123,6 +123,7 @@ final class BufferedReader
         }
 
         return $this->guard(function () use ($delimiter, $length, $cancellation, $limit): string {
+            $position = 0; // This is here for Psalm.
             while (($position = \strpos($this->buffer, $delimiter)) === false) {
                 $chunk = $this->stream->read($cancellation);
                 if ($chunk === null) {
@@ -143,7 +144,6 @@ final class BufferedReader
                 }
             }
 
-            /** @psalm-suppress PossiblyUndefinedVariable */
             $buffer = \substr($this->buffer, 0, $position);
             $this->buffer = \substr($this->buffer, $position + $length);
             return $buffer;
