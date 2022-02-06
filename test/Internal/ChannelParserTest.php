@@ -3,13 +3,14 @@
 namespace Amp\ByteStream\Internal;
 
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\Serialization\SerializationException;
 use Amp\Sync\ChannelException;
 
 class ChannelParserTest extends AsyncTestCase
 {
     public function testCorruptedData(): void
     {
-        $this->expectException(ChannelException::class);
+        $this->expectException(SerializationException::class);
         $this->expectExceptionMessage('Exception thrown when unserializing data');
 
         $data = "Invalid serialized data";

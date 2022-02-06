@@ -3,6 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\Serialization\SerializationException;
 use Amp\Sync\ChannelException;
 
 class StreamChannelTest extends AsyncTestCase
@@ -59,7 +60,7 @@ class StreamChannelTest extends AsyncTestCase
      */
     public function testSendUnserializableData(): void
     {
-        $this->expectException(ChannelException::class);
+        $this->expectException(SerializationException::class);
 
         $pipe = new Pipe(0);
         $sink = $pipe->getSink();

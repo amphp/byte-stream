@@ -21,6 +21,7 @@ final class ChannelParser extends Parser
      * @return \Generator
      *
      * @throws ChannelException
+     * @throws SerializationException
      */
     private static function parser(\Closure $push, Serializer $serializer): \Generator
     {
@@ -34,15 +35,7 @@ final class ChannelParser extends Parser
                 throw new ChannelException("Invalid packet received: " . encodeUnprintableChars($data));
             }
 
-            try {
-                $data = $serializer->unserialize(yield $data["length"]);
-            } catch (SerializationException $exception) {
-                throw new ChannelException(
-                    "Failed to unserialize the channel data: " . $exception->getMessage(),
-                    0,
-                    $exception,
-                );
-            }
+            $data = $serializer->unserialize(yield $data["length"]);
 
             try {
                 $push($data);
@@ -73,19 +66,11 @@ final class ChannelParser extends Parser
      *
      * @return string Encoded data that can be parsed by this class.
      *
-     * @throws ChannelException
+     * @throws SerializationException
      */
     public function encode(mixed $data): string
     {
-        try {
-            $data = $this->serializer->serialize($data);
-        } catch (SerializationException $exception) {
-            throw new ChannelException(
-                "Serializing the channel data failed: " . $exception->getMessage(),
-                0,
-                $exception,
-            );
-        }
+        $data = $this->serializer->serialize($data);
         return \pack("CL", 0, \strlen($data)) . $data;
     }
 }
