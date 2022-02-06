@@ -2,11 +2,11 @@
 
 namespace Amp\ByteStream;
 
+use Amp\ByteStream\Internal\ChannelParser;
 use Amp\Cancellation;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 use Amp\Serialization\Serializer;
-use Amp\ByteStream\Internal\ChannelParser;
 use Amp\Sync\Channel;
 use Amp\Sync\ChannelException;
 
