@@ -16,9 +16,6 @@ final class ChannelParser extends Parser
 
     /**
      * @param \Closure(mixed):void $push
-     * @param Serializer $serializer
-     *
-     * @return \Generator
      *
      * @throws ChannelException
      * @throws SerializationException
@@ -53,7 +50,6 @@ final class ChannelParser extends Parser
 
     /**
      * @param \Closure(mixed):void $onMessage Closure invoked when data is parsed.
-     * @param Serializer|null $serializer
      */
     public function __construct(\Closure $onMessage, ?Serializer $serializer = null)
     {

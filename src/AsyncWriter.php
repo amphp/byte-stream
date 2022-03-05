@@ -77,8 +77,6 @@ final class AsyncWriter
      * Queues a chunk of data to be written to the stream, returning a {@see Future} that is completed once the data
      * has been written to the stream or errors if it cannot be written to the stream.
      *
-     * @param string $bytes
-     *
      * @return Future<never>
      */
     public function write(string $bytes): Future

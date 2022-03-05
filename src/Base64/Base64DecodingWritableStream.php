@@ -7,13 +7,10 @@ use Amp\ByteStream\WritableStream;
 
 final class Base64DecodingWritableStream implements WritableStream
 {
-    /** @var WritableStream */
     private WritableStream $destination;
 
-    /** @var string */
     private string $buffer = '';
 
-    /** @var int */
     private int $offset = 0;
 
     public function __construct(WritableStream $destination)

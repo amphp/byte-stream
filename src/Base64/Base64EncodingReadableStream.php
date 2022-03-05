@@ -7,10 +7,8 @@ use Amp\Cancellation;
 
 final class Base64EncodingReadableStream implements ReadableStream
 {
-    /** @var ReadableStream */
     private ReadableStream $source;
 
-    /** @var string|null */
     private ?string $buffer = '';
 
     public function __construct(ReadableStream $source)

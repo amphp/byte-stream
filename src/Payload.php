@@ -62,7 +62,6 @@ class Payload implements ReadableStream
     /**
      * Buffers the entire message.
      *
-     * @param Cancellation|null $cancellation
      * @param int $limit Only buffer up to the given number of bytes, throwing {@see BufferException} if exceeded.
      *
      * @return string The entire message contents.

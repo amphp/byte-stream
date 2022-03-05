@@ -32,10 +32,6 @@ final class StreamChannel implements Channel
 
     /**
      * Creates a new channel from the given stream objects. Note that $read and $write can be the same object.
-     *
-     * @param ReadableStream $read
-     * @param WritableStream $write
-     * @param Serializer|null $serializer
      */
     public function __construct(ReadableStream $read, WritableStream $write, ?Serializer $serializer = null)
     {

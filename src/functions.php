@@ -21,10 +21,6 @@ if (!\defined('STDERR')) {
 }
 
 /**
- * @param ReadableStream $source
- * @param WritableStream $destination
- * @param Cancellation|null $cancellation
- *
  * @return int The number of bytes written to the destination.
  */
 function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation $cancellation = null): int
@@ -41,8 +37,6 @@ function pipe(ReadableStream $source, WritableStream $destination, ?Cancellation
 }
 
 /**
- * @param ReadableStream $source
- * @param Cancellation|null $cancellation
  * @param int $limit Only buffer up to the given number of bytes, throwing {@see BufferException} if exceeded.
  *
  * @return string Entire contents of the InputStream.
@@ -67,8 +61,6 @@ function buffer(ReadableStream $source, ?Cancellation $cancellation = null, int 
 
 /**
  * The php://input buffer stream for the process associated with the currently active event loop.
- *
- * @return ReadableResourceStream
  */
 function getInputBufferStream(): ReadableResourceStream
 {
@@ -81,8 +73,6 @@ function getInputBufferStream(): ReadableResourceStream
 
 /**
  * The php://output buffer stream for the process associated with the currently active event loop.
- *
- * @return WritableResourceStream
  */
 function getOutputBufferStream(): WritableResourceStream
 {
@@ -95,8 +85,6 @@ function getOutputBufferStream(): WritableResourceStream
 
 /**
  * The STDIN stream for the process associated with the currently active event loop.
- *
- * @return ReadableResourceStream
  */
 function getStdin(): ReadableResourceStream
 {
@@ -109,8 +97,6 @@ function getStdin(): ReadableResourceStream
 
 /**
  * The STDOUT stream for the process associated with the currently active event loop.
- *
- * @return WritableResourceStream
  */
 function getStdout(): WritableResourceStream
 {
@@ -123,8 +109,6 @@ function getStdout(): WritableResourceStream
 
 /**
  * The STDERR stream for the process associated with the currently active event loop.
- *
- * @return WritableResourceStream
  */
 function getStderr(): WritableResourceStream
 {
@@ -137,9 +121,6 @@ function getStderr(): WritableResourceStream
 
 /**
  * Splits the stream into chunks based on a delimiter.
- *
- * @param ReadableStream $source
- * @param string $delimiter
  *
  * @return \Traversable<string>
  */
@@ -163,8 +144,6 @@ function split(ReadableStream $source, string $delimiter): \Traversable
 
 /**
  * Splits the stream into lines.
- *
- * @param ReadableStream $source
  *
  * @return \Traversable<string>
  */
