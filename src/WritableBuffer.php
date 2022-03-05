@@ -47,6 +47,10 @@ final class WritableBuffer implements WritableStream
 
     public function close(): void
     {
+        if ($this->closed) {
+            return;
+        }
+
         $this->closed = true;
 
         $this->deferredFuture->complete($this->contents);

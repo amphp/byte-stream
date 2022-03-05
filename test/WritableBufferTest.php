@@ -25,6 +25,15 @@ final class WritableBufferTest extends AsyncTestCase
         self::assertSame('foobar', $output->buffer());
     }
 
+    public function testDoubleClose(): void
+    {
+        $output = new WritableBuffer();
+        $output->close();
+        $output->close();
+
+        $this->expectNotToPerformAssertions();
+    }
+
     public function testThrowsOnWritingToClosedBuffer(): void
     {
         $this->expectException(ClosedException::class);
