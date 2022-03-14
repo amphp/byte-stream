@@ -76,7 +76,6 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                 $onClose,
             ): void {
                 $firstWrite = true;
-                $suspension = null;
 
                 try {
                     while (!$writes->isEmpty()) {
@@ -89,8 +88,15 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                             continue;
                         }
 
+                        if (!$writable) {
+                            $suspension?->resume([ClosedException::class, "The stream was closed"]);
+                            continue;
+                        }
+
                         if (!\is_resource($stream)) {
-                            throw new ClosedException("The stream was closed by the peer");
+                            $writable = false;
+                            $suspension?->resume([ClosedException::class, "The stream was closed by the peer"]);
+                            continue;
                         }
 
                         // Using error handler to verify that writing zero bytes was not due an error.
@@ -122,7 +128,13 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                         // fwrite() may write zero bytes on subsequent calls due to the buffer filling again.
                         /** @psalm-suppress TypeDoesNotContainType $errorCode may be set by error handler. */
                         if ($written === 0 && $errorCode !== 0 && $firstWrite) {
-                            throw new StreamException(\sprintf('Failed to write to stream (%d): %s', $errorCode, $errorMessage));
+                            $writable = false;
+                            $suspension?->resume([
+                                StreamException::class,
+                                \sprintf('Failed to write to stream (%d): %s', $errorCode, $errorMessage)
+                            ]);
+
+                            continue;
                         }
 
                         if ($length > $written) {
@@ -133,30 +145,6 @@ final class WritableResourceStream implements WritableStream, ResourceStream
 
                         $suspension?->resume();
                         $firstWrite = false;
-                    }
-                } catch (\Throwable $exception) {
-                    $writable = false;
-
-                    $suspension?->throw($exception);
-                    while (!$writes->isEmpty()) {
-                        [, $suspension] = $writes->shift();
-                        $suspension?->throw($exception);
-                    }
-
-                    EventLoop::cancel($callbackId);
-
-                    if (!$onClose->isComplete()) {
-                        $onClose->complete();
-                    }
-
-                    if (\is_resource($resource)) {
-                        $meta = \stream_get_meta_data($resource);
-                        if (\str_contains($meta["mode"], "+")) {
-                            \stream_socket_shutdown($resource, \STREAM_SHUT_WR);
-                        } else {
-                            \fclose($resource);
-                        }
-                        $resource = null;
                     }
                 } finally {
                     if (!$writable && \is_resource($resource)) {
@@ -170,7 +158,15 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                     }
 
                     if ($writes->isEmpty()) {
-                        EventLoop::disable($callbackId);
+                        if ($writable) {
+                            EventLoop::disable($callbackId);
+                        } else {
+                            EventLoop::cancel($callbackId);
+
+                            if (!$onClose->isComplete()) {
+                                $onClose->complete();
+                            }
+                        }
                     }
                 }
             }
@@ -241,7 +237,10 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         EventLoop::enable($this->callbackId);
         $this->writes->push([$bytes, $suspension = EventLoop::getSuspension()]);
 
-        $suspension->suspend();
+        if ([$exceptionClass, $message] = $suspension->suspend()) {
+            /** @psalm-suppress InvalidThrow */
+            throw new $exceptionClass($message);
+        }
     }
 
     /**
