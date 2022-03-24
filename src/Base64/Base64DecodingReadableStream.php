@@ -8,7 +8,7 @@ use Amp\Cancellation;
 
 final class Base64DecodingReadableStream implements ReadableStream
 {
-    private ?ReadableStream $source;
+    private readonly ReadableStream $source;
 
     private string $buffer = '';
 
@@ -19,7 +19,7 @@ final class Base64DecodingReadableStream implements ReadableStream
 
     public function read(?Cancellation $cancellation = null): ?string
     {
-        if ($this->source === null) {
+        if ($this->source->isClosed()) {
             throw new StreamException('Failed to read stream chunk due to invalid base64 data');
         }
 
@@ -33,8 +33,7 @@ final class Base64DecodingReadableStream implements ReadableStream
             $this->buffer = '';
 
             if ($chunk === false) {
-                $this->source = null;
-
+                $this->source->close();
                 throw new StreamException('Failed to read stream chunk due to invalid base64 data');
             }
 
@@ -47,7 +46,7 @@ final class Base64DecodingReadableStream implements ReadableStream
         $chunk = \base64_decode(\substr($this->buffer, 0, $length - $length % 4), true);
 
         if ($chunk === false) {
-            $this->source = null;
+            $this->source->close();
             $this->buffer = '';
 
             throw new StreamException('Failed to read stream chunk due to invalid base64 data');
@@ -60,16 +59,21 @@ final class Base64DecodingReadableStream implements ReadableStream
 
     public function isReadable(): bool
     {
-        return (bool) $this->source?->isReadable();
+        return $this->source->isReadable();
     }
 
     public function close(): void
     {
-        $this->source?->close();
+        $this->source->close();
     }
 
     public function isClosed(): bool
     {
-        return $this->source?->isClosed() ?? true;
+        return $this->source->isClosed();
+    }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->source->onClose($onClose);
     }
 }

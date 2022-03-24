@@ -16,6 +16,8 @@ final class ReadableIterableStream implements ReadableStream
 
     private bool $pending = false;
 
+    private readonly OnCloseRegistry $registry;
+
     /**
      * @param iterable<mixed, string> $iterable
      */
@@ -29,6 +31,8 @@ final class ReadableIterableStream implements ReadableStream
         $this->iterator = $iterable instanceof ConcurrentIterator
             ? $iterable
             : new ConcurrentIterableIterator($iterable);
+
+        $this->registry = new OnCloseRegistry;
     }
 
     public function read(?Cancellation $cancellation = null): ?string
@@ -82,10 +86,17 @@ final class ReadableIterableStream implements ReadableStream
     {
         $this->iterator?->dispose();
         $this->iterator = null;
+
+        $this->registry->call();
     }
 
     public function isClosed(): bool
     {
         return !$this->isReadable();
+    }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->registry->register($onClose);
     }
 }

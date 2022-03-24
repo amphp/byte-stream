@@ -19,17 +19,25 @@ class Payload implements ReadableStream
 
     private int $mode = 0;
 
+    private readonly OnCloseRegistry $registry;
+
     public function __construct(ReadableStream|string $stream)
     {
         $this->stream = match (true) {
             $stream instanceof ReadableBuffer => $stream->read(),
             default => $stream,
         };
+
+        $this->registry = new OnCloseRegistry;
+
+        if ($this->stream === null) {
+            $this->close();
+        }
     }
 
     public function __destruct()
     {
-        if ($this->stream instanceof ClosableStream) {
+        if ($this->stream instanceof Closable) {
             $this->stream->close();
         }
     }
@@ -96,10 +104,17 @@ class Payload implements ReadableStream
         if ($this->stream instanceof ReadableStream) {
             $this->stream->close();
         }
+
+        $this->registry->call();
     }
 
     public function isClosed(): bool
     {
         return !$this->isReadable();
+    }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->registry->call();
     }
 }

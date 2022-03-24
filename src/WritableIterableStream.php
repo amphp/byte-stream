@@ -12,15 +12,18 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
     private Queue $queue;
 
     /** @var \Traversable<int, string> */
-    private iterable $iterable;
+    private readonly iterable $iterable;
 
     private int $bufferSize;
+
+    private readonly OnCloseRegistry $registry;
 
     public function __construct(int $bufferSize)
     {
         $this->queue = new Queue;
         $this->iterable = $this->queue->iterate();
         $this->bufferSize = $bufferSize;
+        $this->registry = new OnCloseRegistry;
     }
 
     public function close(): void
@@ -28,11 +31,18 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
         if (!$this->queue->isComplete()) {
             $this->queue->complete();
         }
+
+        $this->registry->call();
     }
 
     public function isClosed(): bool
     {
         return !$this->isWritable();
+    }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->registry->register($onClose);
     }
 
     public function write(string $bytes): void

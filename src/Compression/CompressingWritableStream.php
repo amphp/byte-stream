@@ -108,4 +108,9 @@ final class CompressingWritableStream implements WritableStream
     {
         return $this->destination->isClosed();
     }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->destination->onClose($onClose);
+    }
 }

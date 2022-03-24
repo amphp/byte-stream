@@ -25,7 +25,9 @@ final class WritableResourceStream implements WritableStream, ResourceStream
     private ?int $chunkSize = null;
 
     /** @var \Closure():bool */
-    private \Closure $errorHandler;
+    private readonly \Closure $errorHandler;
+
+    private readonly OnCloseRegistry $registry;
 
     /**
      * @param resource $stream Stream resource.
@@ -48,6 +50,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
             throw new \ValueError('The chunk length must be a positive integer');
         }
 
+        $this->registry = $registry = new OnCloseRegistry;
+
         \stream_set_blocking($stream, false);
         \stream_set_write_buffer($stream, 0);
 
@@ -68,6 +72,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                 &$chunkSize,
                 &$writable,
                 &$resource,
+                $registry,
             ): void {
                 $firstWrite = true;
                 $suspension = null;
@@ -138,6 +143,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                     }
 
                     EventLoop::cancel($callbackId);
+
+                    $registry->call();
 
                     if (\is_resource($resource)) {
                         $meta = \stream_get_meta_data($resource);
@@ -276,6 +283,11 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         return $this->resource === null;
     }
 
+    public function onClose(\Closure $onClose): void
+    {
+        $this->registry->register($onClose);
+    }
+
     /**
      * @return resource|object|null Stream resource or null if end() has been called or the stream closed.
      */
@@ -352,5 +364,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         }
 
         EventLoop::cancel($this->callbackId);
+
+        $this->registry->call();
     }
 }

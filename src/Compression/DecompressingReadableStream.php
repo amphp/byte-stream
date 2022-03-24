@@ -111,4 +111,9 @@ final class DecompressingReadableStream implements ReadableStream
     {
         return $this->resource === null;
     }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->source->onClose($onClose);
+    }
 }

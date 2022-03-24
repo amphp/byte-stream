@@ -53,4 +53,9 @@ final class Base64EncodingReadableStream implements ReadableStream
     {
         return $this->source->isClosed();
     }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->source->onClose($onClose);
+    }
 }

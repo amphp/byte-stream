@@ -11,9 +11,12 @@ final class ReadableStreamChain implements ReadableStream
 
     private bool $reading = false;
 
+    private readonly OnCloseRegistry $registry;
+
     public function __construct(ReadableStream ...$sources)
     {
         $this->sources = $sources;
+        $this->registry = new OnCloseRegistry;
     }
 
     public function read(?Cancellation $cancellation = null): ?string
@@ -58,10 +61,17 @@ final class ReadableStreamChain implements ReadableStream
         foreach ($sources as $source) {
             $source->close();
         }
+
+        $this->registry->call();
     }
 
     public function isClosed(): bool
     {
         return !$this->isReadable();
+    }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->registry->register($onClose);
     }
 }
