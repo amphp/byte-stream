@@ -89,13 +89,13 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                         }
 
                         if (!$writable) {
-                            $suspension?->resume([ClosedException::class, "The stream was closed"]);
+                            $suspension?->resume(static fn () => throw new ClosedException("The stream was closed"));
                             continue;
                         }
 
                         if (!\is_resource($stream)) {
                             $writable = false;
-                            $suspension?->resume([ClosedException::class, "The stream was closed by the peer"]);
+                            $suspension?->resume(static fn () => throw new ClosedException("The stream was closed by the peer"));
                             continue;
                         }
 
@@ -129,10 +129,9 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                         /** @psalm-suppress TypeDoesNotContainType $errorCode may be set by error handler. */
                         if ($written === 0 && $errorCode !== 0 && $firstWrite) {
                             $writable = false;
-                            $suspension?->resume([
-                                StreamException::class,
+                            $suspension?->resume(static fn () => throw new StreamException(
                                 \sprintf('Failed to write to stream (%d): %s', $errorCode, $errorMessage)
-                            ]);
+                            ));
 
                             continue;
                         }
@@ -237,9 +236,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         EventLoop::enable($this->callbackId);
         $this->writes->push([$bytes, $suspension = EventLoop::getSuspension()]);
 
-        if ([$exceptionClass, $message] = $suspension->suspend()) {
-            /** @psalm-suppress InvalidThrow */
-            throw new $exceptionClass($message);
+        if ($closure = $suspension->suspend()) {
+            $closure();
         }
     }
 
