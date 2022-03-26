@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream;
 
+use Amp\DeferredFuture;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
@@ -25,7 +26,9 @@ final class WritableResourceStream implements WritableStream, ResourceStream
     private ?int $chunkSize = null;
 
     /** @var \Closure():bool */
-    private \Closure $errorHandler;
+    private readonly \Closure $errorHandler;
+
+    private readonly DeferredFuture $onClose;
 
     /**
      * @param resource $stream Stream resource.
@@ -48,6 +51,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
             throw new \ValueError('The chunk length must be a positive integer');
         }
 
+        $this->onClose = $onClose = new DeferredFuture;
+
         \stream_set_blocking($stream, false);
         \stream_set_write_buffer($stream, 0);
 
@@ -68,6 +73,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                 &$chunkSize,
                 &$writable,
                 &$resource,
+                $onClose,
             ): void {
                 $firstWrite = true;
                 $suspension = null;
@@ -138,6 +144,10 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                     }
 
                     EventLoop::cancel($callbackId);
+
+                    if (!$onClose->isComplete()) {
+                        $onClose->complete();
+                    }
 
                     if (\is_resource($resource)) {
                         $meta = \stream_get_meta_data($resource);
@@ -276,6 +286,11 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         return $this->resource === null;
     }
 
+    public function onClose(\Closure $onClose): void
+    {
+        $this->onClose->getFuture()->finally($onClose);
+    }
+
     /**
      * @return resource|object|null Stream resource or null if end() has been called or the stream closed.
      */
@@ -352,5 +367,9 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         }
 
         EventLoop::cancel($this->callbackId);
+
+        if (!$this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
     }
 }

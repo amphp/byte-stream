@@ -4,6 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\Cancellation;
 use Amp\CancelledException;
+use Amp\DeferredFuture;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
@@ -28,12 +29,14 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
     private int $chunkSize;
 
-    private bool $useSingleRead;
+    private readonly bool $useSingleRead;
 
     private int $defaultChunkSize;
 
     /** @var \Closure(CancelledException):void */
-    private \Closure $cancel;
+    private readonly \Closure $cancel;
+
+    private readonly DeferredFuture $onClose;
 
     /**
      * @param resource $stream Stream resource.
@@ -59,6 +62,8 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
             throw new \ValueError('The chunk length must be a positive integer');
         }
 
+        $this->onClose = $onClose = new DeferredFuture;
+
         \stream_set_blocking($stream, false);
         \stream_set_read_buffer($stream, 0);
 
@@ -78,6 +83,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
             &$stream,
             &$chunkSize,
             $useSingleRead,
+            $onClose,
         ): void {
             \set_error_handler(self::$errorHandler);
 
@@ -102,6 +108,10 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
                 $data = null; // Stream closed, resolve read with null.
 
                 EventLoop::cancel($callbackId);
+
+                if (!$onClose->isComplete()) {
+                    $onClose->complete();
+                }
             } else {
                 EventLoop::disable($callbackId);
             }
@@ -221,6 +231,11 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
         return $this->resource === null;
     }
 
+    public function onClose(\Closure $onClose): void
+    {
+        $this->onClose->getFuture()->finally($onClose);
+    }
+
     /**
      * @return resource|object|null The stream resource or null if the stream has closed.
      */
@@ -289,5 +304,9 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
         $this->suspension = null;
 
         EventLoop::cancel($this->callbackId);
+
+        if (!$this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
     }
 }

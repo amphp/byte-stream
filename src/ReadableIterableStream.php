@@ -3,6 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
+use Amp\DeferredFuture;
 use Amp\Pipeline\ConcurrentIterableIterator;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
@@ -15,6 +16,8 @@ final class ReadableIterableStream implements ReadableStream
     private ?\Throwable $exception = null;
 
     private bool $pending = false;
+
+    private readonly DeferredFuture $onClose;
 
     /**
      * @param iterable<mixed, string> $iterable
@@ -29,6 +32,8 @@ final class ReadableIterableStream implements ReadableStream
         $this->iterator = $iterable instanceof ConcurrentIterator
             ? $iterable
             : new ConcurrentIterableIterator($iterable);
+
+        $this->onClose = new DeferredFuture;
     }
 
     public function read(?Cancellation $cancellation = null): ?string
@@ -82,10 +87,19 @@ final class ReadableIterableStream implements ReadableStream
     {
         $this->iterator?->dispose();
         $this->iterator = null;
+
+        if (!$this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
     }
 
     public function isClosed(): bool
     {
         return !$this->isReadable();
+    }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->onClose->getFuture()->finally($onClose);
     }
 }

@@ -63,4 +63,9 @@ final class Base64DecodingWritableStream implements WritableStream
     {
         return $this->destination->isClosed();
     }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->destination->onClose($onClose);
+    }
 }

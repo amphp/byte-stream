@@ -2,10 +2,10 @@
 
 namespace Amp\ByteStream;
 
-interface ClosableStream
+interface Closable
 {
     /**
-     * Closes the stream, marking it as unreadable and/or unwritable.
+     * Closes the stream or resource, marking it as unreadable and/or unwritable.
      *
      * - Whether pending reads are aborted or not is implementation dependent.
      * - New read operations should immediately return {@code null}.
@@ -16,9 +16,16 @@ interface ClosableStream
     public function close(): void;
 
     /**
-     * Returns whether the stream has been closed.
+     * Returns whether this resource has been closed.
      *
      * @return bool {@code true} if closed, otherwise {@code false}
      */
     public function isClosed(): bool;
+
+    /**
+     * Registers a callback that is invoked when this resource is closed.
+     *
+     * @param \Closure():void $onClose
+     */
+    public function onClose(\Closure $onClose): void;
 }

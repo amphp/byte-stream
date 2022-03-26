@@ -6,7 +6,7 @@ use Amp\DeferredFuture;
 
 final class WritableBuffer implements WritableStream
 {
-    private DeferredFuture $deferredFuture;
+    private readonly DeferredFuture $deferredFuture;
 
     private string $contents = '';
 
@@ -60,5 +60,10 @@ final class WritableBuffer implements WritableStream
     public function isClosed(): bool
     {
         return $this->closed;
+    }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->deferredFuture->getFuture()->finally($onClose);
     }
 }
