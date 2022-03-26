@@ -3,6 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
+use Amp\DeferredFuture;
 
 /**
  * Creates a buffered message from a ReadableStream.
@@ -19,7 +20,7 @@ class Payload implements ReadableStream
 
     private int $mode = 0;
 
-    private readonly OnCloseRegistry $registry;
+    private readonly DeferredFuture $onClose;
 
     public function __construct(ReadableStream|string $stream)
     {
@@ -28,7 +29,7 @@ class Payload implements ReadableStream
             default => $stream,
         };
 
-        $this->registry = new OnCloseRegistry;
+        $this->onClose = new DeferredFuture;
 
         if ($this->stream === null) {
             $this->close();
@@ -105,7 +106,9 @@ class Payload implements ReadableStream
             $this->stream->close();
         }
 
-        $this->registry->call();
+        if (!$this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
     }
 
     public function isClosed(): bool
@@ -115,6 +118,6 @@ class Payload implements ReadableStream
 
     public function onClose(\Closure $onClose): void
     {
-        $this->registry->call();
+        $this->onClose->getFuture()->finally($onClose);
     }
 }

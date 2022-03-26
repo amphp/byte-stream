@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream;
 
+use Amp\DeferredFuture;
 use Amp\Pipeline\Queue;
 
 /**
@@ -16,14 +17,19 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
 
     private int $bufferSize;
 
-    private readonly OnCloseRegistry $registry;
+    private readonly DeferredFuture $onClose;
 
     public function __construct(int $bufferSize)
     {
         $this->queue = new Queue;
         $this->iterable = $this->queue->iterate();
         $this->bufferSize = $bufferSize;
-        $this->registry = new OnCloseRegistry;
+        $this->onClose = new DeferredFuture;
+    }
+
+    public function __destruct()
+    {
+        $this->close();
     }
 
     public function close(): void
@@ -32,7 +38,9 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
             $this->queue->complete();
         }
 
-        $this->registry->call();
+        if ($this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
     }
 
     public function isClosed(): bool
@@ -42,7 +50,7 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
 
     public function onClose(\Closure $onClose): void
     {
-        $this->registry->register($onClose);
+        $this->onClose->getFuture()->finally($onClose);
     }
 
     public function write(string $bytes): void

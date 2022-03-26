@@ -3,6 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
+use Amp\DeferredFuture;
 
 final class ReadableStreamChain implements ReadableStream
 {
@@ -11,12 +12,16 @@ final class ReadableStreamChain implements ReadableStream
 
     private bool $reading = false;
 
-    private readonly OnCloseRegistry $registry;
+    private readonly DeferredFuture $onClose;
 
     public function __construct(ReadableStream ...$sources)
     {
         $this->sources = $sources;
-        $this->registry = new OnCloseRegistry;
+        $this->onClose = new DeferredFuture;
+
+        if (empty($this->sources)) {
+            $this->close();
+        }
     }
 
     public function read(?Cancellation $cancellation = null): ?string
@@ -62,7 +67,9 @@ final class ReadableStreamChain implements ReadableStream
             $source->close();
         }
 
-        $this->registry->call();
+        if (!$this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
     }
 
     public function isClosed(): bool
@@ -72,6 +79,6 @@ final class ReadableStreamChain implements ReadableStream
 
     public function onClose(\Closure $onClose): void
     {
-        $this->registry->register($onClose);
+        $this->onClose->getFuture()->finally($onClose);
     }
 }

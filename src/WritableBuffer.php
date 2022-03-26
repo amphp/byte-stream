@@ -12,12 +12,9 @@ final class WritableBuffer implements WritableStream
 
     private bool $closed = false;
 
-    public readonly OnCloseRegistry $registry;
-
     public function __construct()
     {
         $this->deferredFuture = new DeferredFuture;
-        $this->registry = new OnCloseRegistry;
     }
 
     public function write(string $bytes): void
@@ -58,8 +55,6 @@ final class WritableBuffer implements WritableStream
 
         $this->deferredFuture->complete($this->contents);
         $this->contents = '';
-
-        $this->registry->call();
     }
 
     public function isClosed(): bool
@@ -69,6 +64,6 @@ final class WritableBuffer implements WritableStream
 
     public function onClose(\Closure $onClose): void
     {
-        $this->registry->register($onClose);
+        $this->deferredFuture->getFuture()->finally($onClose);
     }
 }

@@ -3,6 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
+use Amp\DeferredFuture;
 
 /**
  * ReadableStream with a single already known data chunk.
@@ -11,7 +12,7 @@ final class ReadableBuffer implements ReadableStream
 {
     private ?string $contents;
 
-    private readonly OnCloseRegistry $registry;
+    private readonly DeferredFuture $onClose;
 
     /**
      * @param string|null $contents Data chunk or `null` for no data chunk.
@@ -19,7 +20,7 @@ final class ReadableBuffer implements ReadableStream
     public function __construct(?string $contents = null)
     {
         $this->contents = $contents === '' ? null : $contents;
-        $this->registry = new OnCloseRegistry;
+        $this->onClose = new DeferredFuture;
 
         if ($this->contents === null) {
             $this->close();
@@ -42,7 +43,9 @@ final class ReadableBuffer implements ReadableStream
     public function close(): void
     {
         $this->contents = null;
-        $this->registry->call();
+        if (!$this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
     }
 
     public function isClosed(): bool
@@ -52,6 +55,6 @@ final class ReadableBuffer implements ReadableStream
 
     public function onClose(\Closure $onClose): void
     {
-        $this->registry->register($onClose);
+        $this->onClose->getFuture()->finally($onClose);
     }
 }

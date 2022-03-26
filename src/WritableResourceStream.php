@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream;
 
+use Amp\DeferredFuture;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
@@ -27,7 +28,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
     /** @var \Closure():bool */
     private readonly \Closure $errorHandler;
 
-    private readonly OnCloseRegistry $registry;
+    private readonly DeferredFuture $onClose;
 
     /**
      * @param resource $stream Stream resource.
@@ -50,7 +51,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
             throw new \ValueError('The chunk length must be a positive integer');
         }
 
-        $this->registry = $registry = new OnCloseRegistry;
+        $this->onClose = $onClose = new DeferredFuture;
 
         \stream_set_blocking($stream, false);
         \stream_set_write_buffer($stream, 0);
@@ -72,7 +73,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                 &$chunkSize,
                 &$writable,
                 &$resource,
-                $registry,
+                $onClose,
             ): void {
                 $firstWrite = true;
                 $suspension = null;
@@ -144,7 +145,9 @@ final class WritableResourceStream implements WritableStream, ResourceStream
 
                     EventLoop::cancel($callbackId);
 
-                    $registry->call();
+                    if (!$onClose->isComplete()) {
+                        $onClose->complete();
+                    }
 
                     if (\is_resource($resource)) {
                         $meta = \stream_get_meta_data($resource);
@@ -285,7 +288,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
 
     public function onClose(\Closure $onClose): void
     {
-        $this->registry->register($onClose);
+        $this->onClose->getFuture()->finally($onClose);
     }
 
     /**
@@ -365,6 +368,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
 
         EventLoop::cancel($this->callbackId);
 
-        $this->registry->call();
+        if (!$this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
     }
 }
