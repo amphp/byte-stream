@@ -3,6 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
+use Amp\Closable;
 
 /**
  * A `ReadableStream` allows reading byte streams in chunks.

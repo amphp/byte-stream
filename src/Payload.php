@@ -38,7 +38,7 @@ class Payload implements ReadableStream
 
     public function __destruct()
     {
-        if ($this->stream instanceof Closable) {
+        if ($this->stream instanceof ReadableStream) {
             $this->stream->close();
         }
     }
