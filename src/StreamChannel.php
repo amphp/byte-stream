@@ -104,4 +104,9 @@ final class StreamChannel implements Channel
         $this->read->close();
         $this->write->close();
     }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->read->onClose($onClose);
+    }
 }
