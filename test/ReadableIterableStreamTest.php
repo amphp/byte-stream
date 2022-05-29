@@ -6,7 +6,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\Pipeline\Queue;
 
-final class IterableStreamTest extends AsyncTestCase
+final class ReadableIterableStreamTest extends AsyncTestCase
 {
     public function testReadIterator(): void
     {
@@ -52,8 +52,8 @@ final class IterableStreamTest extends AsyncTestCase
             }
 
             self::fail("No exception has been thrown");
-        } catch (TestException $reason) {
-            self::assertSame($exception, $reason);
+        } catch (StreamException $reason) {
+            self::assertSame($exception, $reason->getPrevious());
             $callable(); // <-- ensure this point is reached
         }
     }

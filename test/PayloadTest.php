@@ -130,8 +130,8 @@ final class PayloadTest extends AsyncTestCase
             }
 
             self::fail("No exception has been thrown");
-        } catch (TestException $reason) {
-            self::assertSame($exception, $reason);
+        } catch (StreamException $reason) {
+            self::assertSame($exception, $reason->getPrevious());
             $callable(); // <-- ensure this point is reached
         }
     }
@@ -153,8 +153,8 @@ final class PayloadTest extends AsyncTestCase
             $readFuture->await();
 
             self::fail("No exception has been thrown");
-        } catch (TestException $reason) {
-            self::assertSame($exception, $reason);
+        } catch (StreamException $reason) {
+            self::assertSame($exception, $reason->getPrevious());
             $callable(); // <-- ensure this point is reached
         }
     }
