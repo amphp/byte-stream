@@ -70,7 +70,7 @@ final class ReadableIterableStream implements ReadableStream
 
             return $chunk;
         } catch (\Throwable $exception) {
-            if ($exception instanceof CancelledException && $cancellation->isRequested()) {
+            if ($exception instanceof CancelledException && $cancellation?->isRequested()) {
                 throw $exception; // Read cancelled, stream did not fail.
             }
 
