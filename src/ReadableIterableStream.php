@@ -3,6 +3,7 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
+use Amp\CancelledException;
 use Amp\DeferredFuture;
 use Amp\Pipeline\ConcurrentIterableIterator;
 use Amp\Pipeline\ConcurrentIterator;
@@ -69,10 +70,13 @@ final class ReadableIterableStream implements ReadableStream
 
             return $chunk;
         } catch (\Throwable $exception) {
-            $this->exception = $exception instanceof StreamException
+            if ($exception instanceof CancelledException && $cancellation->isRequested()) {
+                throw $exception; // Read cancelled, stream did not fail.
+            }
+
+            throw $this->exception = $exception instanceof StreamException
                 ? $exception
                 : new StreamException("Iterable threw an exception", 0, $exception);
-            throw $exception;
         } finally {
             $this->pending = false;
         }
