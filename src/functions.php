@@ -163,7 +163,7 @@ function parseLineDelimitedJson(
     ReadableStream $source,
     bool $associative = false,
     int $depth = 512,
-    int $options = 0
+    int $flags = 0
 ): \Traversable {
     foreach (splitLines($source) as $line) {
         $line = \trim($line);
@@ -172,6 +172,6 @@ function parseLineDelimitedJson(
             continue;
         }
 
-        yield \json_decode($line, $associative, $depth, $options | \JSON_THROW_ON_ERROR);
+        yield \json_decode($line, $associative, $depth, $flags | \JSON_THROW_ON_ERROR);
     }
 }
