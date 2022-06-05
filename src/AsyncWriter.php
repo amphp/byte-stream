@@ -19,9 +19,8 @@ final class AsyncWriter
     /** @var \SplQueue<array{DeferredFuture, string|null}> */
     private \SplQueue $writeQueue;
 
+    /** @var Suspension<bool>|null */
     private ?Suspension $suspension = null;
-
-    private bool $active = true;
 
     public function __construct(WritableStream $destination)
     {
@@ -29,47 +28,52 @@ final class AsyncWriter
         $this->writeQueue = $writeQueue = new \SplQueue;
 
         $suspension = &$this->suspension;
-        $active = &$this->active;
-        EventLoop::queue(static function () use ($destination, $writeQueue, &$suspension, &$active): void {
-            while ($active && $destination->isWritable()) {
+        EventLoop::queue(static function () use ($writeQueue, $destination, &$suspension): void {
+            while ($destination->isWritable()) {
                 if ($writeQueue->isEmpty()) {
                     $suspension = EventLoop::getSuspension();
-                    $suspension->suspend();
-                }
-
-                while (!$writeQueue->isEmpty()) {
-                    /**
-                     * @var DeferredFuture $deferredFuture
-                     * @var string|null $bytes
-                     */
-                    [$deferredFuture, $bytes] = $writeQueue->shift();
-
-                    try {
-                        if ($bytes !== null) {
-                            $destination->write($bytes);
-                        } else {
-                            $destination->end();
-                        }
-
-                        $deferredFuture->complete();
-                    } catch (\Throwable $exception) {
-                        $this->active = false;
-                        $deferredFuture->error($exception);
-                        while (!$writeQueue->isEmpty()) {
-                            [$deferredFuture] = $writeQueue->shift();
-                            $deferredFuture->error($exception);
-                        }
+                    if (!$suspension->suspend()) {
                         return;
                     }
                 }
+
+                self::dequeue($writeQueue, $destination);
             }
         });
     }
 
+    private static function dequeue(\SplQueue $writeQueue, WritableStream $destination): void
+    {
+        while (!$writeQueue->isEmpty()) {
+            /**
+             * @var DeferredFuture $deferredFuture
+             * @var string|null $bytes
+             */
+            [$deferredFuture, $bytes] = $writeQueue->dequeue();
+
+            try {
+                if ($bytes !== null) {
+                    $destination->write($bytes);
+                } else {
+                    $destination->end();
+                }
+
+                $deferredFuture->complete();
+            } catch (\Throwable $exception) {
+                $deferredFuture->error($exception);
+                while (!$writeQueue->isEmpty()) {
+                    [$deferredFuture] = $writeQueue->dequeue();
+                    $deferredFuture->error($exception);
+                }
+                return;
+            }
+        }
+    }
+
     public function __destruct()
     {
-        $this->active = false;
-        $this->suspension?->resume();
+        $this->destination = null;
+        $this->suspension?->resume(false);
         $this->suspension = null;
     }
 
@@ -81,16 +85,7 @@ final class AsyncWriter
      */
     public function write(string $bytes): Future
     {
-        if (!$this->isWritable()) {
-            return Future::error(new ClosedException('The destination stream is no longer writable'));
-        }
-
-        $deferredFuture = new DeferredFuture();
-        $this->writeQueue->push([$deferredFuture, $bytes]);
-        $this->suspension?->resume();
-        $this->suspension = null;
-
-        return $deferredFuture->getFuture();
+        return $this->send($bytes);
     }
 
     /**
@@ -100,15 +95,22 @@ final class AsyncWriter
      */
     public function end(): Future
     {
+        return $this->send(null);
+    }
+
+    private function send(?string $bytes): Future
+    {
         if (!$this->isWritable()) {
             return Future::error(new ClosedException('The destination stream is no longer writable'));
         }
 
-        $this->destination = null;
+        if ($bytes === null) {
+            $this->destination = null;
+        }
 
         $deferredFuture = new DeferredFuture();
-        $this->writeQueue->push([$deferredFuture, null]);
-        $this->suspension?->resume();
+        $this->writeQueue->enqueue([$deferredFuture, $bytes]);
+        $this->suspension?->resume(true);
         $this->suspension = null;
 
         return $deferredFuture->getFuture();
@@ -116,6 +118,6 @@ final class AsyncWriter
 
     public function isWritable(): bool
     {
-        return $this->active && $this->destination?->isWritable();
+        return (bool) $this->destination?->isWritable();
     }
 }
