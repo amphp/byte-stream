@@ -52,8 +52,8 @@ final class ReadableIterableStreamTest extends AsyncTestCase
             }
 
             self::fail("No exception has been thrown");
-        } catch (StreamException $reason) {
-            self::assertSame($exception, $reason->getPrevious());
+        } catch (TestException $reason) {
+            self::assertSame($exception, $reason);
             $callable(); // <-- ensure this point is reached
         }
     }

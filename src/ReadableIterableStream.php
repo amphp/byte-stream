@@ -9,6 +9,11 @@ use Amp\Pipeline\ConcurrentIterableIterator;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 
+/**
+ * Creates a stream from an iterable emitting strings. If the iterable throws an exception, the exception will
+ * be thrown from {@see read()} and {@see buffer()}. Consider wrapping any exceptions in {@see StreamException}
+ * if you do not wish for another type of exception to be thrown from the stream.
+ */
 final class ReadableIterableStream implements ReadableStream
 {
     /** @var ConcurrentIterator<string>|null */
@@ -74,9 +79,7 @@ final class ReadableIterableStream implements ReadableStream
                 throw $exception; // Read cancelled, stream did not fail.
             }
 
-            throw $this->exception = $exception instanceof StreamException
-                ? $exception
-                : new StreamException("Iterable threw an exception", 0, $exception);
+            throw $this->exception = $exception;
         } finally {
             $this->pending = false;
         }
