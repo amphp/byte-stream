@@ -21,7 +21,7 @@ final class AsyncWriterTest extends AsyncTestCase
             self::assertSame($chunk, $source->read());
         }
 
-        Future\all($futures);
+        Future\await($futures);
     }
 
     public function testEnd(): void
@@ -41,7 +41,7 @@ final class AsyncWriterTest extends AsyncTestCase
 
         self::assertSame($chunk, $source->read());
 
-        Future\all([$future1, $future2]);
+        Future\await([$future1, $future2]);
 
         self::assertFalse($sink->isWritable());
         self::assertNull($source->read());
