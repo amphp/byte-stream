@@ -1,12 +1,7 @@
-[![byte-stream](https://raw.githubusercontent.com/amphp/logo/master/repos/byte-stream.png?v=07-09-2017)](https://amphp.org/byte-stream/)
+# amphp/byte-stream
 
-<p align="center">
-<a href="https://travis-ci.org/amphp/byte-stream"><img src="https://img.shields.io/travis/amphp/byte-stream/master.svg?style=flat-square"></a>
-<a href="https://coveralls.io/github/amphp/byte-stream?branch=master"><img src="https://img.shields.io/coveralls/amphp/byte-stream/master.svg?style=flat-square"></a>
-<a href="blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square"></a>
-</p>
-
-`amphp/byte-stream` is a stream abstraction to make working with non-blocking I/O simple.
+AMPHP is a collection of event-driven libraries for PHP designed with fibers and concurrency in mind.
+`amphp/byte-stream` specifically provides a stream abstraction to ease working with various byte streams.
 
 ## Installation
 
@@ -18,11 +13,85 @@ composer require amphp/byte-stream
 
 ## Requirements
 
-- PHP 7.0+
+This package requires PHP 8.1 or later.
 
-## Documentation
+## Usage
 
-Documentation is bundled within this repository in the [`./docs`](./docs) directory.
+Streams are an abstraction over ordered sequences of bytes. This package provides the fundamental interfaces `ReadableStream` and `WritableStream`.
+
+> **Note**
+> Previous versions used the terms `InputStream` and `OutputStream`, but these terms can be confusing depending on the use case.
+
+### ReadableStream
+
+`ReadableStream` offers a primary method: `read()`. It returns a `string` or `null`. `null` indicates that the stream has ended.
+
+The following example shows a `ReadableStream` consumption that buffers the complete stream contents.
+
+```php
+$stream = ...;
+$buffer = "";
+
+while (($chunk = $stream->read()) !== null) {
+    $buffer .= $chunk;
+}
+
+// do something with $buffer
+```
+
+> **Note**
+> `Amp\ByteStream\buffer($stream)` can be used instead, but we'd like to demonstrate manual consumption here.
+
+This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
+
+* [`Payload`](#Payload)
+* [`ReadableBuffer`](#ReadableBuffer)
+* [`ReadableIterableStream`](#ReadableIterableStream)
+* [`ReadableResourceStream`](#ReadableResourceStream)
+* [`ReadableStreamChain`](#ReadableStreamChain)
+* [`Base64DecodingReadableStream`](#Base64DecodingReadableStream)
+* [`Base64EncodingReadableStream`](#Base64EncodingReadableStream)
+* [`CompressingReadableStream`](#CompressingReadableStream)
+
+### WritableStream
+
+`WritableStream` offers two primary methods: `write()` and `end()`.
+
+#### write
+
+`write()` writes the given string to the stream. Waiting for completion allows writing only as fast as the underlying stream can write and potentially send over a network. TCP streams will return immediately as long as the write buffer isn't full.
+
+The writing order is always ensured, even if the writer doesn't wait for completion before issuing another write.
+
+#### end
+
+`end()` marks the stream as ended. TCP streams might close the underlying stream for writing, but MUST NOT close it. Instead, all resources should be freed and actual resource handles be closed by PHP's garbage collection process.
+
+The following example uses the previous example to read from a stream and writes all data to a `WritableStream`:
+
+```php
+$readableStream = ...;
+$writableStream = ...;
+$buffer = "";
+
+while (($chunk = $readableStream->read()) !== null) {
+    $writableStream->write($chunk);
+}
+
+$writableStream->end();
+```
+
+> **Note**
+> `Amp\ByteStream\pipe($readableStream, $writableStream)` can be used instead, but we'd like to demonstrate manual consumption / writing here.
+
+This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
+
+* [`WritableBuffer`](#WritableBuffer)
+* [`WritableIterableStream`](#WritableIterableStream)
+* [`WritableResourceStream`](#WritableResourceStream)
+* [`Base64DecodingWritableStream`](#Base64DecodingWritableStream)
+* [`Base64EncodingWritableStream`](#Base64EncodingWritableStream)
+* [`CompressingWritableStream`](#CompressingWritableStream)
 
 ## Versioning
 
