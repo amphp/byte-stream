@@ -57,13 +57,13 @@ This package offers some basic implementations, other libraries might provide ev
 
 `WritableStream` offers two primary methods: `write()` and `end()`.
 
-#### write
+#### WritableStream::write
 
 `write()` writes the given string to the stream. Waiting for completion allows writing only as fast as the underlying stream can write and potentially send over a network. TCP streams will return immediately as long as the write buffer isn't full.
 
 The writing order is always ensured, even if the writer doesn't wait for completion before issuing another write.
 
-#### end
+#### WritableStream::end
 
 `end()` marks the stream as ended. TCP streams might close the underlying stream for writing, but MUST NOT close it. Instead, all resources should be freed and actual resource handles be closed by PHP's garbage collection process.
 
