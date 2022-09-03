@@ -51,7 +51,40 @@ This package offers some basic implementations, other libraries might provide ev
 * [`ReadableStreamChain`](#ReadableStreamChain)
 * [`Base64DecodingReadableStream`](#Base64DecodingReadableStream)
 * [`Base64EncodingReadableStream`](#Base64EncodingReadableStream)
-* [`CompressingReadableStream`](#CompressingReadableStream)
+* [`DecompressingReadableStream`](#DecompressingReadableStream)
+
+## ReadableBuffer
+
+An `ReadableBuffer` allows creating an `InputStream` from a single known string chunk.
+This is helpful if the complete stream contents are already known.
+
+```php
+$stream = new ReadableBuffer("foobar");
+```
+
+It also allows creating a stream without any chunks by passing `null` as chunk.
+
+```php
+$stream = new ReadableBuffer;
+
+// The stream ends immediately
+assert(null === $stream->read());
+```
+
+## DecompressingReadableStream
+
+This package implements compression based on Zlib. `CompressingWritableStream` can be used for compression, while `DecompressingReadableStream` can be used for decompression. Both can simply wrap an existing stream to apply them. Both accept an `$encoding` and `$options` parameter in their constructor.
+
+```php
+$readableStream = new ReadableResourceStream(STDIN);
+$decompressingReadableStream = new DecompressingReadableStream($readableStream, \ZLIB_ENCODING_GZIP);
+
+while (null !== $chunk = $decompressingReadableStream) {
+    print $chunk;
+}
+```
+
+See also: [`./examples/gzip-decompress.php`](https://github.com/amphp/byte-stream/blob/v2/examples/gzip-decompress.php)
 
 ### WritableStream
 
@@ -92,6 +125,23 @@ This package offers some basic implementations, other libraries might provide ev
 * [`Base64DecodingWritableStream`](#Base64DecodingWritableStream)
 * [`Base64EncodingWritableStream`](#Base64EncodingWritableStream)
 * [`CompressingWritableStream`](#CompressingWritableStream)
+
+### CompressingWritableStream
+
+This package implements compression based on Zlib. `CompressingWritableStream` can be used for compression, while `DecompressingReadableStream` can be used for decompression. Both can simply wrap an existing stream to apply them. Both accept an `$encoding` and `$options` parameter in their constructor.
+
+```php
+$writableStream = new WritableResourceStream(STDOUT);
+$compressedWritableStream = new CompressingWritableStream($writableStream, \ZLIB_ENCODING_GZIP);
+
+for ($i = 0; $i < 100; $i++) {
+    $compressedWritableStream->write(bin2hex(random_bytes(32));
+}
+
+$compressedWritableStream->end();
+```
+
+See also: [`./examples/gzip-compress.php`](https://github.com/amphp/byte-stream/blob/v2/examples/gzip-compress.php)
 
 ## Versioning
 
