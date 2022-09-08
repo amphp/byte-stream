@@ -5,6 +5,7 @@ namespace Amp\ByteStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Serialization\SerializationException;
 use Amp\Sync\ChannelException;
+use function Amp\async;
 
 class StreamChannelTest extends AsyncTestCase
 {
@@ -15,7 +16,7 @@ class StreamChannelTest extends AsyncTestCase
 
         $message = 'hello';
 
-        $channel->send($message);
+        async(fn () => $channel->send($message));
         $data = $channel->receive();
         $this->assertSame($message, $data);
     }
@@ -34,7 +35,7 @@ class StreamChannelTest extends AsyncTestCase
             $message .= \chr(\mt_rand(0, 255));
         }
 
-        $channel->send($message);
+        async(fn () => $channel->send($message));
         $data = $channel->receive();
         $this->assertSame($message, $data);
     }
@@ -51,7 +52,7 @@ class StreamChannelTest extends AsyncTestCase
         $channel = new StreamChannel($pipe->getSource(), $sink);
 
         // Close $a. $b should close on next read...
-        $sink->write(\pack('L', 10) . '1234567890');
+        async(fn () => $sink->write(\pack('L', 10) . '1234567890'));
         $data = $channel->receive();
     }
 

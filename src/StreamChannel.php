@@ -4,6 +4,7 @@ namespace Amp\ByteStream;
 
 use Amp\ByteStream\Internal\ChannelParser;
 use Amp\Cancellation;
+use Amp\DeferredFuture;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 use Amp\Serialization\Serializer;
@@ -30,6 +31,9 @@ final class StreamChannel implements Channel
     /** @var ConcurrentIterator<TReceive> */
     private ConcurrentIterator $iterator;
 
+    private int $pendingReceives = 0;
+    private ?DeferredFuture $readBarrier = null;
+
     /**
      * Creates a new channel from the given stream objects. Note that $read and $write can be the same object.
      */
@@ -38,11 +42,25 @@ final class StreamChannel implements Channel
         $this->read = $read;
         $this->write = $write;
 
+        $readBarrier = &$this->readBarrier;
+        $pendingReceives = &$this->pendingReceives;
+
         $received = new \SplQueue();
         $this->parser = $parser = new ChannelParser(\Closure::fromCallable([$received, 'push']), $serializer);
 
-        $this->iterator = Pipeline::fromIterable(static function () use ($read, $received, $parser): \Generator {
+        $this->iterator = Pipeline::fromIterable(static function () use (
+            $read,
+            $received,
+            $parser,
+            &$readBarrier,
+            &$pendingReceives,
+        ): \Generator {
             while (true) {
+                if ($pendingReceives === 0) {
+                    $readBarrier = new DeferredFuture();
+                    $readBarrier->getFuture()->await();
+                }
+
                 try {
                     $chunk = $read->read();
                 } catch (StreamException $exception) {
@@ -60,6 +78,7 @@ final class StreamChannel implements Channel
                 $parser->push($chunk);
 
                 while (!$received->isEmpty()) {
+                    $pendingReceives--;
                     yield $received->shift();
                 }
             }
@@ -84,6 +103,11 @@ final class StreamChannel implements Channel
 
     public function receive(?Cancellation $cancellation = null): mixed
     {
+        if (++$this->pendingReceives === 1) {
+            $this->readBarrier?->complete();
+            $this->readBarrier = null;
+        }
+
         if (!$this->iterator->continue($cancellation)) {
             throw new ChannelException("The channel closed while waiting to receive the next value");
         }
