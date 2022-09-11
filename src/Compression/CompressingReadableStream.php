@@ -32,6 +32,7 @@ final class CompressingReadableStream implements ReadableStream
         });
 
         try {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
             $this->deflateContext = \deflate_init($encoding, $options);
         } finally {
             \restore_error_handler();
@@ -53,7 +54,7 @@ final class CompressingReadableStream implements ReadableStream
         $data = $this->source->read($cancellation);
 
         // Needs a double guard, as stream might have been closed while reading
-        /** @psalm-suppress ParadoxicalCondition */
+        /** @psalm-suppress TypeDoesNotContainNull */
         if ($this->deflateContext === null) {
             return null;
         }
@@ -66,10 +67,12 @@ final class CompressingReadableStream implements ReadableStream
 
         try {
             if ($data === null) {
+                /** @psalm-suppress InvalidArgument */
                 $compressed = \deflate_add($this->deflateContext, "", \ZLIB_FINISH);
 
                 $this->close();
             } else {
+                /** @psalm-suppress InvalidArgument */
                 $compressed = \deflate_add($this->deflateContext, $data, \ZLIB_SYNC_FLUSH);
             }
         } finally {

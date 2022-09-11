@@ -32,6 +32,7 @@ final class DecompressingReadableStream implements ReadableStream
         });
 
         try {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
             $this->inflateContext = \inflate_init($encoding, $options);
         } finally {
             \restore_error_handler();
@@ -53,12 +54,13 @@ final class DecompressingReadableStream implements ReadableStream
         $data = $this->source->read($cancellation);
 
         // Needs a double guard, as stream might have been closed while reading
-        /** @psalm-suppress ParadoxicalCondition */
+        /** @psalm-suppress TypeDoesNotContainNull */
         if ($this->inflateContext === null) {
             return null;
         }
 
         if ($data === null) {
+            /** @psalm-suppress InvalidArgument */
             $decompressed = @\inflate_add($this->inflateContext, "", \ZLIB_FINISH);
 
             if ($decompressed === false) {
@@ -72,6 +74,7 @@ final class DecompressingReadableStream implements ReadableStream
             return $decompressed;
         }
 
+        /** @psalm-suppress InvalidArgument */
         $decompressed = @\inflate_add($this->inflateContext, $data, \ZLIB_SYNC_FLUSH);
 
         if ($decompressed === false) {

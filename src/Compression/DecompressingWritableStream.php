@@ -32,6 +32,7 @@ final class DecompressingWritableStream implements WritableStream
         });
 
         try {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
             $this->inflateContext = \inflate_init($encoding, $options);
         } finally {
             \restore_error_handler();
@@ -44,6 +45,7 @@ final class DecompressingWritableStream implements WritableStream
             throw new ClosedException("The stream has already been closed");
         }
 
+        /** @psalm-suppress InvalidArgument */
         $decompressed = \inflate_add($this->inflateContext, $bytes, \ZLIB_SYNC_FLUSH);
 
         if ($decompressed === false) {
@@ -61,6 +63,7 @@ final class DecompressingWritableStream implements WritableStream
             throw new ClosedException("The stream has already been closed");
         }
 
+        /** @psalm-suppress InvalidArgument */
         $decompressed = \inflate_add($this->inflateContext, '', \ZLIB_FINISH);
 
         if ($decompressed === false) {

@@ -32,6 +32,7 @@ final class CompressingWritableStream implements WritableStream
         });
 
         try {
+            /** @psalm-suppress InvalidPropertyAssignmentValue */
             $this->deflateContext = \deflate_init($encoding, $options);
         } finally {
             \restore_error_handler();
@@ -56,6 +57,7 @@ final class CompressingWritableStream implements WritableStream
         });
 
         try {
+            /** @psalm-suppress InvalidArgument */
             $compressed = \deflate_add($this->deflateContext, '', \ZLIB_FINISH);
         } finally {
             \restore_error_handler();
@@ -86,6 +88,7 @@ final class CompressingWritableStream implements WritableStream
         });
 
         try {
+            /** @psalm-suppress InvalidArgument */
             $compressed = \deflate_add($this->deflateContext, $bytes, \ZLIB_SYNC_FLUSH);
         } finally {
             \restore_error_handler();
