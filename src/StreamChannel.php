@@ -28,6 +28,7 @@ final class StreamChannel implements Channel
 
     private ChannelParser $parser;
 
+    /** @var \SplQueue<TReceive> */
     private \SplQueue $received;
 
     private Mutex $readMutex;
