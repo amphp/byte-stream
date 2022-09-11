@@ -7,33 +7,33 @@ use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
 
 /**
- * Allows decompression of input streams using Zlib.
+ * Allows compression of input streams using Zlib.
  */
-final class DecompressingReadableStream implements ReadableStream
+final class CompressingReadableStream implements ReadableStream
 {
     /** @var resource|null */
     private $resource;
 
     /**
-     * @param ReadableStream $source Input stream to read compressed data from.
-     * @param int         $encoding Compression algorithm used, see `inflate_init()`.
-     * @param array       $options Algorithm options, see `inflate_init()`.
+     * @param ReadableStream $source Input stream to read data from.
+     * @param int         $encoding Compression algorithm used, see `deflate_init()`.
+     * @param array       $options Algorithm options, see `deflate_init()`.
      *
      * @throws \Error
      *
-     * @see http://php.net/manual/en/function.inflate-init.php
+     * @see http://php.net/manual/en/function.deflate-init.php
      */
     public function __construct(
         private ReadableStream $source,
         private int $encoding,
         private array $options = [],
     ) {
-        $this->resource = @\inflate_init($encoding, $options);
+        $this->resource = @\deflate_init($encoding, $options);
 
         if ($this->resource === false) {
             $this->close();
 
-            throw new \Error("Failed initializing decompression context");
+            throw new \Error("Failed initializing compression context");
         }
     }
 
@@ -52,28 +52,28 @@ final class DecompressingReadableStream implements ReadableStream
         }
 
         if ($data === null) {
-            $decompressed = @\inflate_add($this->resource, "", \ZLIB_FINISH);
+            $compressed = @\deflate_add($this->resource, "", \ZLIB_FINISH);
 
-            if ($decompressed === false) {
+            if ($compressed === false) {
                 $this->close();
 
-                throw new StreamException("Failed adding data to inflate context");
+                throw new StreamException("Failed adding data to deflate context");
             }
 
             $this->close();
 
-            return $decompressed;
+            return $compressed;
         }
 
-        $decompressed = @\inflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+        $compressed = @\deflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
 
-        if ($decompressed === false) {
+        if ($compressed === false) {
             $this->close();
 
-            throw new StreamException("Failed adding data to inflate context");
+            throw new StreamException("Failed adding data to deflate context");
         }
 
-        return $decompressed;
+        return $compressed;
     }
 
     public function isReadable(): bool
