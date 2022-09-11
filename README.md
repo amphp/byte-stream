@@ -44,14 +44,14 @@ while (($chunk = $stream->read()) !== null) {
 
 This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
 
-* [`Payload`](#Payload)
-* [`ReadableBuffer`](#ReadableBuffer)
-* [`ReadableIterableStream`](#ReadableIterableStream)
-* [`ReadableResourceStream`](#ReadableResourceStream)
-* [`ReadableStreamChain`](#ReadableStreamChain)
-* [`Base64DecodingReadableStream`](#Base64DecodingReadableStream)
-* [`Base64EncodingReadableStream`](#Base64EncodingReadableStream)
-* [`DecompressingReadableStream`](#DecompressingReadableStream)
+* [`Payload`](#payload)
+* [`ReadableBuffer`](#readablebuffer)
+* [`ReadableIterableStream`](#readableiterablestream)
+* [`ReadableResourceStream`](#readableresourcestream)
+* [`ReadableStreamChain`](#readablestreamchain)
+* [`Base64DecodingReadableStream`](#base64decodingreadablestream)
+* [`Base64EncodingReadableStream`](#base64encodingreadablestream)
+* [`DecompressingReadableStream`](#decompressingreadablestream)
 
 ### Payload
 
@@ -164,12 +164,12 @@ $writableStream->end();
 
 This package offers some basic implementations, other libraries might provide even more implementations, such as [`amphp/socket`](https://github.com/amphp/socket).
 
-* [`WritableBuffer`](#WritableBuffer)
-* [`WritableIterableStream`](#WritableIterableStream)
-* [`WritableResourceStream`](#WritableResourceStream)
-* [`Base64DecodingWritableStream`](#Base64DecodingWritableStream)
-* [`Base64EncodingWritableStream`](#Base64EncodingWritableStream)
-* [`CompressingWritableStream`](#CompressingWritableStream)
+* [`WritableBuffer`](#writablebuffer)
+* [`WritableIterableStream`](#writableiterablestream)
+* [`WritableResourceStream`](#writableresourcestream)
+* [`Base64DecodingWritableStream`](#base64decodingwritablestream)
+* [`Base64EncodingWritableStream`](#base64encodingwritablestream)
+* [`CompressingWritableStream`](#compressingwritablestream)
 
 ### WritableResourceStream
 
