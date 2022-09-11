@@ -21,6 +21,20 @@ class StreamChannelTest extends AsyncTestCase
         $this->assertSame($message, $data);
     }
 
+    public function testSendReceiveBuffered(): void
+    {
+        $pipe = new Pipe(10000);
+        $channel = new StreamChannel($pipe->getSource(), $pipe->getSink());
+
+        $message = 'hello';
+        $encoded = \serialize($message);
+        $encoded = \pack('CL', 0, \strlen($encoded)) . $encoded;
+
+        $pipe->getSink()->write($encoded . $encoded);
+        $data = $channel->receive();
+        $this->assertSame($message, $data);
+    }
+
     /**
      * @depends testSendReceive
      */
