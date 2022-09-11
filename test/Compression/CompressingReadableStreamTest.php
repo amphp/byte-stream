@@ -6,31 +6,21 @@ use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\ReadableIterableStream;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Pipeline;
+use function Amp\ByteStream\buffer;
 
 final class CompressingReadableStreamTest extends AsyncTestCase
 {
     public function testRead(): void
     {
         $file = __DIR__ . "/../fixtures/foobar.txt";
+        $contents = \file_get_contents($file);
 
-        $stream = new ReadableIterableStream(Pipeline::fromIterable(function () use ($file) {
-            $content = \file_get_contents($file);
-
-            while ($content !== '') {
-                yield $content[0];
-                $content = \substr($content, 1);
-            }
-        }));
+        $stream = new ReadableIterableStream(\str_split($contents));
 
         $gzStream = new CompressingReadableStream($stream, \ZLIB_ENCODING_GZIP);
-        $inputStream = new DecompressingReadableStream($gzStream, \ZLIB_ENCODING_GZIP);
+        $readableStream = new DecompressingReadableStream($gzStream, \ZLIB_ENCODING_GZIP);
 
-        $buffer = "";
-        while (($chunk = $inputStream->read()) !== null) {
-            $buffer .= $chunk;
-        }
-
-        self::assertStringEqualsFile($file, $buffer);
+        self::assertStringEqualsFile($file, buffer($readableStream));
     }
 
     public function testGetEncoding(): void

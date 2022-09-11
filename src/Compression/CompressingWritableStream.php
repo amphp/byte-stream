@@ -11,56 +11,55 @@ use Amp\ByteStream\WritableStream;
  */
 final class CompressingWritableStream implements WritableStream
 {
-    /** @var resource|null */
-    private $resource;
+    private ?\DeflateContext $deflateContext;
 
     /**
      * @param WritableStream $destination Output stream to write the compressed data to.
      * @param int $encoding Compression encoding to use, see `deflate_init()`.
      * @param array $options Compression options to use, see `deflate_init()`.
      *
-     * @throws \Error If an invalid encoding or invalid options have been passed.
-     *
      * @see http://php.net/manual/en/function.deflate-init.php
      */
     public function __construct(
-        private WritableStream $destination,
-        private int $encoding,
-        private array $options = []
+        private readonly WritableStream $destination,
+        private readonly int $encoding,
+        private readonly array $options = []
     ) {
-        $this->resource = @\deflate_init($encoding, $options);
-
-        if ($this->resource === false) {
+        \set_error_handler(function ($errno, $message) {
             $this->close();
 
-            throw new \Error("Failed initializing compression context");
+            throw new \Error("Failed initializing deflate context: $message");
+        });
+
+        try {
+            $this->deflateContext = \deflate_init($encoding, $options);
+        } finally {
+            \restore_error_handler();
         }
     }
 
-    public function write(string $bytes): void
+    public function close(): void
     {
-        if ($this->resource === null) {
-            throw new ClosedException("The stream has already been closed");
-        }
-
-        $compressed = \deflate_add($this->resource, $bytes, \ZLIB_SYNC_FLUSH);
-
-        if ($compressed === false) {
-            $this->close();
-
-            throw new StreamException("Failed adding data to deflate context");
-        }
-
-        $this->destination->write($compressed);
+        $this->destination->close();
     }
 
     public function end(): void
     {
-        if ($this->resource === null) {
+        if ($this->deflateContext === null) {
             throw new ClosedException("The stream has already been closed");
         }
 
-        $compressed = \deflate_add($this->resource, '', \ZLIB_FINISH);
+        \set_error_handler(function ($errno, $message) {
+            $this->close();
+
+            throw new StreamException("Failed adding data to deflate context: $message");
+        });
+
+        try {
+            $compressed = \deflate_add($this->deflateContext, '', \ZLIB_FINISH);
+        } finally {
+            \restore_error_handler();
+        }
 
         if ($compressed === false) {
             $this->close();
@@ -68,15 +67,42 @@ final class CompressingWritableStream implements WritableStream
             throw new StreamException("Failed adding data to deflate context");
         }
 
-        $this->resource = null;
+        $this->deflateContext = null;
 
         $this->destination->write($compressed);
         $this->destination->end();
     }
 
+    public function write(string $bytes): void
+    {
+        if ($this->deflateContext === null) {
+            throw new ClosedException("The stream has already been closed");
+        }
+
+        \set_error_handler(function ($errno, $message) {
+            $this->close();
+
+            throw new StreamException("Failed adding data to deflate context: $message");
+        });
+
+        try {
+            $compressed = \deflate_add($this->deflateContext, $bytes, \ZLIB_SYNC_FLUSH);
+        } finally {
+            \restore_error_handler();
+        }
+
+        if ($compressed === false) {
+            $this->close();
+
+            throw new StreamException("Failed adding data to deflate context");
+        }
+
+        $this->destination->write($compressed);
+    }
+
     public function isWritable(): bool
     {
-        return $this->resource !== null;
+        return $this->deflateContext !== null && $this->destination->isWritable();
     }
 
     /**
@@ -99,14 +125,9 @@ final class CompressingWritableStream implements WritableStream
         return $this->options;
     }
 
-    public function close(): void
-    {
-        $this->destination->close();
-    }
-
     public function isClosed(): bool
     {
-        return $this->destination->isClosed();
+        return $this->deflateContext === null || $this->destination->isClosed();
     }
 
     public function onClose(\Closure $onClose): void

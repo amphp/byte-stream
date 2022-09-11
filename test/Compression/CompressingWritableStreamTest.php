@@ -8,6 +8,7 @@ use Amp\ByteStream\ReadableResourceStream;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\ByteStream\pipe;
 
 final class CompressingWritableStreamTest extends AsyncTestCase
 {
@@ -16,14 +17,11 @@ final class CompressingWritableStreamTest extends AsyncTestCase
         $file = __DIR__ . "/../fixtures/foobar.txt";
 
         $bufferStream = new WritableBuffer();
-        $outputStream = new CompressingWritableStream($bufferStream, \ZLIB_ENCODING_GZIP);
+        $writableStream = new CompressingWritableStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
         $fileStream = new ReadableResourceStream(\fopen($file, 'rb'));
-        while (($chunk = $fileStream->read()) !== null) {
-            $outputStream->write($chunk);
-        }
-
-        $outputStream->end();
+        pipe($fileStream, $writableStream);
+        $writableStream->end();
 
         $inputStream = new DecompressingReadableStream(new ReadableBuffer($bufferStream->buffer()), \ZLIB_ENCODING_GZIP);
 

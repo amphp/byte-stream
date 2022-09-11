@@ -11,39 +11,40 @@ use Amp\ByteStream\WritableStream;
  */
 final class DecompressingWritableStream implements WritableStream
 {
-    /** @var resource|null */
-    private $resource;
+    private ?\InflateContext $inflateContext;
 
     /**
      * @param WritableStream $destination Output stream to write the decompressed data to.
      * @param int $encoding Compression encoding to use, see `inflate_init()`.
      * @param array $options Compression options to use, see `inflate_init()`.
      *
-     * @throws \Error If an invalid encoding or invalid options have been passed.
-     *
      * @see http://php.net/manual/en/function.inflate-init.php
      */
     public function __construct(
-        private WritableStream $destination,
-        private int $encoding,
-        private array $options = []
+        private readonly WritableStream $destination,
+        private readonly int $encoding,
+        private readonly array $options = []
     ) {
-        $this->resource = @\inflate_init($encoding, $options);
-
-        if ($this->resource === false) {
+        \set_error_handler(function ($errno, $message) {
             $this->close();
 
-            throw new \Error("Failed initializing decompression context");
+            throw new \Error("Failed initializing inflate context: $message");
+        });
+
+        try {
+            $this->inflateContext = \inflate_init($encoding, $options);
+        } finally {
+            \restore_error_handler();
         }
     }
 
     public function write(string $bytes): void
     {
-        if ($this->resource === null) {
+        if ($this->inflateContext === null) {
             throw new ClosedException("The stream has already been closed");
         }
 
-        $decompressed = \inflate_add($this->resource, $bytes, \ZLIB_SYNC_FLUSH);
+        $decompressed = \inflate_add($this->inflateContext, $bytes, \ZLIB_SYNC_FLUSH);
 
         if ($decompressed === false) {
             $this->close();
@@ -56,11 +57,11 @@ final class DecompressingWritableStream implements WritableStream
 
     public function end(): void
     {
-        if ($this->resource === null) {
+        if ($this->inflateContext === null) {
             throw new ClosedException("The stream has already been closed");
         }
 
-        $decompressed = \inflate_add($this->resource, '', \ZLIB_FINISH);
+        $decompressed = \inflate_add($this->inflateContext, '', \ZLIB_FINISH);
 
         if ($decompressed === false) {
             $this->close();
@@ -68,7 +69,7 @@ final class DecompressingWritableStream implements WritableStream
             throw new StreamException("Failed adding data to inflate context");
         }
 
-        $this->resource = null;
+        $this->inflateContext = null;
 
         $this->destination->write($decompressed);
         $this->destination->end();
@@ -76,7 +77,7 @@ final class DecompressingWritableStream implements WritableStream
 
     public function isWritable(): bool
     {
-        return $this->resource !== null;
+        return $this->inflateContext !== null && $this->destination->isWritable();
     }
 
     /**
@@ -106,7 +107,7 @@ final class DecompressingWritableStream implements WritableStream
 
     public function isClosed(): bool
     {
-        return $this->destination->isClosed();
+        return $this->inflateContext === null || $this->destination->isClosed();
     }
 
     public function onClose(\Closure $onClose): void

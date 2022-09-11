@@ -6,6 +6,7 @@ use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\ReadableResourceStream;
 use Amp\ByteStream\WritableBuffer;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\ByteStream\pipe;
 
 final class DecompressingWritableStreamTest extends AsyncTestCase
 {
@@ -15,14 +16,11 @@ final class DecompressingWritableStreamTest extends AsyncTestCase
         $file2 = __DIR__ . "/../fixtures/foobar.txt";
 
         $bufferStream = new WritableBuffer();
-        $outputStream = new DecompressingWritableStream($bufferStream, \ZLIB_ENCODING_GZIP);
+        $writableStream = new DecompressingWritableStream($bufferStream, \ZLIB_ENCODING_GZIP);
 
         $fileStream = new ReadableResourceStream(\fopen($file1, 'rb'));
-        while (($chunk = $fileStream->read()) !== null) {
-            $outputStream->write($chunk);
-        }
-
-        $outputStream->end();
+        pipe($fileStream, $writableStream);
+        $writableStream->end();
 
         self::assertStringEqualsFile($file2, $bufferStream->buffer());
     }

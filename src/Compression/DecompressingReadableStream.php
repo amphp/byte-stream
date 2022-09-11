@@ -11,35 +11,42 @@ use Amp\Cancellation;
  */
 final class DecompressingReadableStream implements ReadableStream
 {
-    /** @var resource|null */
-    private $resource;
+    private ?\InflateContext $inflateContext;
 
     /**
      * @param ReadableStream $source Input stream to read compressed data from.
-     * @param int         $encoding Compression algorithm used, see `inflate_init()`.
-     * @param array       $options Algorithm options, see `inflate_init()`.
-     *
-     * @throws \Error
+     * @param int $encoding Compression algorithm used, see `inflate_init()`.
+     * @param array $options Algorithm options, see `inflate_init()`.
      *
      * @see http://php.net/manual/en/function.inflate-init.php
      */
     public function __construct(
-        private ReadableStream $source,
-        private int $encoding,
-        private array $options = [],
+        private readonly ReadableStream $source,
+        private readonly int $encoding,
+        private readonly array $options = [],
     ) {
-        $this->resource = @\inflate_init($encoding, $options);
-
-        if ($this->resource === false) {
+        \set_error_handler(function ($errno, $message) {
             $this->close();
 
-            throw new \Error("Failed initializing decompression context");
+            throw new \Error("Failed initializing inflate context: $message");
+        });
+
+        try {
+            $this->inflateContext = \inflate_init($encoding, $options);
+        } finally {
+            \restore_error_handler();
         }
+    }
+
+    public function close(): void
+    {
+        $this->source->close();
+        $this->inflateContext = null;
     }
 
     public function read(?Cancellation $cancellation = null): ?string
     {
-        if ($this->resource === null) {
+        if ($this->inflateContext === null) {
             return null;
         }
 
@@ -47,12 +54,12 @@ final class DecompressingReadableStream implements ReadableStream
 
         // Needs a double guard, as stream might have been closed while reading
         /** @psalm-suppress ParadoxicalCondition */
-        if ($this->resource === null) {
+        if ($this->inflateContext === null) {
             return null;
         }
 
         if ($data === null) {
-            $decompressed = @\inflate_add($this->resource, "", \ZLIB_FINISH);
+            $decompressed = @\inflate_add($this->inflateContext, "", \ZLIB_FINISH);
 
             if ($decompressed === false) {
                 $this->close();
@@ -65,7 +72,7 @@ final class DecompressingReadableStream implements ReadableStream
             return $decompressed;
         }
 
-        $decompressed = @\inflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+        $decompressed = @\inflate_add($this->inflateContext, $data, \ZLIB_SYNC_FLUSH);
 
         if ($decompressed === false) {
             $this->close();
@@ -78,7 +85,7 @@ final class DecompressingReadableStream implements ReadableStream
 
     public function isReadable(): bool
     {
-        return $this->resource !== null;
+        return $this->inflateContext !== null && $this->source->isReadable();
     }
 
     /**
@@ -101,15 +108,9 @@ final class DecompressingReadableStream implements ReadableStream
         return $this->options;
     }
 
-    public function close(): void
-    {
-        $this->source->close();
-        $this->resource = null;
-    }
-
     public function isClosed(): bool
     {
-        return $this->resource === null;
+        return $this->inflateContext === null || $this->source->isClosed();
     }
 
     public function onClose(\Closure $onClose): void

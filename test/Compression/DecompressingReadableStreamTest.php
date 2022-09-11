@@ -7,6 +7,7 @@ use Amp\ByteStream\ReadableIterableStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Pipeline;
+use function Amp\ByteStream\buffer;
 
 final class DecompressingReadableStreamTest extends AsyncTestCase
 {
@@ -15,24 +16,13 @@ final class DecompressingReadableStreamTest extends AsyncTestCase
         $file1 = __DIR__ . "/../fixtures/foobar.txt";
         $file2 = __DIR__ . "/../fixtures/foobar.txt.gz";
 
-        $stream = new ReadableIterableStream(Pipeline::fromIterable(function () use ($file2) {
-            $content = \file_get_contents($file2);
+        $contents = \file_get_contents($file2);
 
-            while ($content !== '') {
-                yield $content[0];
-                $content = \substr($content, 1);
-            }
-        }));
-
+        $stream = new ReadableIterableStream(\str_split($contents));
         $gzStream = new DecompressingReadableStream($stream, \ZLIB_ENCODING_GZIP);
 
-        $buffer = "";
-        while (($chunk = $gzStream->read()) !== null) {
-            $buffer .= $chunk;
-        }
-
         $expected = \str_replace("\r\n", "\n", \file_get_contents($file1));
-        self::assertSame($expected, $buffer);
+        self::assertSame($expected, buffer($gzStream));
     }
 
     public function testGetEncoding(): void

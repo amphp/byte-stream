@@ -11,35 +11,42 @@ use Amp\Cancellation;
  */
 final class CompressingReadableStream implements ReadableStream
 {
-    /** @var resource|null */
-    private $resource;
+    private ?\DeflateContext $deflateContext;
 
     /**
      * @param ReadableStream $source Input stream to read data from.
-     * @param int         $encoding Compression algorithm used, see `deflate_init()`.
-     * @param array       $options Algorithm options, see `deflate_init()`.
-     *
-     * @throws \Error
+     * @param int $encoding Compression algorithm used, see `deflate_init()`.
+     * @param array $options Algorithm options, see `deflate_init()`.
      *
      * @see http://php.net/manual/en/function.deflate-init.php
      */
     public function __construct(
-        private ReadableStream $source,
-        private int $encoding,
-        private array $options = [],
+        private readonly ReadableStream $source,
+        private readonly int $encoding,
+        private readonly array $options = [],
     ) {
-        $this->resource = @\deflate_init($encoding, $options);
-
-        if ($this->resource === false) {
+        \set_error_handler(function ($errno, $message) {
             $this->close();
 
-            throw new \Error("Failed initializing compression context");
+            throw new \Error("Failed initializing deflate context: $message");
+        });
+
+        try {
+            $this->deflateContext = \deflate_init($encoding, $options);
+        } finally {
+            \restore_error_handler();
         }
+    }
+
+    public function close(): void
+    {
+        $this->source->close();
+        $this->deflateContext = null;
     }
 
     public function read(?Cancellation $cancellation = null): ?string
     {
-        if ($this->resource === null) {
+        if ($this->deflateContext === null) {
             return null;
         }
 
@@ -47,25 +54,27 @@ final class CompressingReadableStream implements ReadableStream
 
         // Needs a double guard, as stream might have been closed while reading
         /** @psalm-suppress ParadoxicalCondition */
-        if ($this->resource === null) {
+        if ($this->deflateContext === null) {
             return null;
         }
 
-        if ($data === null) {
-            $compressed = @\deflate_add($this->resource, "", \ZLIB_FINISH);
-
-            if ($compressed === false) {
-                $this->close();
-
-                throw new StreamException("Failed adding data to deflate context");
-            }
-
+        \set_error_handler(function ($errno, $message) {
             $this->close();
 
-            return $compressed;
-        }
+            throw new StreamException("Failed adding data to deflate context: $message");
+        });
 
-        $compressed = @\deflate_add($this->resource, $data, \ZLIB_SYNC_FLUSH);
+        try {
+            if ($data === null) {
+                $compressed = \deflate_add($this->deflateContext, "", \ZLIB_FINISH);
+
+                $this->close();
+            } else {
+                $compressed = \deflate_add($this->deflateContext, $data, \ZLIB_SYNC_FLUSH);
+            }
+        } finally {
+            \restore_error_handler();
+        }
 
         if ($compressed === false) {
             $this->close();
@@ -78,7 +87,7 @@ final class CompressingReadableStream implements ReadableStream
 
     public function isReadable(): bool
     {
-        return $this->resource !== null;
+        return $this->deflateContext !== null && $this->source->isReadable();
     }
 
     /**
@@ -101,15 +110,9 @@ final class CompressingReadableStream implements ReadableStream
         return $this->options;
     }
 
-    public function close(): void
-    {
-        $this->source->close();
-        $this->resource = null;
-    }
-
     public function isClosed(): bool
     {
-        return $this->resource === null;
+        return $this->deflateContext === null || $this->source->isClosed();
     }
 
     public function onClose(\Closure $onClose): void
