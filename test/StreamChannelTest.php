@@ -2,9 +2,13 @@
 
 namespace Amp\ByteStream;
 
+use Amp\CancelledException;
+use Amp\DeferredCancellation;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Serialization\SerializationException;
 use Amp\Sync\ChannelException;
+use Amp\TimeoutCancellation;
+use function Amp\async;
 
 class StreamChannelTest extends AsyncTestCase
 {
@@ -15,8 +19,46 @@ class StreamChannelTest extends AsyncTestCase
 
         $message = 'hello';
 
-        $channel->send($message);
+        async(fn () => $channel->send($message));
         $data = $channel->receive();
+        $this->assertSame($message, $data);
+    }
+
+    public function testSendReceiveBuffered(): void
+    {
+        $pipe = new Pipe(10000);
+        $channel = new StreamChannel($pipe->getSource(), $pipe->getSink());
+
+        $message = 'hello';
+        $encoded = \serialize($message);
+        $encoded = \pack('CL', 0, \strlen($encoded)) . $encoded;
+
+        $pipe->getSink()->write($encoded . $encoded);
+        $data = $channel->receive();
+        $this->assertSame($message, $data);
+    }
+
+    public function testCancelReceive(): void
+    {
+        $pipe = new Pipe(0);
+        $channel = new StreamChannel($pipe->getSource(), $pipe->getSink());
+
+        $message = 'hello';
+        $encoded = \serialize($message);
+        $encoded = \pack('CL', 0, \strlen($encoded)) . $encoded;
+
+        try {
+            $deferredCancellation = new DeferredCancellation();
+            $deferredCancellation->cancel();
+            $channel->receive($deferredCancellation->getCancellation());
+
+            self::fail('Expected CancelledException has not been thrown');
+        } catch (CancelledException) {
+            // ignore exception
+        }
+
+        async(fn () => $pipe->getSink()->write($encoded));
+        $data = $channel->receive(new TimeoutCancellation(0));
         $this->assertSame($message, $data);
     }
 
@@ -34,7 +76,7 @@ class StreamChannelTest extends AsyncTestCase
             $message .= \chr(\mt_rand(0, 255));
         }
 
-        $channel->send($message);
+        async(fn () => $channel->send($message));
         $data = $channel->receive();
         $this->assertSame($message, $data);
     }
@@ -51,7 +93,7 @@ class StreamChannelTest extends AsyncTestCase
         $channel = new StreamChannel($pipe->getSource(), $sink);
 
         // Close $a. $b should close on next read...
-        $sink->write(\pack('L', 10) . '1234567890');
+        async(fn () => $sink->write(\pack('L', 10) . '1234567890'));
         $data = $channel->receive();
     }
 
