@@ -7,6 +7,9 @@ use Amp\Cancellation;
 use Amp\Serialization\Serializer;
 use Amp\Sync\Channel;
 use Amp\Sync\ChannelException;
+use Amp\Sync\LocalMutex;
+use Amp\Sync\Mutex;
+use function Amp\async;
 
 /**
  * An asynchronous channel for sending data between threads and processes.
@@ -27,6 +30,8 @@ final class StreamChannel implements Channel
 
     private \SplQueue $received;
 
+    private Mutex $readMutex;
+
     /**
      * Creates a new channel from the given stream objects. Note that $read and $write can be the same object.
      */
@@ -36,6 +41,7 @@ final class StreamChannel implements Channel
         $this->write = $write;
 
         $this->received = new \SplQueue();
+        $this->readMutex = new LocalMutex();
         $this->parser = new ChannelParser($this->received->push(...), $serializer);
     }
 
@@ -68,25 +74,31 @@ final class StreamChannel implements Channel
     {
         $cancellation?->throwIfRequested();
 
-        while ($this->received->isEmpty()) {
-            try {
-                $chunk = $this->read->read($cancellation);
-            } catch (StreamException $exception) {
-                throw new ChannelException(
-                    "Reading from the channel failed. Did the context die?",
-                    0,
-                    $exception,
-                );
+        $lock = $this->readMutex->acquire();
+
+        try {
+            while ($this->received->isEmpty()) {
+                try {
+                    $chunk = $this->read->read($cancellation);
+                } catch (StreamException $exception) {
+                    throw new ChannelException(
+                        "Reading from the channel failed. Did the context die?",
+                        0,
+                        $exception,
+                    );
+                }
+
+                if ($chunk === null) {
+                    throw new ChannelException("The channel closed while waiting to receive the next value");
+                }
+
+                $this->parser->push($chunk);
             }
 
-            if ($chunk === null) {
-                throw new ChannelException("The channel closed while waiting to receive the next value");
-            }
-
-            $this->parser->push($chunk);
+            return $this->received->shift();
+        } finally {
+            async($lock->release(...));
         }
-
-        return $this->received->shift();
     }
 
     public function isClosed(): bool
