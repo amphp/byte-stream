@@ -5,7 +5,6 @@ namespace Amp\ByteStream\Compression;
 use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\ReadableIterableStream;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline\Pipeline;
 use function Amp\ByteStream\buffer;
 
 final class CompressingReadableStreamTest extends AsyncTestCase

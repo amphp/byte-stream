@@ -6,7 +6,6 @@ use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\ReadableIterableStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Pipeline\Pipeline;
 use function Amp\ByteStream\buffer;
 
 final class DecompressingReadableStreamTest extends AsyncTestCase
