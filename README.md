@@ -53,16 +53,42 @@ This package offers some basic implementations, other libraries might provide ev
 * [`Base64EncodingReadableStream`](#Base64EncodingReadableStream)
 * [`DecompressingReadableStream`](#DecompressingReadableStream)
 
-## ReadableBuffer
+### Payload
 
-An `ReadableBuffer` allows creating an `InputStream` from a single known string chunk.
+`Payload` implements `ReadableStream` while also providing a `buffer()` method for buffering the entire contents.
+This allows consuming a message either in chunks (streaming) or consume everything at once (buffering).
+When the object is destructed, any remaining data in the stream is automatically consumed and discarded.
+This class is useful for small payloads or when the entire contents of a stream is needed before any processing can be done.
+
+#### Buffering
+
+Buffering a complete readable stream can be accomplished using the `buffer()` method.
+
+```php
+$payload = new Payload($inputStream);
+$content = $payload->buffer();
+```
+
+#### Streaming
+
+Sometimes it's useful / possible to consume a payload in chunks rather than first buffering it completely, e.g. streaming a large HTTP response body directly to disk.
+
+```php
+while (null !== $chunk = $payload->read()) {
+    // Use $chunk here, works just like any other ReadableStream
+}
+```
+
+### ReadableBuffer
+
+An `ReadableBuffer` allows creating a `ReadableStream` from a single known string chunk.
 This is helpful if the complete stream contents are already known.
 
 ```php
 $stream = new ReadableBuffer("foobar");
 ```
 
-It also allows creating a stream without any chunks by passing `null` as chunk.
+It also allows creating a stream without any chunks by passing `null` as chunk / omitting the constructor argument:
 
 ```php
 $stream = new ReadableBuffer;
@@ -71,7 +97,26 @@ $stream = new ReadableBuffer;
 assert(null === $stream->read());
 ```
 
-## DecompressingReadableStream
+### ReadableIterableStream
+
+`ReadableIterableStream` allows converting an `iterable` that yields strings into a `ReadableStream`:
+
+```php
+$inputStream = new Amp\ByteStream\ReadableIterableStream((function () {
+    for ($i = 0; $i < 10; $i++) {
+        Amp\delay(1);
+        yield $emit(".");
+    }
+})());
+```
+
+### ReadableResourceStream
+
+This package abstracts PHP's stream resources with `ReadableResourceStream` and `WritableResourceStream`.
+They automatically set the passed resource to non-blocking mode and allow reading and writing like any other `ReadableStream` / `WritableStream`.
+They also handle backpressure automatically by disabling the read watcher in case there's no read request and only activate a writability watcher if the underlying write buffer is already full, which makes them very efficient.
+
+### DecompressingReadableStream
 
 This package implements compression based on Zlib. `CompressingWritableStream` can be used for compression, while `DecompressingReadableStream` can be used for decompression. Both can simply wrap an existing stream to apply them. Both accept an `$encoding` and `$options` parameter in their constructor.
 
@@ -125,6 +170,12 @@ This package offers some basic implementations, other libraries might provide ev
 * [`Base64DecodingWritableStream`](#Base64DecodingWritableStream)
 * [`Base64EncodingWritableStream`](#Base64EncodingWritableStream)
 * [`CompressingWritableStream`](#CompressingWritableStream)
+
+### WritableResourceStream
+
+This package abstracts PHP's stream resources with `ReadableResourceStream` and `WritableResourceStream`.
+They automatically set the passed resource to non-blocking mode and allow reading and writing like any other `ReadableStream` / `WritableStream`.
+They also handle backpressure automatically by disabling the read watcher in case there's no read request and only activate a writability watcher if the underlying write buffer is already full, which makes them very efficient.
 
 ### CompressingWritableStream
 
