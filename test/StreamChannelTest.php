@@ -2,9 +2,12 @@
 
 namespace Amp\ByteStream;
 
+use Amp\CancelledException;
+use Amp\DeferredCancellation;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Serialization\SerializationException;
 use Amp\Sync\ChannelException;
+use Amp\TimeoutCancellation;
 use function Amp\async;
 
 class StreamChannelTest extends AsyncTestCase
@@ -32,6 +35,30 @@ class StreamChannelTest extends AsyncTestCase
 
         $pipe->getSink()->write($encoded . $encoded);
         $data = $channel->receive();
+        $this->assertSame($message, $data);
+    }
+
+    public function testCancelReceive(): void
+    {
+        $pipe = new Pipe(0);
+        $channel = new StreamChannel($pipe->getSource(), $pipe->getSink());
+
+        $message = 'hello';
+        $encoded = \serialize($message);
+        $encoded = \pack('CL', 0, \strlen($encoded)) . $encoded;
+
+        try {
+            $deferredCancellation = new DeferredCancellation();
+            $deferredCancellation->cancel();
+            $channel->receive($deferredCancellation->getCancellation());
+
+            self::fail('Expected CancelledException has not been thrown');
+        } catch (CancelledException) {
+            // ignore exception
+        }
+
+        async(fn () => $pipe->getSink()->write($encoded));
+        $data = $channel->receive(new TimeoutCancellation(0));
         $this->assertSame($message, $data);
     }
 
