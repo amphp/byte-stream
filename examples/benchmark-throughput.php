@@ -17,6 +17,8 @@ EventLoop::setDriver(new StreamSelectDriver);
 $args = getopt('i:o:t:');
 $if = $args['i'] ?? '/dev/zero';
 $of = $args['o'] ?? '/dev/null';
+
+/** @psalm-suppress RiskyCast */
 $duration = (int) ($args['t'] ?? 30);
 
 assert(is_string($if) && is_string($of));
