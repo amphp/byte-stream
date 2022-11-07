@@ -40,8 +40,8 @@
         "psalm/phar": "^4.27",
         "jetbrains/phpstorm-stubs": "^2019.3"
     },
-    "minimum-stability": "dev",
-    "prefer-stable": false,
+    "minimum-stability": "beta",
+    "prefer-stable": true,
     "autoload": {
         "psr-4": {
             "Amp\\ByteStream\\": "src"
