@@ -31,7 +31,7 @@
         "amphp/parser": "^1",
         "amphp/serialization": "^1",
         "amphp/sync": "^2",
-        "revolt/event-loop": "^0.2.3"
+        "revolt/event-loop": "^1 || ^0.2.3"
     },
     "require-dev": {
         "amphp/phpunit-util": "^3",
