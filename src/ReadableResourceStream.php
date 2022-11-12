@@ -38,6 +38,12 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
     private readonly DeferredFuture $onClose;
 
+    private int $continuousReads = 0;
+
+    private readonly \Closure $resumeSuspension;
+
+    private readonly \Closure $resetContinuousReads;
+
     /**
      * @param resource $stream Stream resource.
      * @param positive-int $chunkSize Default chunk size per read operation.
@@ -129,6 +135,16 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
             EventLoop::disable($callbackId);
         };
+
+        $this->resumeSuspension = static function () use (&$suspension): void {
+            $suspension?->resume();
+            $suspension = null;
+        };
+
+        $continuousReads = &$this->continuousReads;
+        $this->resetContinuousReads = static function () use (&$continuousReads): void {
+            $continuousReads = 0;
+        };
     }
 
     /**
@@ -191,14 +207,16 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
             }
         }
 
-        // Use a deferred suspension so other events are not starved by a stream that always has data available.
-        $this->suspension = EventLoop::getSuspension();
-        EventLoop::defer(function () use ($data): void {
-            $this->suspension?->resume($data);
-            $this->suspension = null;
-        });
+        if ($this->continuousReads > 10) {
+            // Use a deferred suspension so other events are not starved by a stream that always has data available.
+            $this->suspension = EventLoop::getSuspension();
+            EventLoop::defer($this->resumeSuspension);
+            $this->suspension->suspend();
+        } elseif ($this->continuousReads++ === 0) {
+            EventLoop::queue($this->resetContinuousReads);
+        }
 
-        return $this->suspension->suspend();
+        return $data;
     }
 
     public function isReadable(): bool
