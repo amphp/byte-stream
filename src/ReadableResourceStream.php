@@ -40,8 +40,10 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
 
     private int $continuousReads = 0;
 
+    /** @var \Closure():void */
     private readonly \Closure $resumeSuspension;
 
+    /** @var \Closure():void */
     private readonly \Closure $resetContinuousReads;
 
     /**
