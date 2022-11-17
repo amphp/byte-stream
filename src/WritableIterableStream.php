@@ -80,7 +80,7 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
 
     public function isWritable(): bool
     {
-        return !$this->queue->isComplete();
+        return !$this->queue->isComplete() && !$this->queue->isDisposed();
     }
 
     public function getIterator(): \Traversable
