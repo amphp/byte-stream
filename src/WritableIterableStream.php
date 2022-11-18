@@ -55,7 +55,7 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
 
     public function write(string $bytes): void
     {
-        if ($this->queue->isComplete()) {
+        if ($this->queue->isComplete() || $this->queue->isDisposed()) {
             throw new ClosedException('The stream is no longer writable');
         }
 
