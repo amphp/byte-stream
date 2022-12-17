@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 use Amp\ByteStream\Compression\DecompressingReadableStream;
 use Amp\ByteStream\ReadableResourceStream;

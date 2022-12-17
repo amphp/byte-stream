@@ -1,4 +1,5 @@
-<?php /** @noinspection PhpComposerExtensionStubsInspection */
+<?php declare(strict_types=1);
+/** @noinspection PhpComposerExtensionStubsInspection */
 
 namespace Amp\ByteStream\Compression;
 
