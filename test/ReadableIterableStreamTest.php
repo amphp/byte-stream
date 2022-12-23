@@ -89,4 +89,19 @@ final class ReadableIterableStreamTest extends AsyncTestCase
             $stream->read();
         }
     }
+
+    public function testPhpEngineIterables(): void {
+        $iterables = [
+            ['abc'],
+            new \ArrayIterator(['abc']),
+            (static function () {
+                yield 'abc';
+            })()
+        ];
+
+        foreach ($iterables as $iterable) {
+            $stream = new ReadableIterableStream($iterable);
+            self::assertSame($stream->read(), 'abc');
+        }
+    }
 }

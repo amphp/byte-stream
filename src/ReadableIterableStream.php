@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 use Amp\CancelledException;
 use Amp\DeferredFuture;
-use Amp\Pipeline\ConcurrentIterableIterator;
+use Amp\Pipeline\Internal\ConcurrentIterableIterator;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 
