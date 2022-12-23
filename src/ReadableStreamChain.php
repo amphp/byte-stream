@@ -7,6 +7,8 @@ use Amp\DeferredFuture;
 
 final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     /** @var ReadableStream[] */
     private array $sources;
 
@@ -80,10 +82,5 @@ final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
-    }
-
-    public function getIterator(): \Traversable
-    {
-        return streamToIterator($this);
     }
 }

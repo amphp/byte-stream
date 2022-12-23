@@ -175,13 +175,3 @@ function parseLineDelimitedJson(
         yield \json_decode($line, $associative, $depth, $flags | \JSON_THROW_ON_ERROR);
     }
 }
-
-/**
- * @return \Traversable<int, string>
- */
-function streamToIterator(ReadableStream $stream): \Traversable
-{
-    while (($chunk = $stream->read()) !== null) {
-        yield $chunk;
-    }
-}

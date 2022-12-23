@@ -10,6 +10,8 @@ use Amp\DeferredFuture;
  */
 final class ReadableBuffer implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     private ?string $contents;
 
     private readonly DeferredFuture $onClose;
@@ -56,10 +58,5 @@ final class ReadableBuffer implements ReadableStream, \IteratorAggregate
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
-    }
-
-    public function getIterator(): \Traversable
-    {
-        return streamToIterator($this);
     }
 }

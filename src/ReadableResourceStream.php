@@ -13,6 +13,8 @@ use Revolt\EventLoop\Suspension;
  */
 final class ReadableResourceStream implements ReadableStream, ResourceStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     public const DEFAULT_CHUNK_SIZE = 8192;
 
     /** @var \Closure():bool */
@@ -254,11 +256,6 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
-    }
-
-    public function getIterator(): \Traversable
-    {
-        return streamToIterator($this);
     }
 
     /**

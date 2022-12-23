@@ -13,6 +13,8 @@ use Amp\DeferredFuture;
  */
 final class Payload implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     private const MODE_STREAM = 1;
     private const MODE_BUFFER = 2;
 
@@ -119,10 +121,5 @@ final class Payload implements ReadableStream, \IteratorAggregate
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
-    }
-
-    public function getIterator(): \Traversable
-    {
-        return streamToIterator($this);
     }
 }

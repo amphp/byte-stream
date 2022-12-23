@@ -3,12 +3,14 @@
 namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\ReadableStream;
+use Amp\ByteStream\ReadableStreamIteratorAggregate;
 use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
-use function Amp\ByteStream\streamToIterator;
 
 final class Base64DecodingReadableStream implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     private readonly ReadableStream $source;
 
     private string $buffer = '';
@@ -76,10 +78,5 @@ final class Base64DecodingReadableStream implements ReadableStream, \IteratorAgg
     public function onClose(\Closure $onClose): void
     {
         $this->source->onClose($onClose);
-    }
-
-    public function getIterator(): \Traversable
-    {
-        return streamToIterator($this);
     }
 }
