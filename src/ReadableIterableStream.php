@@ -5,7 +5,6 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 use Amp\CancelledException;
 use Amp\DeferredFuture;
-use Amp\Pipeline\ConcurrentIterableIterator;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 
@@ -30,14 +29,9 @@ final class ReadableIterableStream implements ReadableStream
      */
     public function __construct(iterable $iterable)
     {
-        /** @psalm-suppress TypeDoesNotContainType */
-        if ($iterable instanceof Pipeline) {
-            $iterable = $iterable->getIterator();
-        }
-
         $this->iterator = $iterable instanceof ConcurrentIterator
             ? $iterable
-            : new ConcurrentIterableIterator($iterable);
+            : Pipeline::fromIterable($iterable)->getIterator();
 
         $this->onClose = new DeferredFuture;
     }
