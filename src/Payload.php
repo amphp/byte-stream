@@ -11,7 +11,7 @@ use Amp\DeferredFuture;
  * The message can be consumed in chunks using the read() API, or it may be buffered and accessed in its entirety by
  * calling buffer(). Once buffering is requested through buffer(), the stream cannot be read in chunks.
  */
-class Payload implements ReadableStream
+final class Payload implements ReadableStream
 {
     private const MODE_STREAM = 1;
     private const MODE_BUFFER = 2;
