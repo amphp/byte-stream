@@ -8,7 +8,7 @@ use Amp\DeferredFuture;
 /**
  * ReadableStream with a single already known data chunk.
  */
-final class ReadableBuffer implements ReadableStream
+final class ReadableBuffer implements ReadableStream, \IteratorAggregate
 {
     private ?string $contents;
 
@@ -56,5 +56,10 @@ final class ReadableBuffer implements ReadableStream
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return streamToIterator($this);
     }
 }

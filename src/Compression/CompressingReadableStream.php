@@ -6,11 +6,12 @@ namespace Amp\ByteStream\Compression;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
+use function Amp\ByteStream\streamToIterator;
 
 /**
  * Allows compression of input streams using Zlib.
  */
-final class CompressingReadableStream implements ReadableStream
+final class CompressingReadableStream implements ReadableStream, \IteratorAggregate
 {
     private ?\DeflateContext $deflateContext;
 
@@ -122,5 +123,10 @@ final class CompressingReadableStream implements ReadableStream
     public function onClose(\Closure $onClose): void
     {
         $this->source->onClose($onClose);
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return streamToIterator($this);
     }
 }

@@ -11,7 +11,7 @@ use Revolt\EventLoop\Suspension;
 /**
  * Readable stream abstraction for PHP's stream resources.
  */
-final class ReadableResourceStream implements ReadableStream, ResourceStream
+final class ReadableResourceStream implements ReadableStream, ResourceStream, \IteratorAggregate
 {
     public const DEFAULT_CHUNK_SIZE = 8192;
 
@@ -254,6 +254,11 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return streamToIterator($this);
     }
 
     /**

@@ -5,7 +5,7 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 use Amp\DeferredFuture;
 
-final class ReadableStreamChain implements ReadableStream
+final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
 {
     /** @var ReadableStream[] */
     private array $sources;
@@ -80,5 +80,10 @@ final class ReadableStreamChain implements ReadableStream
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return streamToIterator($this);
     }
 }

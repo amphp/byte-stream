@@ -6,6 +6,7 @@ use Amp\Cancellation;
 use Amp\CancelledException;
 use Amp\DeferredFuture;
 use Amp\Pipeline\ConcurrentIterator;
+use Amp\Pipeline\Internal\ConcurrentIterableIterator;
 use Amp\Pipeline\Pipeline;
 
 /**
@@ -13,7 +14,7 @@ use Amp\Pipeline\Pipeline;
  * be thrown from {@see read()} and {@see buffer()}. Consider wrapping any exceptions in {@see StreamException}
  * if you do not wish for another type of exception to be thrown from the stream.
  */
-final class ReadableIterableStream implements ReadableStream
+final class ReadableIterableStream implements ReadableStream, \IteratorAggregate
 {
     /** @var ConcurrentIterator<string>|null */
     private ?ConcurrentIterator $iterator;
@@ -102,5 +103,10 @@ final class ReadableIterableStream implements ReadableStream
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
+    }
+
+    public function getIterator(): \Traversable
+    {
+        return streamToIterator($this);
     }
 }
