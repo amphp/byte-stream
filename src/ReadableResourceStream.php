@@ -11,8 +11,10 @@ use Revolt\EventLoop\Suspension;
 /**
  * Readable stream abstraction for PHP's stream resources.
  */
-final class ReadableResourceStream implements ReadableStream, ResourceStream
+final class ReadableResourceStream implements ReadableStream, ResourceStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     public const DEFAULT_CHUNK_SIZE = 8192;
 
     /** @var \Closure():bool */

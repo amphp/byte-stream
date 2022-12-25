@@ -4,14 +4,17 @@
 namespace Amp\ByteStream\Compression;
 
 use Amp\ByteStream\ReadableStream;
+use Amp\ByteStream\ReadableStreamIteratorAggregate;
 use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
 
 /**
  * Allows decompression of input streams using Zlib.
  */
-final class DecompressingReadableStream implements ReadableStream
+final class DecompressingReadableStream implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     private ?\InflateContext $inflateContext;
 
     /**

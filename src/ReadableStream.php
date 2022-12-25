@@ -21,8 +21,10 @@ use Amp\Closable;
  *     return $buffer;
  * }
  * ```
+ *
+ * @implements \Traversable<int, string>
  */
-interface ReadableStream extends Closable
+interface ReadableStream extends Closable, \Traversable
 {
     /**
      * Reads data from the stream.

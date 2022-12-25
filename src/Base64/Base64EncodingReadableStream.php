@@ -3,10 +3,13 @@
 namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\ReadableStream;
+use Amp\ByteStream\ReadableStreamIteratorAggregate;
 use Amp\Cancellation;
 
-final class Base64EncodingReadableStream implements ReadableStream
+final class Base64EncodingReadableStream implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     private ReadableStream $source;
 
     private ?string $buffer = '';

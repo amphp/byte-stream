@@ -13,8 +13,10 @@ use Amp\Pipeline\Pipeline;
  * be thrown from {@see read()} and {@see buffer()}. Consider wrapping any exceptions in {@see StreamException}
  * if you do not wish for another type of exception to be thrown from the stream.
  */
-final class ReadableIterableStream implements ReadableStream
+final class ReadableIterableStream implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     /** @var ConcurrentIterator<string>|null */
     private ?ConcurrentIterator $iterator;
 

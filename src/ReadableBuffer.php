@@ -8,8 +8,10 @@ use Amp\DeferredFuture;
 /**
  * ReadableStream with a single already known data chunk.
  */
-final class ReadableBuffer implements ReadableStream
+final class ReadableBuffer implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     private ?string $contents;
 
     private readonly DeferredFuture $onClose;

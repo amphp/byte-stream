@@ -5,8 +5,10 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 use Amp\DeferredFuture;
 
-final class ReadableStreamChain implements ReadableStream
+final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
 {
+    use ReadableStreamIteratorAggregate;
+
     /** @var ReadableStream[] */
     private array $sources;
 

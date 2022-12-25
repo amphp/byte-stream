@@ -23,12 +23,7 @@ final class ReadableIterableStreamTest extends AsyncTestCase
 
         self::assertTrue($stream->isReadable());
 
-        $buffer = "";
-        while (($chunk = $stream->read()) !== null) {
-            $buffer .= $chunk;
-        }
-
-        self::assertSame(\implode($values), $buffer);
+        self::assertSame(\implode($values), buffer($stream));
         self::assertNull($stream->read());
         self::assertFalse($stream->isReadable());
     }
@@ -47,7 +42,7 @@ final class ReadableIterableStreamTest extends AsyncTestCase
         $callable = $this->createCallback(1);
 
         try {
-            while (($chunk = $stream->read()) !== null) {
+            foreach ($stream as $chunk) {
                 self::assertSame($value, $chunk);
             }
 
