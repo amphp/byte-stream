@@ -10,13 +10,11 @@ final class Base64EncodingReadableStream implements ReadableStream, \IteratorAgg
 {
     use ReadableStreamIteratorAggregate;
 
-    private ReadableStream $source;
-
     private ?string $buffer = '';
 
-    public function __construct(ReadableStream $source)
-    {
-        $this->source = $source;
+    public function __construct(
+        private readonly ReadableStream $source,
+    ) {
     }
 
     public function read(?Cancellation $cancellation = null): ?string

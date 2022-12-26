@@ -9,9 +9,9 @@ namespace Amp\ByteStream;
  */
 final class Pipe
 {
-    private WritableStream $sink;
+    private readonly WritableStream $sink;
 
-    private ReadableStream $source;
+    private readonly ReadableStream $source;
 
     public function __construct(int $bufferSize)
     {

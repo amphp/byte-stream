@@ -19,7 +19,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
     private string $callbackId;
 
     /** @var \SplQueue<array{string, Suspension|null}> */
-    private \SplQueue $writes;
+    private readonly \SplQueue $writes;
 
     private bool $writable = true;
 

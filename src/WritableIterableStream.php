@@ -10,7 +10,7 @@ use Amp\Pipeline\Queue;
  */
 final class WritableIterableStream implements WritableStream, \IteratorAggregate
 {
-    private Queue $queue;
+    private readonly Queue $queue;
 
     /** @var \Traversable<int, string> */
     private readonly iterable $iterable;

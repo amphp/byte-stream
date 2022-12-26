@@ -17,7 +17,7 @@ final class AsyncWriter
     private ?WritableStream $destination;
 
     /** @var \SplQueue<array{DeferredFuture, string|null}> */
-    private \SplQueue $writeQueue;
+    private readonly \SplQueue $writeQueue;
 
     /** @var Suspension<bool>|null */
     private ?Suspension $suspension = null;

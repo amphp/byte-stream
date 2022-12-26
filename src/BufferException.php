@@ -4,11 +4,12 @@ namespace Amp\ByteStream;
 
 final class BufferException extends StreamException
 {
-    private string $buffer;
-
-    public function __construct(string $buffer, string $message, int $code = 0, ?\Throwable $previous = null)
-    {
-        $this->buffer = $buffer;
+    public function __construct(
+        private readonly string $buffer,
+        string $message,
+        int $code = 0,
+        ?\Throwable $previous = null
+    ) {
         parent::__construct($message, $code, $previous);
     }
 

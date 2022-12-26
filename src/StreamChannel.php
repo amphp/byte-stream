@@ -22,25 +22,21 @@ use function Amp\async;
  */
 final class StreamChannel implements Channel
 {
-    private ReadableStream $read;
-
-    private WritableStream $write;
-
-    private ChannelParser $parser;
+    private readonly ChannelParser $parser;
 
     /** @var \SplQueue<TReceive> */
-    private \SplQueue $received;
+    private readonly \SplQueue $received;
 
-    private Mutex $readMutex;
+    private readonly Mutex $readMutex;
 
     /**
      * Creates a new channel from the given stream objects. Note that $read and $write can be the same object.
      */
-    public function __construct(ReadableStream $read, WritableStream $write, ?Serializer $serializer = null)
-    {
-        $this->read = $read;
-        $this->write = $write;
-
+    public function __construct(
+        private readonly ReadableStream $read,
+        private readonly WritableStream $write,
+        ?Serializer $serializer = null,
+    ) {
         $this->received = new \SplQueue();
         $this->readMutex = new LocalMutex();
         $this->parser = new ChannelParser($this->received->push(...), $serializer);
