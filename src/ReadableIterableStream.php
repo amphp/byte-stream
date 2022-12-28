@@ -14,6 +14,8 @@ use Amp\Pipeline\Pipeline;
  * Creates a stream from an iterable emitting strings. If the iterable throws an exception, the exception will
  * be thrown from {@see read()} and {@see buffer()}. Consider wrapping any exceptions in {@see StreamException}
  * if you do not wish for another type of exception to be thrown from the stream.
+ *
+ * @implements \IteratorAggregate<int, string>
  */
 final class ReadableIterableStream implements ReadableStream, \IteratorAggregate
 {

@@ -122,7 +122,9 @@ function getStderr(): WritableResourceStream
 /**
  * Splits the stream into chunks based on a delimiter.
  *
- * @return \Traversable<string>
+ * @param non-empty-string $delimiter
+ *
+ * @return \Traversable<int, string>
  */
 function split(ReadableStream $source, string $delimiter): \Traversable
 {
@@ -145,7 +147,7 @@ function split(ReadableStream $source, string $delimiter): \Traversable
 /**
  * Splits the stream into lines.
  *
- * @return \Traversable<string>
+ * @return \Traversable<int, string>
  */
 function splitLines(ReadableStream $source): \Traversable
 {

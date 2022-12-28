@@ -9,6 +9,9 @@ use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
+/**
+ * @implements \IteratorAggregate<int, string>
+ */
 final class Base64DecodingReadableStream implements ReadableStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;

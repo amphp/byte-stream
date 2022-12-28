@@ -22,7 +22,7 @@ use Amp\Closable;
  * }
  * ```
  *
- * @implements \Traversable<int, string>
+ * @extends \Traversable<int, string>
  */
 interface ReadableStream extends Closable, \Traversable
 {

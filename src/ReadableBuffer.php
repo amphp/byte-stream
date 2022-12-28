@@ -9,6 +9,8 @@ use Amp\ForbidSerialization;
 
 /**
  * ReadableStream with a single already known data chunk.
+ *
+ * @implements \IteratorAggregate<int, string>
  */
 final class ReadableBuffer implements ReadableStream, \IteratorAggregate
 {

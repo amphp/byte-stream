@@ -12,6 +12,8 @@ use Amp\ForbidSerialization;
 
 /**
  * Allows compression of input streams using Zlib.
+ *
+ * @implements \IteratorAggregate<int, string>
  */
 final class CompressingReadableStream implements ReadableStream, \IteratorAggregate
 {

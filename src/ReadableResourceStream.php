@@ -12,6 +12,8 @@ use Revolt\EventLoop\Suspension;
 
 /**
  * Readable stream abstraction for PHP's stream resources.
+ *
+ * @implements \IteratorAggregate<int, string>
  */
 final class ReadableResourceStream implements ReadableStream, ResourceStream, \IteratorAggregate
 {

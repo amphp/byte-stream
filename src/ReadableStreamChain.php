@@ -7,6 +7,9 @@ use Amp\DeferredFuture;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
+/**
+ * @implements \IteratorAggregate<int, string>
+ */
 final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;
