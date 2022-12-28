@@ -5,6 +5,8 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 use Amp\CancelledException;
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 
@@ -16,6 +18,8 @@ use Amp\Pipeline\Pipeline;
 final class ReadableIterableStream implements ReadableStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;
+    use ForbidCloning;
+    use ForbidSerialization;
 
     /** @var ConcurrentIterator<string>|null */
     private ?ConcurrentIterator $iterator;

@@ -3,6 +3,8 @@
 namespace Amp\ByteStream;
 
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
@@ -11,6 +13,9 @@ use Revolt\EventLoop\Suspension;
  */
 final class WritableResourceStream implements WritableStream, ResourceStream
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private const LARGE_CHUNK_SIZE = 128 * 1024;
 
     /** @var resource|null */

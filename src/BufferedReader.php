@@ -3,9 +3,14 @@
 namespace Amp\ByteStream;
 
 use Amp\Cancellation;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 final class BufferedReader
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private string $buffer = '';
 
     private bool $pending = false;

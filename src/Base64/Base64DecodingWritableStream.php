@@ -4,9 +4,14 @@ namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\WritableStream;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 final class Base64DecodingWritableStream implements WritableStream
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private string $buffer = '';
 
     private int $offset = 0;

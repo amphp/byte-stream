@@ -3,6 +3,8 @@
 namespace Amp\ByteStream;
 
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Future;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
@@ -14,6 +16,9 @@ use Revolt\EventLoop\Suspension;
  */
 final class AsyncWriter
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private ?WritableStream $destination;
 
     /** @var \SplQueue<array{DeferredFuture, string|null}> */

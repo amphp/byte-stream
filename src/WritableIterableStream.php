@@ -3,6 +3,8 @@
 namespace Amp\ByteStream;
 
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Pipeline\Queue;
 
 /**
@@ -10,6 +12,9 @@ use Amp\Pipeline\Queue;
  */
 final class WritableIterableStream implements WritableStream, \IteratorAggregate
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly Queue $queue;
 
     /** @var \Traversable<int, string> */

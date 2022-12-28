@@ -4,6 +4,8 @@ namespace Amp\ByteStream;
 
 use Amp\Cancellation;
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 /**
  * Creates a buffered message from a ReadableStream.
@@ -14,6 +16,8 @@ use Amp\DeferredFuture;
 final class Payload implements ReadableStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;
+    use ForbidCloning;
+    use ForbidSerialization;
 
     private const MODE_STREAM = 1;
     private const MODE_BUFFER = 2;

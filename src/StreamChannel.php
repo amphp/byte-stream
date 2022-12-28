@@ -4,6 +4,8 @@ namespace Amp\ByteStream;
 
 use Amp\ByteStream\Internal\ChannelParser;
 use Amp\Cancellation;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Serialization\Serializer;
 use Amp\Sync\Channel;
 use Amp\Sync\ChannelException;
@@ -22,6 +24,9 @@ use function Amp\async;
  */
 final class StreamChannel implements Channel
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly ChannelParser $parser;
 
     /** @var \SplQueue<TReceive> */

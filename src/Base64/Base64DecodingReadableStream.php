@@ -6,10 +6,14 @@ use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
 use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 final class Base64DecodingReadableStream implements ReadableStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;
+    use ForbidCloning;
+    use ForbidSerialization;
 
     private string $buffer = '';
 

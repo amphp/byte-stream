@@ -2,6 +2,8 @@
 
 namespace Amp\ByteStream\Internal;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Parser\Parser;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\SerializationException;
@@ -12,6 +14,9 @@ use function Amp\Serialization\encodeUnprintableChars;
 /** @internal */
 final class ChannelParser extends Parser
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private const HEADER_LENGTH = 5;
 
     /**

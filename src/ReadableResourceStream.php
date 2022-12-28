@@ -5,6 +5,8 @@ namespace Amp\ByteStream;
 use Amp\Cancellation;
 use Amp\CancelledException;
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
@@ -14,6 +16,8 @@ use Revolt\EventLoop\Suspension;
 final class ReadableResourceStream implements ReadableStream, ResourceStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;
+    use ForbidCloning;
+    use ForbidSerialization;
 
     public const DEFAULT_CHUNK_SIZE = 8192;
 

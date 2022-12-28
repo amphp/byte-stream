@@ -3,9 +3,14 @@
 namespace Amp\ByteStream\Base64;
 
 use Amp\ByteStream\WritableStream;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 final class Base64EncodingWritableStream implements WritableStream
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private string $buffer = '';
 
     public function __construct(

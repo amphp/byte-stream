@@ -3,9 +3,14 @@
 namespace Amp\ByteStream;
 
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 final class WritableBuffer implements WritableStream
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly DeferredFuture $deferredFuture;
 
     private string $contents = '';

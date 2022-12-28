@@ -2,6 +2,9 @@
 
 namespace Amp\ByteStream;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 /**
  * Create a local stream where data written to the pipe is immediately available on the pipe.
  *
@@ -9,6 +12,9 @@ namespace Amp\ByteStream;
  */
 final class Pipe
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly WritableStream $sink;
 
     private readonly ReadableStream $source;

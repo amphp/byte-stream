@@ -7,6 +7,8 @@ use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\ReadableStreamIteratorAggregate;
 use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 /**
  * Allows compression of input streams using Zlib.
@@ -14,6 +16,8 @@ use Amp\Cancellation;
 final class CompressingReadableStream implements ReadableStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;
+    use ForbidCloning;
+    use ForbidSerialization;
 
     private ?\DeflateContext $deflateContext;
 

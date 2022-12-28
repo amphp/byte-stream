@@ -4,6 +4,8 @@ namespace Amp\ByteStream;
 
 use Amp\Cancellation;
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 /**
  * ReadableStream with a single already known data chunk.
@@ -11,6 +13,8 @@ use Amp\DeferredFuture;
 final class ReadableBuffer implements ReadableStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;
+    use ForbidCloning;
+    use ForbidSerialization;
 
     private ?string $contents;
 

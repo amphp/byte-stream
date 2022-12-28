@@ -6,12 +6,17 @@ namespace Amp\ByteStream\Compression;
 use Amp\ByteStream\ClosedException;
 use Amp\ByteStream\StreamException;
 use Amp\ByteStream\WritableStream;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 /**
  * Allows decompression of output streams using Zlib.
  */
 final class DecompressingWritableStream implements WritableStream
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private ?\InflateContext $inflateContext;
 
     /**

@@ -4,10 +4,14 @@ namespace Amp\ByteStream;
 
 use Amp\Cancellation;
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
 {
     use ReadableStreamIteratorAggregate;
+    use ForbidCloning;
+    use ForbidSerialization;
 
     /** @var ReadableStream[] */
     private array $sources;
