@@ -37,8 +37,7 @@
         "amphp/phpunit-util": "^3",
         "phpunit/phpunit": "^9",
         "amphp/php-cs-fixer-config": "^2",
-        "psalm/phar": "^5.4",
-        "jetbrains/phpstorm-stubs": "^2019.3"
+        "psalm/phar": "^5.4"
     },
     "autoload": {
         "psr-4": {
