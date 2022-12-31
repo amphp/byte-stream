@@ -223,7 +223,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
             EventLoop::defer($this->resumeSuspension);
             $this->suspension->suspend();
         } elseif ($this->continuousReads++ === 0) {
-            EventLoop::queue($this->resetContinuousReads);
+            EventLoop::defer($this->resetContinuousReads);
         }
 
         return $data;
