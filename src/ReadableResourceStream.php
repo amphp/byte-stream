@@ -240,7 +240,6 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
     public function close(): void
     {
         if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
-            // Error suppression, as resource might already be closed
             $meta = \stream_get_meta_data($this->resource);
 
             if (\str_contains($meta["mode"], "+")) {
@@ -250,6 +249,9 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
                 \fclose($this->resource);
             }
         }
+
+        $this->suspension?->resume();
+        $this->suspension = null;
 
         $this->free();
     }
@@ -327,9 +329,6 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
     {
         $this->readable = false;
         $this->resource = null;
-
-        $this->suspension?->resume();
-        $this->suspension = null;
 
         EventLoop::cancel($this->callbackId);
 

@@ -170,6 +170,21 @@ final class ResourceStreamTest extends AsyncTestCase
         async(fn () => $b->read())->await();
     }
 
+    public function testCloseWithPendingRead(): void
+    {
+        /** @noinspection PhpUnusedLocalVariableInspection Required to keep reference */
+        [$a, $b] = $this->getStreamPair();
+
+        $future = async($b->read(...));
+        async($b->close(...));
+
+        self::assertFalse($b->isClosed());
+
+        self::assertNull($future->await());
+
+        self::assertTrue($b->isClosed());
+    }
+
     public function testResolveSuccessOnClosedStream(): void
     {
         [, $b] = $this->getStreamPair();
