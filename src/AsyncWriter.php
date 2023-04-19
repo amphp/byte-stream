@@ -12,7 +12,7 @@ use Revolt\EventLoop\Suspension;
 /**
  * This class provides a tool for efficiently writing to a stream asynchronously. A single fiber is used for all
  * writes to the stream, while each write returns a {@see Future} instead of waiting for each write to complete before
- * returning controller to the caller.
+ * returning control to the caller.
  */
 final class AsyncWriter
 {
