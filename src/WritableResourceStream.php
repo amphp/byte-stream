@@ -153,11 +153,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                 } finally {
                     if (!$writable && \is_resource($resource)) {
                         $meta = \stream_get_meta_data($resource);
-                        if (\str_contains($meta["mode"], "+")) {
-                            \stream_socket_shutdown($resource, \STREAM_SHUT_WR);
-                        } else {
-                            \fclose($resource);
-                        }
+                        \fclose($resource);
                         $resource = null;
                     }
 
@@ -272,12 +268,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
             // Error suppression, as resource might already be closed
             $meta = \stream_get_meta_data($this->resource);
 
-            if (\str_contains($meta["mode"], "+")) {
-                \stream_socket_shutdown($this->resource, \STREAM_SHUT_WR);
-            } else {
-                /** @psalm-suppress InvalidPropertyAssignmentValue psalm reports this as closed-resource */
-                \fclose($this->resource);
-            }
+            \fclose($this-resource);
         }
 
         $this->free();

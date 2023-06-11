@@ -242,12 +242,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
         if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
             $meta = \stream_get_meta_data($this->resource);
 
-            if (\str_contains($meta["mode"], "+")) {
-                \stream_socket_shutdown($this->resource, \STREAM_SHUT_RD);
-            } else {
-                /** @psalm-suppress InvalidPropertyAssignmentValue */
-                \fclose($this->resource);
-            }
+            \fclose($this->resource);
         }
 
         $this->suspension?->resume();
