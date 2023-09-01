@@ -11,9 +11,14 @@ use Amp\ByteStream\WritableResourceStream;
  */
 function tryToCreateReadableStreamFromResource($resource): ReadableResourceStream
 {
-    return \is_resource($resource) && \get_resource_type($resource) === 'stream'
-        ? new ReadableResourceStream($resource)
-        : new ReadableResourceStream(\fopen('php://memory', 'rb'));
+    if (\is_resource($resource) && \get_resource_type($resource) === 'stream') {
+        return new ReadableResourceStream($resource);
+    }
+
+    $stream = new ReadableResourceStream(\fopen('php://memory', 'rb'));
+    $stream->close();
+
+    return $stream;
 }
 
 /**
