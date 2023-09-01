@@ -157,6 +157,8 @@ function splitLines(ReadableStream $source): \Traversable
 }
 
 /**
+ * @param int<1, 2147483647> $depth
+ *
  * @return \Traversable<int, mixed> Traversable of decoded JSON values
  *
  * @throws \JsonException If JSON parsing fails
@@ -165,7 +167,7 @@ function parseLineDelimitedJson(
     ReadableStream $source,
     bool $associative = false,
     int $depth = 512,
-    int $flags = 0
+    int $flags = 0,
 ): \Traversable {
     foreach (splitLines($source) as $line) {
         $line = \trim($line);
