@@ -92,7 +92,7 @@ function getStdin(): ReadableResourceStream
 
     $map ??= new \WeakMap();
 
-    return $map[EventLoop::getDriver()] ??= new ReadableResourceStream(\STDIN);
+    return $map[EventLoop::getDriver()] ??= Internal\tryToCreateReadableStreamFromResource(\STDIN);
 }
 
 /**
@@ -104,7 +104,7 @@ function getStdout(): WritableResourceStream
 
     $map ??= new \WeakMap();
 
-    return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\STDOUT);
+    return $map[EventLoop::getDriver()] ??= Internal\tryToCreateWritableStreamFromResource(\STDOUT);
 }
 
 /**
@@ -116,7 +116,7 @@ function getStderr(): WritableResourceStream
 
     $map ??= new \WeakMap();
 
-    return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\STDERR);
+    return $map[EventLoop::getDriver()] ??= Internal\tryToCreateWritableStreamFromResource(\STDERR);
 }
 
 /**
