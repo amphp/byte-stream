@@ -44,7 +44,8 @@
             "Amp\\ByteStream\\": "src"
         },
         "files": [
-            "src/functions.php"
+            "src/functions.php",
+            "src/Internal/functions.php"
         ]
     },
     "autoload-dev": {
