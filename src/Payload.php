@@ -15,7 +15,7 @@ use Amp\ForbidSerialization;
  *
  * @implements \IteratorAggregate<int, string>
  */
-final class Payload implements ReadableStream, \IteratorAggregate
+final class Payload implements ReadableStream, \IteratorAggregate, \Stringable
 {
     use ReadableStreamIteratorAggregate;
     use ForbidCloning;
@@ -127,5 +127,16 @@ final class Payload implements ReadableStream, \IteratorAggregate
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
+    }
+
+    /**
+     * Buffers entire stream before returning. Use {@see self::buffer()} to optionally provide a{@see Cancellation}
+     * and/or length limit.
+     *
+     * @throws BufferException|StreamException
+     */
+    public function __toString(): string
+    {
+        return $this->buffer();
     }
 }
