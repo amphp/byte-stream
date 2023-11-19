@@ -126,11 +126,11 @@ function getStderr(): WritableResourceStream
  *
  * @return \Traversable<int, string>
  */
-function split(ReadableStream $source, string $delimiter): \Traversable
+function split(ReadableStream $source, string $delimiter, ?Cancellation $cancellation = null): \Traversable
 {
     $buffer = '';
 
-    while (null !== $chunk = $source->read()) {
+    while (null !== $chunk = $source->read($cancellation)) {
         $buffer .= $chunk;
 
         $split = \explode($delimiter, $buffer);
@@ -149,7 +149,7 @@ function split(ReadableStream $source, string $delimiter): \Traversable
  *
  * @return \Traversable<int, string>
  */
-function splitLines(ReadableStream $source): \Traversable
+function splitLines(ReadableStream $source, ?Cancellation $cancellation = null): \Traversable
 {
     foreach (split($source, "\n") as $line) {
         yield \rtrim($line, "\r");
@@ -168,8 +168,9 @@ function parseLineDelimitedJson(
     bool $associative = false,
     int $depth = 512,
     int $flags = 0,
+    ?Cancellation $cancellation = null
 ): \Traversable {
-    foreach (splitLines($source) as $line) {
+    foreach (splitLines($source, $cancellation) as $line) {
         $line = \trim($line);
 
         if ($line === '') {
