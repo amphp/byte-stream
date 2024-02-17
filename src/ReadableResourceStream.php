@@ -101,6 +101,8 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
             $useSingleRead,
             $onClose,
         ): void {
+            \assert($stream !== null, 'Watcher invoked with null stream');
+
             \set_error_handler(self::$errorHandler);
 
             try {

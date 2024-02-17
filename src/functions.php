@@ -12,10 +12,12 @@ if (\strlen('…') !== 3) {
     );
 } // @codeCoverageIgnoreEnd
 
+/** @psalm-suppress PossiblyInvalidArgument */
 if (!\defined('STDOUT')) {
     \define('STDOUT', \fopen('php://stdout', 'wb'));
 }
 
+/** @psalm-suppress PossiblyInvalidArgument */
 if (!\defined('STDERR')) {
     \define('STDERR', \fopen('php://stderr', 'wb'));
 }

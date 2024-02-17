@@ -28,6 +28,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
 
     private bool $writable = true;
 
+    /** @var positive-int|null */
     private ?int $chunkSize = null;
 
     /** @var \Closure():bool */
@@ -72,8 +73,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         $resource = &$this->resource;
 
         $this->callbackId = EventLoop::disable(EventLoop::onWritable(
-            $stream,
-            static function ($callbackId, $stream) use (
+            $this->resource,
+            static function ($callbackId) use (
                 $writes,
                 &$chunkSize,
                 &$writable,
@@ -98,7 +99,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                             continue;
                         }
 
-                        if (!\is_resource($stream)) {
+                        /** @psalm-suppress TypeDoesNotContainType */
+                        if (!\is_resource($resource)) {
                             $writable = false;
                             $suspension?->resume(static fn () => throw new ClosedException("The stream was closed by the peer"));
                             continue;
@@ -119,9 +121,9 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                             // Customer error handler needed since fwrite() emits E_WARNING if the pipe is broken or the buffer is full.
                             // Use conditional, because PHP doesn't like getting null passed
                             if ($chunkSize) {
-                                $written = \fwrite($stream, $data, $chunkSize);
+                                $written = \fwrite($resource, $data, $chunkSize);
                             } else {
-                                $written = \fwrite($stream, $data);
+                                $written = \fwrite($resource, $data);
                             }
                         } finally {
                             \restore_error_handler();
@@ -151,6 +153,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
                         $firstWrite = false;
                     }
                 } finally {
+                    /** @psalm-suppress RedundantCondition */
                     if (!$writable && \is_resource($resource)) {
                         $meta = \stream_get_meta_data($resource);
                         if (\str_contains($meta["mode"], "+")) {

@@ -130,7 +130,7 @@ final class Payload implements ReadableStream, \IteratorAggregate, \Stringable
     }
 
     /**
-     * Buffers entire stream before returning. Use {@see self::buffer()} to optionally provide a{@see Cancellation}
+     * Buffers entire stream before returning. Use {@see self::buffer()} to optionally provide a {@see Cancellation}
      * and/or length limit.
      *
      * @throws BufferException|StreamException
