@@ -151,7 +151,7 @@ function split(ReadableStream $source, string $delimiter, ?Cancellation $cancell
  */
 function splitLines(ReadableStream $source, ?Cancellation $cancellation = null): \Traversable
 {
-    foreach (split($source, "\n") as $line) {
+    foreach (split($source, "\n", $cancellation) as $line) {
         yield \rtrim($line, "\r");
     }
 }
