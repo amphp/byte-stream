@@ -35,7 +35,7 @@ final class ResourceOutputStream implements OutputStream
      * @param resource $stream Stream resource.
      * @param int|null $chunkSize Chunk size per `fwrite()` operation.
      */
-    public function __construct($stream, int $chunkSize = null)
+    public function __construct($stream, ?int $chunkSize = null)
     {
         if (!\is_resource($stream) || \get_resource_type($stream) !== 'stream') {
             throw new \Error("Expected a valid stream");

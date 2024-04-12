@@ -19,7 +19,7 @@ final class LineReader
     /** @var InputStream */
     private $source;
 
-    public function __construct(InputStream $inputStream, string $delimiter = null)
+    public function __construct(InputStream $inputStream, ?string $delimiter = null)
     {
         $this->source = $inputStream;
         $this->delimiter = $delimiter === null ? "\n" : $delimiter;

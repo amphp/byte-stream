@@ -15,7 +15,7 @@ final class InMemoryStream implements InputStream
     /**
      * @param string|null $contents Data chunk or `null` for no data chunk.
      */
-    public function __construct(string $contents = null)
+    public function __construct(?string $contents = null)
     {
         $this->contents = $contents;
     }
