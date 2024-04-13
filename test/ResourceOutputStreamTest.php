@@ -5,6 +5,7 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
+use function Amp\delay;
 use const PHP_OS;
 
 class ResourceOutputStreamTest extends AsyncTestCase
@@ -72,8 +73,9 @@ class ResourceOutputStreamTest extends AsyncTestCase
         $this->expectException(StreamException::class);
         $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=" . (\stripos(PHP_OS, "win") === 0 ? "10053" : "32 Broken pipe"));
 
-        // The first write still succeeds somehow...
         yield $stream->write("foobar");
+        // There's some delay until a write fails on macOS (and possibly other OSes)
+        yield delay(100);
         yield $stream->write("foobar");
     }
 }
