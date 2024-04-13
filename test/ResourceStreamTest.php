@@ -10,6 +10,7 @@ use Amp\ByteStream\StreamException;
 use Amp\Delayed;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Success;
+use const PHP_OS;
 
 class ResourceStreamTest extends AsyncTestCase
 {
@@ -77,6 +78,11 @@ class ResourceStreamTest extends AsyncTestCase
         $b->close();
 
         yield $writePromise;
+
+        // Windows apparently always needs another write...
+        if (\stripos(PHP_OS, "win") === 0) {
+            yield $a->write("foobar");
+        }
     }
 
     public function testThrowsOnExternallyShutdownStreamWithSmallPayloads()

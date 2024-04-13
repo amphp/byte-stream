@@ -5,6 +5,7 @@ namespace Amp\ByteStream\Test;
 use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
+use const PHP_OS;
 
 class ResourceOutputStreamTest extends AsyncTestCase
 {
@@ -47,9 +48,14 @@ class ResourceOutputStreamTest extends AsyncTestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=32 Broken pipe");
+        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=" . (\stripos(PHP_OS, "win") === 0 ? "10053" : "32 Broken pipe"));
 
         yield $stream->write("foobar");
+
+        // The first write still succeeds somehow on Windows...
+        if (\stripos(PHP_OS, "win") === 0) {
+            yield $stream->write("foobar");
+        }
     }
 
     public function testClosedRemoteSocket(): ?\Generator
