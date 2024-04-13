@@ -83,6 +83,7 @@ jobs:
             composer-${{ runner.os }}-${{ matrix.php-version }}-
 
       - name: Install dependencies
+        shell: bash
         run: |
           php_version=$(php -v)
           composer update --optimize-autoloader --no-interaction --no-progress ${{ matrix.composer-flags }}
