@@ -6,7 +6,6 @@ use Amp\ByteStream\ResourceOutputStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 use function Amp\delay;
-use const PHP_OS;
 
 class ResourceOutputStreamTest extends AsyncTestCase
 {
@@ -36,7 +35,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
     public function testBrokenPipe(): ?\Generator
     {
         if (($sockets = @\stream_socket_pair(
-            \stripos(PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
+            \stripos(\PHP_OS, "win") === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
             STREAM_SOCK_STREAM,
             STREAM_IPPROTO_IP
         )) === false) {
@@ -49,12 +48,12 @@ class ResourceOutputStreamTest extends AsyncTestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=" . (\stripos(PHP_OS, "win") === 0 ? "10053" : "32 Broken pipe"));
+        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=" . (\stripos(\PHP_OS, "win") === 0 ? "10053" : "32 Broken pipe"));
 
         yield $stream->write("foobar");
 
         // The first write still succeeds somehow on Windows...
-        if (\stripos(PHP_OS, "win") === 0) {
+        if (\stripos(\PHP_OS, "win") === 0) {
             yield $stream->write("foobar");
         }
     }
@@ -71,7 +70,7 @@ class ResourceOutputStreamTest extends AsyncTestCase
         \fclose($b);
 
         $this->expectException(StreamException::class);
-        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=" . (\stripos(PHP_OS, "win") === 0 ? "10053" : "32 Broken pipe"));
+        $this->expectExceptionMessage(/* S|s */ "end of 6 bytes failed with errno=" . (\stripos(\PHP_OS, "win") === 0 ? "10053" : "32 Broken pipe"));
 
         yield $stream->write("foobar");
         // There's some delay until a write fails on macOS (and possibly other OSes)
