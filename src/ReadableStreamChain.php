@@ -33,6 +33,7 @@ final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->reading) {
@@ -62,11 +63,13 @@ final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function isReadable(): bool
     {
         return !empty($this->sources);
     }
 
+    #[\Override]
     public function close(): void
     {
         $sources = $this->sources;
@@ -81,11 +84,13 @@ final class ReadableStreamChain implements ReadableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return !$this->isReadable();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);

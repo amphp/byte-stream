@@ -45,11 +45,13 @@ final class CompressingWritableStream implements WritableStream
         }
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->destination->close();
     }
 
+    #[\Override]
     public function end(): void
     {
         if ($this->deflateContext === null) {
@@ -81,6 +83,7 @@ final class CompressingWritableStream implements WritableStream
         $this->destination->end();
     }
 
+    #[\Override]
     public function write(string $bytes): void
     {
         if ($this->deflateContext === null) {
@@ -109,6 +112,7 @@ final class CompressingWritableStream implements WritableStream
         $this->destination->write($compressed);
     }
 
+    #[\Override]
     public function isWritable(): bool
     {
         return $this->deflateContext !== null && $this->destination->isWritable();
@@ -134,11 +138,13 @@ final class CompressingWritableStream implements WritableStream
         return $this->options;
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->deflateContext === null || $this->destination->isClosed();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->destination->onClose($onClose);

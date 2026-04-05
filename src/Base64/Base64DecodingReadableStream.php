@@ -25,6 +25,7 @@ final class Base64DecodingReadableStream implements ReadableStream, \IteratorAgg
     ) {
     }
 
+    #[\Override]
     public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->source->isClosed()) {
@@ -65,21 +66,25 @@ final class Base64DecodingReadableStream implements ReadableStream, \IteratorAgg
         return $chunk;
     }
 
+    #[\Override]
     public function isReadable(): bool
     {
         return $this->source->isReadable();
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->source->close();
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->source->isClosed();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->source->onClose($onClose);

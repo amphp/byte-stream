@@ -21,6 +21,7 @@ final class Base64DecodingWritableStream implements WritableStream
     ) {
     }
 
+    #[\Override]
     public function write(string $bytes): void
     {
         $this->buffer .= $bytes;
@@ -37,6 +38,7 @@ final class Base64DecodingWritableStream implements WritableStream
         $this->destination->write($chunk);
     }
 
+    #[\Override]
     public function end(): void
     {
         $this->offset += \strlen($this->buffer);
@@ -52,21 +54,25 @@ final class Base64DecodingWritableStream implements WritableStream
         $this->destination->end();
     }
 
+    #[\Override]
     public function isWritable(): bool
     {
         return $this->destination->isWritable();
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->destination->close();
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->destination->isClosed();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->destination->onClose($onClose);

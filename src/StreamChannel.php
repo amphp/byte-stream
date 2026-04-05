@@ -55,12 +55,14 @@ final class StreamChannel implements Channel
     /**
      * Closes the read and write resource streams.
      */
+    #[\Override]
     public function close(): void
     {
         $this->read->close();
         $this->write->close();
     }
 
+    #[\Override]
     public function send(mixed $data): void
     {
         $data = $this->parser->encode($data);
@@ -72,6 +74,7 @@ final class StreamChannel implements Channel
         }
     }
 
+    #[\Override]
     public function receive(?Cancellation $cancellation = null): mixed
     {
         $cancellation?->throwIfRequested();
@@ -103,11 +106,13 @@ final class StreamChannel implements Channel
         }
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->read->isClosed() || $this->write->isClosed();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->read->onClose($onClose);

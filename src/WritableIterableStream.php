@@ -37,6 +37,7 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
         $this->close();
     }
 
+    #[\Override]
     public function close(): void
     {
         if (!$this->queue->isComplete()) {
@@ -48,16 +49,19 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return !$this->isWritable();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
     }
 
+    #[\Override]
     public function write(string $bytes): void
     {
         if ($this->queue->isComplete() || $this->queue->isDisposed()) {
@@ -76,6 +80,7 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function end(): void
     {
         if (!$this->queue->isComplete()) {
@@ -83,11 +88,13 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function isWritable(): bool
     {
         return !$this->queue->isComplete() && !$this->queue->isDisposed();
     }
 
+    #[\Override]
     public function getIterator(): \Traversable
     {
         return $this->iterable;

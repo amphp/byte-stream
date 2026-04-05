@@ -22,6 +22,7 @@ final class WritableBuffer implements WritableStream
         $this->deferredFuture = new DeferredFuture;
     }
 
+    #[\Override]
     public function write(string $bytes): void
     {
         if ($this->closed) {
@@ -31,6 +32,7 @@ final class WritableBuffer implements WritableStream
         $this->contents .= $bytes;
     }
 
+    #[\Override]
     public function end(): void
     {
         if ($this->closed) {
@@ -40,6 +42,7 @@ final class WritableBuffer implements WritableStream
         $this->close();
     }
 
+    #[\Override]
     public function isWritable(): bool
     {
         return !$this->closed;
@@ -50,6 +53,7 @@ final class WritableBuffer implements WritableStream
         return $this->deferredFuture->getFuture()->await();
     }
 
+    #[\Override]
     public function close(): void
     {
         if ($this->closed) {
@@ -62,11 +66,13 @@ final class WritableBuffer implements WritableStream
         $this->contents = '';
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->closed;
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->deferredFuture->getFuture()->finally($onClose);

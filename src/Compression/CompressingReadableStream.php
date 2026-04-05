@@ -49,12 +49,14 @@ final class CompressingReadableStream implements ReadableStream, \IteratorAggreg
         }
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->source->close();
         $this->deflateContext = null;
     }
 
+    #[\Override]
     public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->deflateContext === null) {
@@ -98,6 +100,7 @@ final class CompressingReadableStream implements ReadableStream, \IteratorAggreg
         return $compressed;
     }
 
+    #[\Override]
     public function isReadable(): bool
     {
         return $this->deflateContext !== null && $this->source->isReadable();
@@ -123,11 +126,13 @@ final class CompressingReadableStream implements ReadableStream, \IteratorAggreg
         return $this->options;
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->deflateContext === null || $this->source->isClosed();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->source->onClose($onClose);

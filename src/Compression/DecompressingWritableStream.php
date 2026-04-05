@@ -45,6 +45,7 @@ final class DecompressingWritableStream implements WritableStream
         }
     }
 
+    #[\Override]
     public function write(string $bytes): void
     {
         if ($this->inflateContext === null) {
@@ -63,6 +64,7 @@ final class DecompressingWritableStream implements WritableStream
         $this->destination->write($decompressed);
     }
 
+    #[\Override]
     public function end(): void
     {
         if ($this->inflateContext === null) {
@@ -84,6 +86,7 @@ final class DecompressingWritableStream implements WritableStream
         $this->destination->end();
     }
 
+    #[\Override]
     public function isWritable(): bool
     {
         return $this->inflateContext !== null && $this->destination->isWritable();
@@ -109,16 +112,19 @@ final class DecompressingWritableStream implements WritableStream
         return $this->options;
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->destination->close();
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->inflateContext === null || $this->destination->isClosed();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->destination->onClose($onClose);

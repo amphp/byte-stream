@@ -35,6 +35,7 @@ final class ReadableBuffer implements ReadableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function read(?Cancellation $cancellation = null): ?string
     {
         $contents = $this->contents;
@@ -43,11 +44,13 @@ final class ReadableBuffer implements ReadableStream, \IteratorAggregate
         return $contents;
     }
 
+    #[\Override]
     public function isReadable(): bool
     {
         return $this->contents !== null;
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->contents = null;
@@ -56,11 +59,13 @@ final class ReadableBuffer implements ReadableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return !$this->isReadable();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);

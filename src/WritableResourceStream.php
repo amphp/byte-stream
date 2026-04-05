@@ -187,6 +187,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
      *
      * @throws ClosedException If the stream has already been closed.
      */
+    #[\Override]
     public function write(string $bytes): void
     {
         if (!$this->writable) {
@@ -252,6 +253,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
     /**
      * Closes the stream after all pending writes have been completed. Optionally writes a final data chunk before.
      */
+    #[\Override]
     public function end(): void
     {
         $this->writable = false;
@@ -261,6 +263,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         }
     }
 
+    #[\Override]
     public function isWritable(): bool
     {
         return $this->writable;
@@ -269,6 +272,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
      */
+    #[\Override]
     public function close(): void
     {
         if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
@@ -286,11 +290,13 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         $this->free();
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->resource === null;
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
@@ -299,6 +305,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
     /**
      * @return resource|object|null Stream resource or null if end() has been called or the stream closed.
      */
+    #[\Override]
     public function getResource()
     {
         return $this->resource;
@@ -327,6 +334,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
      *
      * @see EventLoop::reference()
      */
+    #[\Override]
     public function reference(): void
     {
         if (!$this->resource) {
@@ -341,6 +349,7 @@ final class WritableResourceStream implements WritableStream, ResourceStream
      *
      * @see EventLoop::unreference()
      */
+    #[\Override]
     public function unreference(): void
     {
         if (!$this->resource) {

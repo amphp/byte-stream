@@ -51,6 +51,7 @@ final class Payload implements ReadableStream, \IteratorAggregate, \Stringable
         }
     }
 
+    #[\Override]
     final public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->mode === self::MODE_BUFFER) {
@@ -69,6 +70,7 @@ final class Payload implements ReadableStream, \IteratorAggregate, \Stringable
         return $chunk;
     }
 
+    #[\Override]
     final public function isReadable(): bool
     {
         return $this->stream instanceof ReadableStream
@@ -108,6 +110,7 @@ final class Payload implements ReadableStream, \IteratorAggregate, \Stringable
         return $payload;
     }
 
+    #[\Override]
     public function close(): void
     {
         if ($this->stream instanceof ReadableStream) {
@@ -119,11 +122,13 @@ final class Payload implements ReadableStream, \IteratorAggregate, \Stringable
         }
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return !$this->isReadable();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
@@ -135,6 +140,7 @@ final class Payload implements ReadableStream, \IteratorAggregate, \Stringable
      *
      * @throws BufferException|StreamException
      */
+    #[\Override]
     public function __toString(): string
     {
         return $this->buffer();

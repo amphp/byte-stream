@@ -162,6 +162,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
     /**
      * @param positive-int|null $limit
      */
+    #[\Override]
     public function read(?Cancellation $cancellation = null, ?int $limit = null): ?string
     {
         $limit ??= $this->defaultChunkSize;
@@ -231,6 +232,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
         return $data;
     }
 
+    #[\Override]
     public function isReadable(): bool
     {
         return $this->readable;
@@ -239,6 +241,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
     /**
      * Closes the stream forcefully. Multiple `close()` calls are ignored.
      */
+    #[\Override]
     public function close(): void
     {
         if (\is_resource($this->resource) && \get_resource_type($this->resource) === 'stream') {
@@ -258,11 +261,13 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
         $this->free();
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->resource === null;
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
@@ -271,6 +276,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
     /**
      * @return resource|object|null The stream resource or null if the stream has closed.
      */
+    #[\Override]
     public function getResource()
     {
         return $this->resource;
@@ -294,6 +300,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
      *
      * @see EventLoop::reference()
      */
+    #[\Override]
     public function reference(): void
     {
         if (!$this->resource) {
@@ -308,6 +315,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
      *
      * @see EventLoop::unreference()
      */
+    #[\Override]
     public function unreference(): void
     {
         if (!$this->resource) {

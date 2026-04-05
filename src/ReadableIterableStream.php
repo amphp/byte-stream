@@ -45,6 +45,7 @@ final class ReadableIterableStream implements ReadableStream, \IteratorAggregate
         $this->onClose = new DeferredFuture;
     }
 
+    #[\Override]
     public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->exception) {
@@ -92,11 +93,13 @@ final class ReadableIterableStream implements ReadableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function isReadable(): bool
     {
         return $this->iterator !== null;
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->iterator?->dispose();
@@ -107,11 +110,13 @@ final class ReadableIterableStream implements ReadableStream, \IteratorAggregate
         }
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return !$this->isReadable();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);

@@ -49,12 +49,14 @@ final class DecompressingReadableStream implements ReadableStream, \IteratorAggr
         }
     }
 
+    #[\Override]
     public function close(): void
     {
         $this->source->close();
         $this->inflateContext = null;
     }
 
+    #[\Override]
     public function read(?Cancellation $cancellation = null): ?string
     {
         if ($this->inflateContext === null) {
@@ -96,6 +98,7 @@ final class DecompressingReadableStream implements ReadableStream, \IteratorAggr
         return $decompressed;
     }
 
+    #[\Override]
     public function isReadable(): bool
     {
         return $this->inflateContext !== null && $this->source->isReadable();
@@ -121,11 +124,13 @@ final class DecompressingReadableStream implements ReadableStream, \IteratorAggr
         return $this->options;
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->inflateContext === null || $this->source->isClosed();
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->source->onClose($onClose);
