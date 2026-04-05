@@ -3,6 +3,7 @@
 namespace Amp\ByteStream\Internal;
 
 use Amp\ByteStream\ReadableResourceStream;
+use Amp\ByteStream\StreamException;
 use Amp\ByteStream\WritableResourceStream;
 
 /**
@@ -15,7 +16,12 @@ function tryToCreateReadableStreamFromResource($resource): ReadableResourceStrea
         return new ReadableResourceStream($resource);
     }
 
-    $stream = new ReadableResourceStream(\fopen('php://memory', 'rb'));
+    $resource = \fopen('php://memory', 'rb');
+    if ($resource === false) {
+        throw new StreamException('Failed to open php://memory for reading');
+    }
+
+    $stream = new ReadableResourceStream($resource);
     $stream->close();
 
     return $stream;
@@ -31,7 +37,12 @@ function tryToCreateWritableStreamFromResource($resource): WritableResourceStrea
         return new WritableResourceStream($resource);
     }
 
-    $stream = new WritableResourceStream(\fopen('php://memory', 'wb'));
+    $resource = \fopen('php://memory', 'wb');
+    if ($resource === false) {
+        throw new StreamException('Failed to open php://memory for writing');
+    }
+
+    $stream = new WritableResourceStream($resource);
     $stream->close();
 
     return $stream;

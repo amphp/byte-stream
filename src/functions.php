@@ -70,7 +70,9 @@ function getInputBufferStream(): ReadableResourceStream
 
     $map ??= new \WeakMap();
 
-    return $map[EventLoop::getDriver()] ??= new ReadableResourceStream(\fopen('php://input', 'rb'));
+    return $map[EventLoop::getDriver()] ??= new ReadableResourceStream(
+        \fopen('php://input', 'rb') ?: throw new StreamException('Failed to open php://input'),
+    );
 }
 
 /**
@@ -82,7 +84,9 @@ function getOutputBufferStream(): WritableResourceStream
 
     $map ??= new \WeakMap();
 
-    return $map[EventLoop::getDriver()] ??= new WritableResourceStream(\fopen('php://output', 'wb'));
+    return $map[EventLoop::getDriver()] ??= new WritableResourceStream(
+        \fopen('php://output', 'wb') ?: throw new StreamException('Failed to open php://output'),
+    );
 }
 
 /**

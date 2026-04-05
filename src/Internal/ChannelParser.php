@@ -30,7 +30,12 @@ final class ChannelParser extends Parser
         while (true) {
             /** @var string $header */
             $header = yield self::HEADER_LENGTH;
-            ['prefix' => $prefix, 'length' => $length] = \unpack("Cprefix/Llength", $header);
+            $unpacked = \unpack("Cprefix/Llength", $header);
+            if ($unpacked === false) {
+                throw new ChannelException("Invalid packet received: " . encodeUnprintableChars($header));
+            }
+
+            ['prefix' => $prefix, 'length' => $length] = $unpacked;
 
             if ($prefix !== 0) {
                 $data = $header . yield;

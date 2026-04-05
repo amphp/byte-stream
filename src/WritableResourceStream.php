@@ -39,6 +39,8 @@ final class WritableResourceStream implements WritableStream, ResourceStream
     /**
      * @param resource $stream Stream resource.
      * @param positive-int|null $chunkSize Chunk size per `fwrite()` operation.
+     *
+     * @psalm-suppress UnusedVariable
      */
     public function __construct($stream, ?int $chunkSize = null)
     {
@@ -374,7 +376,6 @@ final class WritableResourceStream implements WritableStream, ResourceStream
         if (!$this->writes->isEmpty()) {
             $exception = new ClosedException("The socket was closed before writing completed");
             do {
-                /** @var Suspension|null $suspension */
                 [, $suspension] = $this->writes->shift();
                 $suspension?->throw($exception);
             } while (!$this->writes->isEmpty());

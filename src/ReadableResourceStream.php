@@ -35,6 +35,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
 
     private bool $readable = true;
 
+    /** @psalm-suppress UnusedProperty False-positive. */
     private int $chunkSize;
 
     private readonly bool $useSingleRead;
@@ -81,6 +82,7 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
         $this->onClose = $onClose = new DeferredFuture;
 
         \stream_set_blocking($stream, false);
+        /** @psalm-suppress UnusedFunctionCall */
         \stream_set_read_buffer($stream, 0);
 
         // Ignore any errors raised while this handler is set. Errors will be checked through return values.
