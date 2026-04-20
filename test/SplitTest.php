@@ -58,6 +58,20 @@ final class SplitTest extends AsyncTestCase
         $this->check(["a", "bc", "\r", "\n\r\nef\r", "\n"], ["abc", "", "ef"]);
     }
 
+    public function testKey(): void
+    {
+        $stream = new ReadableIterableStream(Pipeline::fromIterable(["a|b|c", "|", "||d|e|f"]));
+
+        $lines = [];
+        $expectedK = 0;
+        foreach (split($stream, '|') as $k => $line) {
+            $this->assertEquals($expectedK++, $k);
+            $lines[] = $line;
+        }
+
+        self::assertSame(["a", "b", "c", "", "", "d", "e", "f"], $lines);
+    }
+
     public function testCustomDelimiter(): void
     {
         $stream = new ReadableIterableStream(Pipeline::fromIterable(["a|b|c", "|", "||d|e|f"]));

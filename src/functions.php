@@ -142,7 +142,10 @@ function split(ReadableStream $source, string $delimiter, ?Cancellation $cancell
         $split = \explode($delimiter, $buffer);
         $buffer = \array_pop($split);
 
-        yield from $split;
+        // Don't use yield from to avoid reusing the keys from $split
+        foreach ($split as $v) {
+            yield $v;
+        }
     }
 
     if ($buffer !== '') {
