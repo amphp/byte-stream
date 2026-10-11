@@ -183,23 +183,8 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
 
         \assert($this->resource !== null);
 
-        \set_error_handler(self::$errorHandler);
-
-        try {
-            // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
-            if ($this->useSingleRead) {
-                $data = \fread($this->resource, $limit);
-            } else {
-                $data = \stream_get_contents($this->resource, $limit);
-            }
-        } finally {
-            \restore_error_handler();
-        }
-
-        \assert(
-            $data !== false,
-            "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to."
-        );
+        // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
+        $data = $this->readDirectly($limit);
 
         if ($data === '') {
             if (\feof($this->resource)) {
@@ -208,6 +193,13 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
                 return null;
             }
 
+            // On a TLS stream feof() calls SSL_peek(), which moves a record that has just arrived from the socket
+            // into the OpenSSL buffer. The socket is then no longer readable, so the watcher would never be invoked
+            // by drivers polling the descriptor (all except StreamSelectDriver, as stream_select() checks SSL_pending()).
+            $data = $this->readDirectly($limit);
+        }
+
+        if ($data === '') {
             $this->chunkSize = $limit;
             EventLoop::enable($this->callbackId);
             $this->suspension = EventLoop::getSuspension();
@@ -332,6 +324,30 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
         if ($this->resource !== null) {
             $this->free();
         }
+    }
+
+    private function readDirectly(int $limit): string
+    {
+        \assert($this->resource !== null);
+
+        \set_error_handler(self::$errorHandler);
+
+        try {
+            if ($this->useSingleRead) {
+                $data = \fread($this->resource, $limit);
+            } else {
+                $data = \stream_get_contents($this->resource, $limit);
+            }
+        } finally {
+            \restore_error_handler();
+        }
+
+        \assert(
+            $data !== false,
+            "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to."
+        );
+
+        return $data;
     }
 
     /**
