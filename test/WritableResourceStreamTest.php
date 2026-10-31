@@ -100,4 +100,140 @@ final class WritableResourceStreamTest extends AsyncTestCase
 
         $this->assertStringContainsString($body, buffer($input));
     }
+
+    /**
+     * TLS streams may return 0 from fwrite() and an error code of 0. This test ensures
+     * this case is handled properly, failing the write op instead of looping forever.
+     * @see https://github.com/amphp/byte-stream/pull/116
+     */
+    public function testWriteFailsWhenTlsPeerIsGone(): void
+    {
+        if (!\extension_loaded('openssl')) {
+            self::markTestSkipped('ext-openssl is required to establish a TLS connection');
+        }
+
+        $this->setTimeout(5);
+
+        [$connection, $client] = $this->createTlsPair();
+
+        \fclose($client);
+
+        // Reading to EOF sets the stream's EOF flag; from that point fwrite() on the same
+        // resource returns 0 without reporting anything on affected OpenSSL builds.
+        $input = new ReadableResourceStream($connection);
+        self::assertNull($input->read());
+
+        $output = new WritableResourceStream($connection);
+
+        $this->expectException(StreamException::class);
+        $this->expectExceptionMessage('Failed to write to stream');
+
+        $output->write('foobar');
+    }
+
+    /**
+     * @return array{resource, resource} Server side and client TLS pair.
+     */
+    private function createTlsPair(): array
+    {
+        $certificate = $this->createCertificate();
+
+        $server = \stream_socket_server(
+            'tcp://127.0.0.1:0',
+            $errno,
+            $errstr,
+            \STREAM_SERVER_BIND | \STREAM_SERVER_LISTEN,
+            \stream_context_create(['ssl' => [
+                'local_cert' => $certificate,
+                'allow_self_signed' => true,
+                'verify_peer' => false,
+            ]]),
+        );
+
+        if ($server === false) {
+            self::fail("Failed to create TLS server: $errstr");
+        }
+
+        $address = \stream_socket_get_name($server, false);
+
+        $client = \stream_socket_client(
+            "tcp://$address",
+            $errno,
+            $errstr,
+            5,
+            \STREAM_CLIENT_CONNECT,
+            \stream_context_create(['ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ]]),
+        );
+
+        if ($client === false) {
+            self::fail("Failed to connect to TLS server: $errstr");
+        }
+
+        $connection = \stream_socket_accept($server, 5);
+        if ($connection === false) {
+            self::fail('Failed to accept TLS connection');
+        }
+
+        \fclose($server);
+
+        // Both handshakes have to progress in this single process, so drive them
+        // alternately on non-blocking sockets until both report completion.
+        \stream_set_blocking($connection, false);
+        \stream_set_blocking($client, false);
+
+        $serverDone = false;
+        $clientDone = false;
+        $deadline = \microtime(true) + 5;
+
+        while (!$serverDone || !$clientDone) {
+            if (!$serverDone) {
+                $serverDone = @\stream_socket_enable_crypto($connection, true, \STREAM_CRYPTO_METHOD_TLS_SERVER) === true;
+            }
+
+            if (!$clientDone) {
+                $clientDone = @\stream_socket_enable_crypto($client, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT) === true;
+            }
+
+            if (\microtime(true) > $deadline) {
+                \unlink($certificate);
+                self::fail('TLS handshake did not complete');
+            }
+
+            delay(0.01);
+        }
+
+        \unlink($certificate);
+
+        \stream_set_blocking($connection, true);
+        \stream_set_blocking($client, true);
+
+        return [$connection, $client];
+    }
+
+    private function createCertificate(): string
+    {
+        $key = \openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => \OPENSSL_KEYTYPE_RSA]);
+        $csr = \openssl_csr_new(['commonName' => 'localhost'], $key, ['digest_alg' => 'sha256']);
+        $certificate = \openssl_csr_sign($csr, null, $key, 1, ['digest_alg' => 'sha256']);
+
+        if ($key === false || $csr === false || $certificate === false) {
+            self::markTestSkipped('Failed to generate a self-signed certificate');
+        }
+
+        \openssl_x509_export($certificate, $certificateOut);
+        \openssl_pkey_export($key, $keyOut);
+
+        $path = \tempnam(\sys_get_temp_dir(), 'amp-byte-stream-tls-');
+        if ($path === false) {
+            self::fail('Failed to create a temporary file for the certificate');
+        }
+
+        \file_put_contents($path, $certificateOut . $keyOut);
+
+        return $path;
+    }
 }
