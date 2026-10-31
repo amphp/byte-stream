@@ -2,6 +2,7 @@
 
 namespace Amp\ByteStream\Base64;
 
+use Amp\ByteStream\ReadableBuffer;
 use Amp\ByteStream\ReadableIterableStream;
 use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\StreamException;
@@ -55,6 +56,33 @@ final class Base64DecodingInputStreamTest extends AsyncTestCase
         $this->expectExceptionMessage('Failed to read stream chunk due to invalid base64 data');
 
         self::assertSame('foo.bar', $future->await());
+    }
+
+    public function testReadFromSourceClosingOnFinalChunk(): void
+    {
+        $stream = new Base64DecodingReadableStream(new ReadableBuffer(\base64_encode('foo.bar')));
+
+        self::assertSame('foo.bar', buffer($stream));
+    }
+
+    public function testReadReturnsNullAfterSourceClosingOnFinalChunk(): void
+    {
+        $stream = new Base64DecodingReadableStream(new ReadableBuffer(\base64_encode('foo.bar')));
+
+        self::assertSame('foo.bar', $stream->read());
+        self::assertNull($stream->read());
+        self::assertFalse($stream->isReadable());
+        self::assertTrue($stream->isClosed());
+    }
+
+    public function testInvalidDataFromSourceClosingOnFinalChunk(): void
+    {
+        $stream = new Base64DecodingReadableStream(new ReadableBuffer('not valid base64!'));
+
+        $this->expectException(StreamException::class);
+        $this->expectExceptionMessage('Failed to read stream chunk due to invalid base64 data');
+
+        buffer($stream);
     }
 
     protected function setUp(): void

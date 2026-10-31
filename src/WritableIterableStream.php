@@ -44,7 +44,7 @@ final class WritableIterableStream implements WritableStream, \IteratorAggregate
             $this->queue->complete();
         }
 
-        if ($this->onClose->isComplete()) {
+        if (!$this->onClose->isComplete()) {
             $this->onClose->complete();
         }
     }
