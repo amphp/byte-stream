@@ -183,21 +183,32 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
 
         \assert($this->resource !== null);
 
-        // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
-        $data = $this->readDirectly($limit);
+        // On a TLS stream feof() calls SSL_peek(), which moves a record that has just arrived from the socket
+        // into the OpenSSL buffer. The socket is then no longer readable, so the watcher would never be invoked
+        // by drivers polling the descriptor (all except StreamSelectDriver, as stream_select() checks SSL_pending()).
+        if (\feof($this->resource)) {
+            $this->free();
 
-        if ($data === '') {
-            if (\feof($this->resource)) {
-                $this->free();
-
-                return null;
-            }
-
-            // On a TLS stream feof() calls SSL_peek(), which moves a record that has just arrived from the socket
-            // into the OpenSSL buffer. The socket is then no longer readable, so the watcher would never be invoked
-            // by drivers polling the descriptor (all except StreamSelectDriver, as stream_select() checks SSL_pending()).
-            $data = $this->readDirectly($limit);
+            return null;
         }
+
+        \set_error_handler(self::$errorHandler);
+
+        try {
+            // Attempt a direct read because PHP may buffer data, e.g. in TLS buffers.
+            if ($this->useSingleRead) {
+                $data = \fread($this->resource, $limit);
+            } else {
+                $data = \stream_get_contents($this->resource, $limit);
+            }
+        } finally {
+            \restore_error_handler();
+        }
+
+        \assert(
+            $data !== false,
+            "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to."
+        );
 
         if ($data === '') {
             $this->chunkSize = $limit;
@@ -324,30 +335,6 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
         if ($this->resource !== null) {
             $this->free();
         }
-    }
-
-    private function readDirectly(int $limit): string
-    {
-        \assert($this->resource !== null);
-
-        \set_error_handler(self::$errorHandler);
-
-        try {
-            if ($this->useSingleRead) {
-                $data = \fread($this->resource, $limit);
-            } else {
-                $data = \stream_get_contents($this->resource, $limit);
-            }
-        } finally {
-            \restore_error_handler();
-        }
-
-        \assert(
-            $data !== false,
-            "Trying to read from a previously fclose()'d resource. Do NOT manually fclose() resources the loop still has a reference to."
-        );
-
-        return $data;
     }
 
     /**
