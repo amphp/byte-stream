@@ -1,4 +1,5 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
 
 namespace Amp\ByteStream;
 
@@ -45,7 +46,7 @@ abstract class TlsStreamTestCase extends AsyncTestCase
             "tcp://$address",
             $errno,
             $errstr,
-           5,
+            5,
             \STREAM_CLIENT_CONNECT,
             \stream_context_create(['ssl' => [
                 'verify_peer' => false,
