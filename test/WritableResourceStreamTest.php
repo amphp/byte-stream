@@ -102,12 +102,9 @@ final class WritableResourceStreamTest extends AsyncTestCase
     }
 
     /**
-     * A peer that is gone leaves the descriptor permanently writable as far as the event
-     * loop is concerned, so a failed write must be recognised as a failure rather than as
-     * a partial write. On a TLS stream that cannot be done from $errorCode alone: fwrite()
-     * returns int(0) and PHP stops raising a warning once the stream's EOF flag is set,
-     * which is exactly what reading to EOF does. Treating it as a partial write re-queues
-     * the chunk and returns with the watcher still enabled, spinning the loop forever.
+     * TLS streams may return 0 from fwrite() and an error code of 0. This test ensures
+     * this case is handled properly, failing the write op instead of looping forever.
+     * @see https://github.com/amphp/byte-stream/pull/116
      */
     public function testWriteFailsWhenTlsPeerIsGone(): void
     {
@@ -126,25 +123,6 @@ final class WritableResourceStreamTest extends AsyncTestCase
         $input = new ReadableResourceStream($connection);
         self::assertNull($input->read());
 
-        // Not every build goes quiet. Where fwrite() still reports the failure the existing
-        // $errorCode check already catches it and there is nothing here to exercise.
-        $reported = false;
-        \set_error_handler(static function () use (&$reported): bool {
-            $reported = true;
-
-            return true;
-        });
-
-        try {
-            \fwrite($connection, 'probe');
-        } finally {
-            \restore_error_handler();
-        }
-
-        if ($reported) {
-            self::markTestSkipped('This build reports failed writes to a closed TLS peer, so $errorCode suffices');
-        }
-
         $output = new WritableResourceStream($connection);
 
         $this->expectException(StreamException::class);
@@ -154,8 +132,7 @@ final class WritableResourceStreamTest extends AsyncTestCase
     }
 
     /**
-     * @return array{resource, resource} Server side and client side of an established TLS
-     *     connection over loopback.
+     * @return array{resource, resource} Server side and client TLS pair.
      */
     private function createTlsPair(): array
     {
@@ -226,7 +203,7 @@ final class WritableResourceStreamTest extends AsyncTestCase
                 self::fail('TLS handshake did not complete');
             }
 
-            \usleep(1000);
+            delay(0.01);
         }
 
         \unlink($certificate);
