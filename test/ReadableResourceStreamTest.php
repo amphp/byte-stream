@@ -2,9 +2,10 @@
 
 namespace Amp\ByteStream;
 
-use Amp\PHPUnit\AsyncTestCase;
+use function Amp\async;
+use function Amp\delay;
 
-final class ReadableResourceStreamTest extends AsyncTestCase
+final class ReadableResourceStreamTest extends TlsStreamTestCase
 {
     public function testGetResource(): void
     {
@@ -59,5 +60,39 @@ final class ReadableResourceStreamTest extends AsyncTestCase
             \proc_terminate($proc);
             \proc_close($proc);
         }
+    }
+
+    public function testTlsStreamReadAndWrite(): void
+    {
+        $this->setTimeout(2);
+
+        [$read, $write] = $this->createTlsPair();
+
+        $input = new ReadableResourceStream($read);
+        $output = new WritableResourceStream($write);
+
+        $output->write('test');
+
+        self::assertFalse(\feof($read), 'feof should return false, but will buffer data');
+
+        $data = $input->read();
+
+        self::assertSame('test', $data);
+
+        $future = async(fn () => $input->read());
+
+        delay(0.1); // Allow read operation above to suspend in event-loop.
+
+        self::assertFalse($future->isComplete());
+
+        $output->write('test');
+        $output->close();
+
+        self::assertFalse(\feof($read), 'feof should return false, but will buffer data');
+
+        self::assertSame('test', $future->await());
+        self::assertNull($input->read());
+
+        self::assertTrue(\feof($read));
     }
 }

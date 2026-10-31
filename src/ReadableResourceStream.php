@@ -183,6 +183,15 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
 
         \assert($this->resource !== null);
 
+        // On a TLS stream feof() calls SSL_peek(), which moves a record that has just arrived from the socket
+        // into the OpenSSL buffer. The socket is then no longer readable, so the watcher would never be invoked
+        // by drivers polling the descriptor (all except StreamSelectDriver, as stream_select() checks SSL_pending()).
+        if (\feof($this->resource)) {
+            $this->free();
+
+            return null;
+        }
+
         \set_error_handler(self::$errorHandler);
 
         try {
@@ -202,12 +211,6 @@ final class ReadableResourceStream implements ReadableStream, ResourceStream, \I
         );
 
         if ($data === '') {
-            if (\feof($this->resource)) {
-                $this->free();
-
-                return null;
-            }
-
             $this->chunkSize = $limit;
             EventLoop::enable($this->callbackId);
             $this->suspension = EventLoop::getSuspension();
