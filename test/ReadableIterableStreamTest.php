@@ -6,6 +6,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\PHPUnit\TestException;
 use Amp\Pipeline\Queue;
 use function Amp\async;
+use function Amp\delay;
 
 final class ReadableIterableStreamTest extends AsyncTestCase
 {
@@ -115,5 +116,36 @@ final class ReadableIterableStreamTest extends AsyncTestCase
         $this->expectExceptionMessage('Stream manually closed');
 
         $future->await();
+    }
+
+    public function testOnCloseInvokedOnClose(): void
+    {
+        $source = new Queue;
+        $stream = new ReadableIterableStream($source->pipe());
+
+        $invoked = false;
+        $stream->onClose(function () use (&$invoked): void {
+            $invoked = true;
+        });
+
+        self::assertFalse($invoked);
+
+        $stream->close();
+
+        delay(0); // Pass control to event-loop to invoke callbacks.
+
+        self::assertTrue($invoked);
+        self::assertTrue($stream->isClosed());
+    }
+
+    public function testOnCloseInvokedAfterClose(): void
+    {
+        $source = new Queue;
+        $stream = new ReadableIterableStream($source->pipe());
+        $stream->close();
+
+        $stream->onClose($this->createCallback(1));
+
+        delay(0); // Pass control to event-loop to invoke callbacks.
     }
 }
