@@ -91,6 +91,10 @@ function getOutputBufferStream(): WritableResourceStream
 
 /**
  * The STDIN stream for the process associated with the currently active event loop.
+ *
+ * If `STDIN` is unavailable (not defined or not a stream resource, as can happen under
+ * some SAPIs), an already-closed stream backed by `php://memory` is returned instead of
+ * `null` or an exception. Call {@see ReadableResourceStream::isReadable()} to detect it.
  */
 function getStdin(): ReadableResourceStream
 {
@@ -103,6 +107,10 @@ function getStdin(): ReadableResourceStream
 
 /**
  * The STDOUT stream for the process associated with the currently active event loop.
+ *
+ * If `STDOUT` is unavailable (not defined or not a stream resource, as can happen under
+ * some SAPIs), an already-closed stream backed by `php://memory` is returned instead of
+ * `null` or an exception. Call {@see WritableResourceStream::isWritable()} to detect it.
  */
 function getStdout(): WritableResourceStream
 {
@@ -115,6 +123,10 @@ function getStdout(): WritableResourceStream
 
 /**
  * The STDERR stream for the process associated with the currently active event loop.
+ *
+ * If `STDERR` is unavailable (not defined or not a stream resource, as can happen under
+ * some SAPIs), an already-closed stream backed by `php://memory` is returned instead of
+ * `null` or an exception. Call {@see WritableResourceStream::isWritable()} to detect it.
  */
 function getStderr(): WritableResourceStream
 {
