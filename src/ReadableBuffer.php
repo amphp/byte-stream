@@ -18,16 +18,13 @@ final class ReadableBuffer implements ReadableStream, \IteratorAggregate
     use ForbidCloning;
     use ForbidSerialization;
 
-    private ?string $contents;
-
     private readonly DeferredFuture $onClose;
 
     /**
      * @param string|null $contents Data chunk or `null` for no data chunk.
      */
-    public function __construct(?string $contents = null)
+    public function __construct(private ?string $contents = null)
     {
-        $this->contents = $contents === '' ? null : $contents;
         $this->onClose = new DeferredFuture;
 
         if ($this->contents === null) {
@@ -38,7 +35,7 @@ final class ReadableBuffer implements ReadableStream, \IteratorAggregate
     #[\Override]
     public function read(?Cancellation $cancellation = null): ?string
     {
-        $contents = $this->contents;
+        $contents = $this->contents !== '' ? $this->contents : null;
         $this->close();
 
         return $contents;
